@@ -1,0 +1,57 @@
+        body { display: flex; flex-direction: column; min-height: 100vh; }
+        /* Thanh dieu huong tren cung (Navbar) */
+        .navbar { background: #0f172a; height: 52px; padding: 0 22px; display: flex; align-items: center;
+            justify-content: space-between; position: sticky; top: 0; z-index: 50; border-bottom: 1px solid #1e293b; }
+        .nav-left { display: flex; align-items: center; gap: 12px; }
+        .brand-badge { background: #e11d48; color: #fff; font-weight: 900; font-size: 12px; padding: 5px 10px; border-radius: 7px; letter-spacing: .5px; }
+        .brand-link { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+        .nav-menu { display: flex; align-items: center; gap: 4px; margin-left: 10px; }
+        .nav-menu a { color: #94a3b8; font-size: 11px; font-weight: 700; text-decoration: none; padding: 6px 11px; border-radius: 7px; transition: 0.15s ease; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
+        .nav-menu a:hover { color: #fff; background: #1e293b; }
+        .nav-menu a.active { color: #fff; background: #e11d48; }
+        @media (max-width: 1200px) {
+            .nav-menu { display: none; }
+        }
+        .nav-sep { width: 1px; height: 22px; background: #334155; }
+        .branch-pill { background: #1e293b; border: 1px solid #334155; color: #94a3b8; padding: 6px 12px; border-radius: 8px; font-size: 11px;
+            display: inline-flex; align-items: center; gap: 6px; }
+        .branch-pill i { color: #e11d48; }
+        .branch-pill b { color: #fff; }
+        .branch-pill select { background: transparent; border: 0; color: #fff; font-weight: 700; font-size: 11px; outline: none; cursor: pointer; }
+        .branch-pill select option { color: #0f172a; }
+        .nav-right { display: flex; align-items: center; gap: 12px; }
+        .user-text { text-align: right; line-height: 1.3; }
+        .user-text b { color: #fff; font-size: 11px; display: block; }
+        .user-text span { color: #94a3b8; font-size: 9px; }
+        .avatar { width: 34px; height: 34px; border-radius: 50%; background: #e11d48; color: #fff; font-weight: 800; font-size: 12px;
+            display: flex; align-items: center; justify-content: center; text-decoration: none; }
+
+        .layout { display: flex; flex: 1; min-height: 0; }
+
+        /* Thanh menu dieu huong ben trai (Sidebar) */
+        .sidebar { width: 210px; background: #0f172a; padding: 20px 10px; display: flex; flex-direction: column; justify-content: space-between; flex-shrink: 0; }
+        .menu-title { font-size: 9px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: .6px; padding: 0 10px; margin: 0 0 8px; }
+        .menu { list-style: none; margin-bottom: 20px; }
+        .menu li { margin-bottom: 3px; }
+        .menu a, .menu .soon { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 7px; font-size: 11px; font-weight: 700;
+            color: #cbd5e1; text-decoration: none; }
+        .menu a:hover { background: #1e293b; color: #fff; }
+        .menu a.active { background: #e11d48; color: #fff; }
+        .menu i { width: 14px; text-align: center; color: #fb7185; }
+        .menu a.active i { color: #fff; }
+        .menu .soon { color: #64748b; cursor: not-allowed; }
+        .menu .soon i { color: #475569; }
+        .menu .soon em { margin-left: auto; font-style: normal; font-size: 8px; background: #1e293b; color: #94a3b8; padding: 2px 6px; border-radius: 999px; }
+        .menu-bottom a { color: #94a3b8; }
+
+        /* Vung noi dung chinh ben phai Sidebar */
+        .content { flex: 1; padding: 22px; overflow-y: auto; min-width: 0; }
+        .scope-warning { background: #fffbeb; border-bottom: 1px solid #fde68a; color: #92400e; font-size: 11px; padding: 8px 22px; }
+        .scope-warning i { margin-right: 6px; }
+        .menu-title { margin-top: 0; }
+
+        @media print {
+            .navbar, .sidebar, .scope-warning { display: none !important; }
+            .layout { display: block; }
+            .content { padding: 0; overflow: visible; }
+        }
