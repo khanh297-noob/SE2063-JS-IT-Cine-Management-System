@@ -1,0 +1,135 @@
+:root {
+    --sidebar-width: 250px;
+    --brand-color: #E50914;
+    --bg-light: #F4F6F9;
+}
+
+body {
+    background-color: var(--bg-light);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    overflow-x: hidden;
+}
+
+/* Sidebar Styles */
+.sidebar {
+    width: var(--sidebar-width);
+    min-height: 100vh;
+    background: #ffffff;
+    border-right: 1px solid #EAEAEA;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+}
+
+.sidebar-brand {
+    padding: 20px 24px;
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--brand-color);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid #F0F0F0;
+}
+
+.nav-item-custom {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 24px;
+    color: #6C757D;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.nav-item-custom:hover {
+    color: var(--brand-color);
+    background-color: #FFF5F5;
+}
+
+.nav-item-custom.active {
+    color: var(--brand-color);
+    background-color: #FEECEE;
+    border-right: 4px solid var(--brand-color);
+    font-weight: 600;
+}
+
+/* Layout Wrapper */
+.main-wrapper {
+    margin-left: var(--sidebar-width);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Top Navigation Bar */
+.top-navbar {
+    background: #0B0E14;
+    color: #FFFFFF;
+    padding: 12px 30px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.content-body {
+    padding: 24px 32px;
+}
+
+/* Component UI */
+.card-custom {
+    background: #FFFFFF;
+    border-radius: 16px;
+    border: 1px solid #EDF1F7;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+.search-input-pill {
+    border-radius: 30px;
+    padding: 10px 20px;
+    border: 1px solid #DEE2E6;
+}
+
+.btn-brand-pill {
+    background-color: var(--brand-color);
+    color: #FFFFFF;
+    border-radius: 30px;
+    padding: 10px 24px;
+    font-weight: 600;
+    border: none;
+    transition: 0.2s ease;
+}
+
+.btn-brand-pill:hover {
+    background-color: #C10712;
+    color: #FFFFFF;
+}
+
+.avatar-initial {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #F1F3F5;
+}
+
+.badge-status {
+    font-size: 0.8rem;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+.status-active {
+    background-color: #D3F9D8;
+    color: #2B8A3E;
+}
+
+.status-locked {
+    background-color: #FFE3E3;
+    color: #C92A2A;
+}
