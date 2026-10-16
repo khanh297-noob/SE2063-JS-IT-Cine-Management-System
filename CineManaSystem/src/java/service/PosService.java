@@ -1,0 +1,203 @@
+package service;
+
+import dao.AuditLogDAO;
+import dao.BookingDAO;
+import dao.FnbDAO;
+import dao.ShowtimeDAO;
+import dao.UserDAO;
+import java.math.BigDecimal;
+import java.sql.Date;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import model.Booking;
+import model.FnbItem;
+import model.Promotion;
+import model.Seat;
+import model.Showtime;
+import model.User;
+import model.WorkShift;
+
+/**
+ * Bán vé tại quầy (phần 7.1): suất chiếu, sơ đồ ghế, tạo đơn + thu tiền mặt/thẻ, hủy & hoàn tiền.
+ * Đơn tại quầy lưu Booking.UserID = UserID của thu ngân (khách vãng lai không có tài khoản).
+ */
+public class PosService {
+
+    private final ShowtimeDAO showtimeDAO = new ShowtimeDAO();
+    private final FnbDAO fnbDAO = new FnbDAO();
+    private final BookingDAO bookingDAO = new BookingDAO();
+    private final UserDAO userDAO = new UserDAO();
+    private final AuditLogDAO auditLogDAO = new AuditLogDAO();
+    private final PaymentService paymentService = new PaymentService();
+
+    public static final int MAX_SEATS = 8;
+
+    // Giá vé = giá gốc + phụ thu loại ghế + phụ thu loại phòng
+    public BigDecimal getTicketPrice(BigDecimal basePrice, String seatType, String roomType) {
+        BigDecimal price = basePrice;
+        if ("VIP".equals(seatType)) {
+            price = price.add(new BigDecimal("20000"));
+        } else if ("Sweetbox".equals(seatType)) {
+            price = price.add(new BigDecimal("50000"));
+        }
+        if ("3D".equals(roomType)) {
+            price = price.add(new BigDecimal("20000"));
+        } else if ("IMAX".equals(roomType)) {
+            price = price.add(new BigDecimal("40000"));
+        }
+        return price;
+    }
+
+    // Suất chiếu trong ngày của rạp, gom theo tên phim: { "Tên phim" -> [suất 1, suất 2...] }
+    public Map<String, List<Showtime>> getShowtimesByMovie(int branchId, LocalDate date, String keyword) {
+        Map<String, List<Showtime>> movies = new LinkedHashMap<>();
+        for (Showtime s : showtimeDAO.getByBranchAndDate(branchId, Date.valueOf(date), keyword)) {
+            if (!movies.containsKey(s.getMovieTitle())) {
+                movies.put(s.getMovieTitle(), new ArrayList<>());
+            }
+            movies.get(s.getMovieTitle()).add(s);
+        }
+        return movies;
+    }
+
+    public Showtime getShowtime(int showtimeId) {
+        return showtimeDAO.getById(showtimeId);
+    }
+
+    // Sơ đồ ghế kèm giá từng ghế
+    public List<Seat> getSeats(Showtime st) {
+        List<Seat> seats = showtimeDAO.getSeats(st.getShowtimeId(), st.getRoomId());
+        for (Seat s : seats) {
+            s.setPrice(getTicketPrice(st.getBasePrice(), s.getSeatType(), st.getRoomType()));
+        }
+        return seats;
+    }
+
+    public List<FnbItem> getFnbMenu() {
+        return fnbDAO.getAll();
+    }
+
+    // Tạm tính = tiền các ghế đã chọn + tiền đồ ăn
+    public BigDecimal getSubtotal(List<Seat> seats, List<FnbItem> items) {
+        BigDecimal sum = BigDecimal.ZERO;
+        for (Seat s : seats) {
+            sum = sum.add(s.getPrice());
+        }
+        for (FnbItem f : items) {
+            sum = sum.add(f.getLineTotal());
+        }
+        return sum;
+    }
+
+    /**
+     * Tạo đơn tại quầy và thu tiền. Lỗi thì ném IllegalArgumentException(message).
+     * @param seats ghế thu ngân đã chọn (lấy từ getSeats)
+     * @param items đồ ăn có số lượng >= 1
+     * @return BookingID vừa tạo
+     */
+    public int createCounterBooking(User cashier, WorkShift shift, Showtime st, List<Seat> seats,
+            List<FnbItem> items, String method, BigDecimal cashReceived, String voucherCode, String ip) {
+        if (shift == null) {
+            throw new IllegalArgumentException("Bạn cần bắt đầu ca làm việc trước khi bán vé.");
+        }
+        if (st == null || st.getBranchId() != shift.getBranchId()) {
+            throw new IllegalArgumentException("No search results.");
+        }
+        if (st.isStarted()) {
+            throw new IllegalArgumentException("This screening is no longer available for booking.");
+        }
+        if (seats.isEmpty()) {
+            throw new IllegalArgumentException("Vui lòng chọn ít nhất 1 ghế.");
+        }
+        if (seats.size() > MAX_SEATS) {
+            throw new IllegalArgumentException("You cannot book more than " + MAX_SEATS + " seats per transaction.");
+        }
+        for (Seat s : seats) {
+            if (!"AVAILABLE".equals(s.getState())) {
+                throw new IllegalArgumentException("The selected seat is not available. (" + s.getLabel() + ")");
+            }
+        }
+        if (!"Cash".equals(method) && !"Credit Card".equals(method)) {
+            throw new IllegalArgumentException("The Payment method is required.");
+        }
+
+        // Tính tiền
+        BigDecimal subtotal = getSubtotal(seats, items);
+        Integer promoId = null;
+        BigDecimal discount = BigDecimal.ZERO;
+        if (!voucherCode.isEmpty()) {
+            Promotion p = paymentService.checkVoucher(voucherCode, subtotal, 0);
+            promoId = p.getPromoId();
+            discount = paymentService.getDiscount(p, subtotal);
+        }
+        BigDecimal total = subtotal.subtract(discount);
+        if ("Cash".equals(method) && (cashReceived == null || cashReceived.compareTo(total) < 0)) {
+            throw new IllegalArgumentException("Tiền khách đưa không đủ (cần " + String.format("%,.0f ₫", total) + ").");
+        }
+
+        // Lưu DB (1 transaction)
+        String txnCode = ("Cash".equals(method) ? "CASH-" : "CARD-") + System.currentTimeMillis();
+        int bookingId = bookingDAO.createCounterBooking(cashier.getUserId(), promoId, total,
+                st.getShowtimeId(), seats, items, method, txnCode);
+        if (bookingId < 0) {
+            throw new IllegalArgumentException("The selected seat is not available.");
+        }
+        auditLogDAO.insert(cashier.getUserId(), "COUNTER_SALE|booking=" + bookingId
+                + "|amount=" + total.toPlainString() + "|method=" + method, ip);
+        return bookingId;
+    }
+
+    public Booking getBooking(int bookingId) {
+        return bookingDAO.getBooking(bookingId);
+    }
+
+    // Giao dịch tại quầy của thu ngân trong 1 ngày
+    public List<Booking> getTransactions(User cashier, LocalDate date, String status) {
+        return bookingDAO.getCounterBookings(cashier.getUserId(), Date.valueOf(date), status);
+    }
+
+    /**
+     * Hủy đơn tại quầy & hoàn tiền - cần quản lý chi nhánh nhập email + mật khẩu để duyệt.
+     * Điều kiện: đơn do chính thu ngân tạo, đang Confirmed, chưa vé nào check-in, còn >= 60 phút tới giờ chiếu.
+     */
+    public void cancelCounterBooking(User cashier, int bookingId, String managerEmail, String managerPassword,
+            String reason, String ip) {
+        Booking b = bookingDAO.getBooking(bookingId);
+        if (b == null) {
+            throw new IllegalArgumentException("No search results.");
+        }
+        if (b.getUserId() != cashier.getUserId()) {
+            throw new IllegalArgumentException("You do not have permission to perform this action.");
+        }
+        if (!"Confirmed".equals(b.getStatus()) || b.isAnyCheckedIn()
+                || LocalDateTime.now().plusMinutes(60).isAfter(b.getStartDateTime())) {
+            throw new IllegalArgumentException("This booking can no longer be cancelled or refunded.");
+        }
+        if (reason.isEmpty()) {
+            throw new IllegalArgumentException("The Reason is required.");
+        }
+        User manager = userDAO.login(managerEmail, managerPassword);
+        if (manager == null) {
+            throw new IllegalArgumentException("Incorrect username or password. Please check again.");
+        }
+        if (!"Branch Management".equals(manager.getRole()) && !"Administrator".equals(manager.getRole())) {
+            throw new IllegalArgumentException("You do not have permission to perform this action.");
+        }
+        if (!bookingDAO.cancelCounterBooking(bookingId)) {
+            throw new IllegalArgumentException("Refund failed. Please contact support.");
+        }
+        String safeReason = reason.replace("|", "/");
+        if (safeReason.length() > 60) {
+            safeReason = safeReason.substring(0, 60);
+        }
+        auditLogDAO.insert(cashier.getUserId(), "COUNTER_REFUND|booking=" + bookingId
+                + "|amount=" + b.getTotalAmount().toPlainString()
+                + "|method=" + b.getPaymentMethod()
+                + "|approvedBy=" + manager.getUserId()
+                + "|reason=" + safeReason, ip);
+    }
+}

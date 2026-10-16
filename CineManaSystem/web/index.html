@@ -1,15 +1,48 @@
 <!DOCTYPE html>
-<!--
-Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
-Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Html.html to edit this template
--->
-<html>
-    <head>
-        <title>TODO supply a title</title>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    </head>
-    <body>
-        <div>TODO write content</div>
-    </body>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>CineGo - Test phần 6 & 7</title>
+    <link rel="stylesheet" href="assets/css/cinego.css">
+</head>
+<body>
+<header class="topbar">
+    <div class="brand"><span class="logo">CG</span> CineGo <span class="crumb">Trang test Payment &amp; POS</span></div>
+    <a href="logout">Đăng xuất</a>
+</header>
+<div class="container" style="max-width:900px">
+    <div class="grid grid-2">
+        <div class="card">
+            <div class="card-title">Đăng nhập (test)</div>
+            <form method="post" action="login">
+                <div class="field"><label>Email</label><input type="email" name="email" value="cashier@cine.vn"></div>
+                <div class="field"><label>Mật khẩu</label><input type="password" name="password" value="123456"></div>
+                <button class="btn btn-primary btn-block">Đăng nhập</button>
+            </form>
+            <p class="text-muted" style="font-size:12px;margin-top:12px">
+                admin@cine.vn · manager@cine.vn · cashier@cine.vn · checker@cine.vn · customer2@gmail.com<br>
+                (mật khẩu đều là 123456)
+            </p>
+        </div>
+        <div class="card">
+            <div class="card-title">Chức năng</div>
+            <b>6. Payment</b>
+            <ul>
+                <li><a href="payment/checkout?bookingId=1">Checkout (đổi bookingId)</a> – customer</li>
+                <li><a href="payment/history">Lịch sử thanh toán</a> – customer</li>
+                <li><a href="admin/payments">Quản lý thanh toán</a> – admin / manager</li>
+            </ul>
+            <b>7. POS</b>
+            <ul>
+                <li><a href="pos/shift">Vào ca / Kết ca</a> – cashier / checker</li>
+                <li><a href="pos">Bán vé tại quầy</a> – cashier</li>
+                <li><a href="pos/transactions">Giao dịch</a> – cashier</li>
+                <li><a href="pos/cash-balance">Két tiền</a> – cashier</li>
+                <li><a href="checker">Soát vé QR</a> – checker</li>
+                <li><a href="manager/working-hours">Giờ làm nhân viên</a> – admin / manager</li>
+            </ul>
+        </div>
+    </div>
+</div>
+</body>
 </html>
