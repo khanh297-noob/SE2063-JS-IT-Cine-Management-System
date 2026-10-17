@@ -18,8 +18,10 @@ import java.util.TreeMap;
 public class VNPayGateway {
 
     public static final String PAY_URL = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
-    public static final String TMN_CODE = "YOUR_TMN_CODE";        // ĐIỀN mã website VNPay cấp
-    public static final String HASH_SECRET = "YOUR_HASH_SECRET";  // ĐIỀN chuỗi bí mật VNPay cấp
+    // Key SANDBOX (tiền ảo) dùng chung với dự án BusManagement (util/VNPayConfig.java).
+    // Không đẩy 2 giá trị này lên GitHub công khai.
+    public static final String TMN_CODE = "7YRRIF43";
+    public static final String HASH_SECRET = "XB4VJUVZLLZW38JY1BEM2EO4JKQJONG0";
 
     /**
      * Tạo link chuyển khách sang trang thanh toán VNPay.
