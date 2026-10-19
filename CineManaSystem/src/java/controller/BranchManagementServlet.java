@@ -20,6 +20,6 @@ public class BranchManagementServlet extends HttpServlet{
         List<Branch> branchList = branchService.getAllBranches();
         request.setAttribute(("branchList"), branchList);
 
-        request.getRequestDispatcher("/admin/branch-management.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/admin/branch-management-khanh.jsp").forward(request, response);
     }
 }

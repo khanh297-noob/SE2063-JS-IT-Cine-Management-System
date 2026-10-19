@@ -23,7 +23,7 @@ public class UserManagementServlet extends HttpServlet {
         List<User> userList = userService.getAllUsers();
         request.setAttribute("userList", userList);
 
-        request.getRequestDispatcher("/admin/user-management.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/admin/user-management-khanh.jsp").forward(request, response);
     }
 
   

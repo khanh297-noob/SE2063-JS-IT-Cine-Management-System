@@ -7,6 +7,7 @@ public class F_BItem {
     private String itemName;
     private String category;
     private BigDecimal price;
+    private boolean active;
 
     public F_BItem() {
     }
@@ -43,4 +44,11 @@ public class F_BItem {
         this.price = price;
     }
 
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
 }

@@ -19,6 +19,11 @@
             <i class="bi bi-geo-alt"></i> Quản lý Cụm rạp
         </a>
 
+        <a href="${pageContext.request.contextPath}/admin/fnb-items"
+           class="nav-item-custom ${activeTab eq 'fnb-items' ? 'active' : ''}">
+            <i class="bi bi-cup-straw"></i> Quản lý F&B
+        </a>
+
         <a href="#" class="nav-item-custom"><i class="bi bi-camera-reels"></i> Kho Phim</a>
 
         <a href="${pageContext.request.contextPath}/admin/audit-logs"

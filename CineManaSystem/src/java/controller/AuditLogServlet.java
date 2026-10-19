@@ -21,6 +21,6 @@ public class AuditLogServlet extends HttpServlet {
         List<AuditLog> logList = auditLogService.getAllLogs();
         request.setAttribute("logList", logList);
 
-        request.getRequestDispatcher("/admin/audit-log.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/admin/audit-log-khanh.jsp").forward(request, response);
     }
 }

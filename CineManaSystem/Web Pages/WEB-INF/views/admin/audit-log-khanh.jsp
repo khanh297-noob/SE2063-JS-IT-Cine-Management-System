@@ -14,10 +14,10 @@
 
     <!-- Đánh dấu active menu & nhúng Sidebar từ WEB-INF -->
     <c:set var="activeTab" value="audit-logs" scope="request"/>
-    <jsp:include page="/WEB-INF/views/common/sidebar.jsp" />
+    <jsp:include page="/WEB-INF/views/common/sidebar-khanh.jsp" />
 
     <div class="main-wrapper">
-        <jsp:include page="/WEB-INF/views/common/header.jsp" />
+        <jsp:include page="/WEB-INF/views/common/header-khanh.jsp" />
 
         <main class="content-body">
             <div class="card-custom p-4 mb-4">

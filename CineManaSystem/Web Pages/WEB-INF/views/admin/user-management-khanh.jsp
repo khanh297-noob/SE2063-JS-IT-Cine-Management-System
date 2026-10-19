@@ -14,10 +14,10 @@
 
     <!-- Đánh dấu active menu & nhúng Sidebar từ WEB-INF -->
     <c:set var="activeTab" value="users" scope="request"/>
-    <jsp:include page="/WEB-INF/views/common/sidebar.jsp" />
+    <jsp:include page="/WEB-INF/views/common/sidebar-khanh.jsp" />
 
     <div class="main-wrapper">
-        <jsp:include page="/WEB-INF/views/common/header.jsp" />
+        <jsp:include page="/WEB-INF/views/common/header-khanh.jsp" />
 
         <main class="content-body">
             <!-- Toast thông báo -->
