@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  web.xml DÙNG CHUNG của cả nhóm (người quản lý: Hoàng). Muốn thêm/sửa gì thì nhắn người quản lý,
+  không tự sửa trên nhánh riêng để tránh conflict khi merge.
+  Servlet và các filter khác khai báo bằng @WebServlet / @WebFilter trong code của từng người.
+-->
+<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd"
+         version="6.0" metadata-complete="false">
+
+    <display-name>Cine Management System</display-name>
+
+    <!-- UTF-8 cho mọi request. Khai báo ở đây (không dùng @WebFilter) để chạy TRƯỚC AuthFilter
+         và mọi filter khai báo bằng annotation. -->
+    <filter>
+        <filter-name>EncodingFilter</filter-name>
+        <filter-class>cinemanagement.filter.EncodingFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>EncodingFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+    <welcome-file-list>
+        <welcome-file>index.html</welcome-file>
+    </welcome-file-list>
+
+    <error-page>
+        <error-code>404</error-code>
+        <location>/WEB-INF/views/error-hoang.jsp</location>
+    </error-page>
+    <error-page>
+        <error-code>500</error-code>
+        <location>/WEB-INF/views/error-hoang.jsp</location>
+    </error-page>
+
+    <session-config>
+        <session-timeout>30</session-timeout>
+    </session-config>
+</web-app>

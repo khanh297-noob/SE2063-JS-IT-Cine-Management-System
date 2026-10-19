@@ -1,15 +1,35 @@
 <!DOCTYPE html>
 <!--
-Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
-Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Html.html to edit this template
+  Trang "/" DÙNG CHUNG của cả nhóm: chọn giao diện. Thêm lối vào module mới thì nhắn người quản lý file chung.
+  Link viết tương đối (manage, movies) để chạy đúng với mọi context path (/CineManaSystem).
 -->
-<html>
-    <head>
-        <title>TODO supply a title</title>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    </head>
-    <body>
-        <div>TODO write content</div>
-    </body>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Chọn giao diện - CineGo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/base-hoang.css">
+    <link rel="stylesheet" href="assets/css/customer-hoang.css">
+</head>
+<body class="landing-body">
+<main class="landing">
+    <div class="landing-brand"><span class="brand">CineGo</span></div>
+    <h1 class="landing-title">Bạn muốn vào giao diện nào?</h1>
+
+    <div class="landing-options">
+        <a class="landing-card" href="manage">
+            <span class="landing-icon" aria-hidden="true">&#9881;</span>
+            <strong>Giao diện quản lý</strong>
+            <span>Chi nhánh, phòng chiếu, sơ đồ ghế, phim, thể loại và trạng thái chiếu.</span>
+        </a>
+        <a class="landing-card landing-card-main" href="movies">
+            <span class="landing-icon" aria-hidden="true">&#127916;</span>
+            <strong>Giao diện khách hàng</strong>
+            <span>Xem phim đang chiếu và sắp chiếu, lọc phim, yêu thích, đánh giá và chấm sao.</span>
+        </a>
+    </div>
+</main>
+</body>
 </html>

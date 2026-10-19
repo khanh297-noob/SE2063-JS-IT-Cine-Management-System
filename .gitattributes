@@ -1,0 +1,28 @@
+# Cố định kiểu xuống dòng: trong repo luôn là LF, khi checkout git tự đổi theo máy
+# (Windows -> CRLF). Tránh việc IntelliJ / NetBeans / SSMS lưu khác kiểu xuống dòng
+# làm git báo cả file bị sửa và gây conflict khi merge.
+* text=auto
+
+*.java        text
+*.jsp         text
+*.jspf        text
+*.xml         text
+*.properties  text
+*.css         text
+*.js          text
+*.html        text
+*.sql         text
+*.md          text
+*.MF          text
+
+# File nhị phân: không đổi xuống dòng, không merge từng dòng
+*.jar   binary
+*.war   binary
+*.class binary
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.webp  binary
+*.ico   binary
+*.pdf   binary
