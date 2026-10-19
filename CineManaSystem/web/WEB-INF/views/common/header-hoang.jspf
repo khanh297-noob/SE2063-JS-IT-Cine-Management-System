@@ -1,0 +1,37 @@
+<%@ page pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%--
+  Đầu trang dùng chung. Trước khi include, trang cha đặt:
+    pageTitle  tiêu đề tab trình duyệt
+    nav        mục menu đang chọn: branches | rooms | room-types | movies | genres
+--%>
+<c:set var="moduleCss" value="branch-hoang,movie-hoang"/>
+<%@ include file="/WEB-INF/views/common/head-hoang.jspf" %>
+<body>
+<header class="topbar">
+    <div class="topbar-inner">
+        <a class="brand" href="${ctx}/manage">CineGo</a>
+        <nav class="topnav" aria-label="Quản trị">
+            <a href="${ctx}/manage/branches" class="${nav == 'branches' ? 'current' : ''}">Chi nhánh</a>
+            <a href="${ctx}/manage/rooms" class="${nav == 'rooms' ? 'current' : ''}">Phòng chiếu</a>
+            <a href="${ctx}/manage/room-types" class="${nav == 'room-types' ? 'current' : ''}">Loại phòng</a>
+            <a href="${ctx}/manage/movies" class="${nav == 'movies' ? 'current' : ''}">Phim</a>
+            <a href="${ctx}/manage/genres" class="${nav == 'genres' ? 'current' : ''}">Thể loại</a>
+        </nav>
+    </div>
+</header>
+<main class="page">
+<c:if test="${not empty sessionScope.flashSuccess}">
+    <div class="notice notice-ok" role="status"><c:out value="${sessionScope.flashSuccess}"/></div>
+    <c:remove var="flashSuccess" scope="session"/>
+</c:if>
+<c:if test="${not empty sessionScope.flashError}">
+    <div class="notice notice-error" role="alert"><c:out value="${sessionScope.flashError}"/></div>
+    <c:remove var="flashError" scope="session"/>
+</c:if>
+<c:if test="${not empty errors}">
+    <div class="notice notice-error" role="alert">
+        Chưa lưu được. Sửa các mục sau rồi thử lại:
+        <ul><c:forEach var="e" items="${errors}"><li><c:out value="${e}"/></li></c:forEach></ul>
+    </div>
+</c:if>

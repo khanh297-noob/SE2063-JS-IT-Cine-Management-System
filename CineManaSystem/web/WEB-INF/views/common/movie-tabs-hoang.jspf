@@ -1,0 +1,10 @@
+<%@ page pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%-- Tab con của một phim. Trang cha đặt movieTab = view | info | media | branches | status và có biến movie. --%>
+<nav class="tabs" aria-label="Thông tin phim">
+    <a href="${ctx}/manage/movies?action=view&id=${movie.movieId}" class="${movieTab == 'view' ? 'current' : ''}">Chi tiết</a>
+    <a href="${ctx}/manage/movies?action=edit&id=${movie.movieId}" class="${movieTab == 'info' ? 'current' : ''}">Thông tin</a>
+    <a href="${ctx}/manage/movies/media?movieId=${movie.movieId}" class="${movieTab == 'media' ? 'current' : ''}">Poster và trailer</a>
+    <a href="${ctx}/manage/movies/branches?movieId=${movie.movieId}" class="${movieTab == 'branches' ? 'current' : ''}">Chi nhánh chiếu</a>
+    <a href="${ctx}/manage/movies/status?movieId=${movie.movieId}" class="${movieTab == 'status' ? 'current' : ''}">Trạng thái</a>
+</nav>
