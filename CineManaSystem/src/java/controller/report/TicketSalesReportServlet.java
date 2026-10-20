@@ -66,9 +66,9 @@ public class TicketSalesReportServlet extends HttpServlet {
             return;
         }
 
-        // Bước 4: lấy danh sách chi nhánh, phim cho ô chọn
+        // Bước 4: lấy danh sách chi nhánh, phim cho ô chọn (phim chỉ gồm các phim chiếu ở chi nhánh được xem)
         List<Branch> branches = reportDao.getBranches(accessService.allowedBranchIds(user, isAdmin));
-        List<Movie> movies = reportDao.getAllMovies();
+        List<Movie> movies = reportDao.getMovies(branchScope);
 
         // Bước 5: lấy dữ liệu báo cáo
         List<TicketReportItem> reportItems = reportDao.getTicketSalesReport(branchScope, movieId, fromDate, toDate);

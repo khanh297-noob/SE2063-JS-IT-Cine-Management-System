@@ -463,6 +463,53 @@ public class ReportDao extends DBContext {
         return list;
     }
 
+    /**
+     * Danh sách phim cho ô lọc phim, theo chi nhánh được xem (bảng MovieBranch: phim được chiếu ở chi nhánh nào).
+     * branchIds == null: tất cả phim (Admin). Danh sách rỗng: không có phim nào.
+     * Không giới hạn theo ngày AvailableFrom/AvailableTo, vì báo cáo xem lại cả những ngày đã qua,
+     * phim đã ngừng chiếu vẫn cần lọc được.
+     */
+    public List<Movie> getMovies(List<Integer> branchIds) {
+        if (branchIds == null) {
+            return getAllMovies();
+        }
+        List<Movie> list = new ArrayList<>();
+        if (branchIds.isEmpty()) {
+            return list;
+        }
+
+        // Bước 1: ghép câu SQL, mỗi chi nhánh một dấu ?
+        StringBuilder sql = new StringBuilder(
+                "SELECT m.MovieID, m.Title, m.Duration, m.ReleaseDate, m.AgeRating, m.TrailerURL, m.PosterURL, m.Status "
+                + "FROM Movie m WHERE EXISTS (SELECT 1 FROM MovieBranch mb WHERE mb.MovieID = m.MovieID AND mb.BranchID IN (");
+        List<Object> params = new ArrayList<>();
+        for (int i = 0; i < branchIds.size(); i++) {
+            sql.append(i == 0 ? "?" : ",?");
+            params.add(branchIds.get(i));
+        }
+        sql.append(")) ORDER BY m.Title");
+
+        // Bước 2: chạy và đọc kết quả
+        try {
+            PreparedStatement st = prepare(sql, params);
+            ResultSet rs = st.executeQuery();
+            while (rs.next()) {
+                list.add(new Movie(
+                        rs.getInt("MovieID"),
+                        rs.getString("Title"),
+                        rs.getInt("Duration"),
+                        rs.getDate("ReleaseDate"),
+                        rs.getString("AgeRating"),
+                        rs.getString("TrailerURL"),
+                        rs.getString("PosterURL"),
+                        rs.getString("Status")));
+            }
+        } catch (Exception e) {
+            System.err.println("ReportDao.getMovies error: " + e.getMessage());
+        }
+        return list;
+    }
+
     /** Danh sách vé đã bán (đủ điều kiện tính doanh thu), mới nhất trước. */
     public List<TicketReportItem> getTicketSalesReport(List<Integer> branchIds, Integer movieId, String fromDate, String toDate) {
         List<TicketReportItem> list = new ArrayList<>();
