@@ -464,10 +464,11 @@ public class ReportDao extends DBContext {
     }
 
     /**
-     * Danh sách phim cho ô lọc phim, theo chi nhánh được xem (bảng MovieBranch: phim được chiếu ở chi nhánh nào).
+     * Danh sách phim cho ô lọc phim theo chi nhánh được xem.
+     * Gồm phim được gán cho chi nhánh (bảng MovieBranch) và phim đã có suất chiếu ở phòng của chi nhánh
+     * (trừ suất đã hủy), nên phim đã ngừng chiếu vẫn xem lại được doanh thu.
+     * Không giới hạn theo ngày AvailableFrom/AvailableTo vì báo cáo xem lại cả những ngày đã qua.
      * branchIds == null: tất cả phim (Admin). Danh sách rỗng: không có phim nào.
-     * Không giới hạn theo ngày AvailableFrom/AvailableTo, vì báo cáo xem lại cả những ngày đã qua,
-     * phim đã ngừng chiếu vẫn cần lọc được.
      */
     public List<Movie> getMovies(List<Integer> branchIds) {
         if (branchIds == null) {
@@ -478,18 +479,12 @@ public class ReportDao extends DBContext {
             return list;
         }
 
-        // Bước 1: ghép câu SQL, mỗi chi nhánh một dấu ?
-        StringBuilder sql = new StringBuilder(
-                "SELECT m.MovieID, m.Title, m.Duration, m.ReleaseDate, m.AgeRating, m.TrailerURL, m.PosterURL, m.Status "
-                + "FROM Movie m WHERE EXISTS (SELECT 1 FROM MovieBranch mb WHERE mb.MovieID = m.MovieID AND mb.BranchID IN (");
+        // Câu SQL có 2 danh sách chi nhánh (một cho MovieBranch, một cho Showtime) nên gán tham số 2 lần
+        StringBuilder sql = new StringBuilder(moviesByBranchSql(branchIds.size()));
         List<Object> params = new ArrayList<>();
-        for (int i = 0; i < branchIds.size(); i++) {
-            sql.append(i == 0 ? "?" : ",?");
-            params.add(branchIds.get(i));
-        }
-        sql.append(")) ORDER BY m.Title");
+        params.addAll(branchIds);
+        params.addAll(branchIds);
 
-        // Bước 2: chạy và đọc kết quả
         try {
             PreparedStatement st = prepare(sql, params);
             ResultSet rs = st.executeQuery();
@@ -508,6 +503,20 @@ public class ReportDao extends DBContext {
             System.err.println("ReportDao.getMovies error: " + e.getMessage());
         }
         return list;
+    }
+
+    /** Ghép câu SQL lấy phim theo chi nhánh; branchCount là số chi nhánh (mỗi chi nhánh một dấu ?). */
+    private static String moviesByBranchSql(int branchCount) {
+        StringBuilder marks = new StringBuilder();
+        for (int i = 0; i < branchCount; i++) {
+            marks.append(i == 0 ? "?" : ",?");
+        }
+        return "SELECT m.MovieID, m.Title, m.Duration, m.ReleaseDate, m.AgeRating, m.TrailerURL, m.PosterURL, m.Status "
+                + "FROM Movie m "
+                + "WHERE EXISTS (SELECT 1 FROM MovieBranch mb WHERE mb.MovieID = m.MovieID AND mb.BranchID IN (" + marks + ")) "
+                + "OR EXISTS (SELECT 1 FROM Showtime s INNER JOIN Room r ON r.RoomID = s.RoomID "
+                + "           WHERE s.MovieID = m.MovieID AND s.Status <> 'Cancelled' AND r.BranchID IN (" + marks + ")) "
+                + "ORDER BY m.Title";
     }
 
     /** Danh sách vé đã bán (đủ điều kiện tính doanh thu), mới nhất trước. */
