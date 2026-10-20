@@ -1,42 +1,12 @@
-# =====================================================================
-# .gitignore DÙNG CHUNG của cả nhóm. Chỉ đưa lên git: mã nguồn, cấu hình project NetBeans,
-# thư viện trong web/WEB-INF/lib, script SQL. Không đưa file build và file riêng từng máy.
-# =====================================================================
-
-# ---------- Build output (NetBeans Ant, Maven) ----------
+**/nbproject/private/
+nbproject/private/
 build/
 dist/
 nbbuild/
 nbdist/
 target/
-out/
 *.class
-*.war
-
-# ---------- NetBeans: cấu hình riêng từng máy (đường dẫn Tomcat, JDK, file đang mở) ----------
-**/nbproject/private/
-nb-configuration.xml
-
-# ---------- Kết nối DB riêng từng máy (xem src/java/db.properties) ----------
-db.local.properties
-
-# ---------- IntelliJ / Eclipse / VS Code ----------
-.idea/
-*.iml
-*.iws
-*.ipr
-.settings/
-.classpath
-.project
-.vscode/
-
-# ---------- Hệ điều hành, log, file tạm ----------
 .DS_Store
 Thumbs.db
-desktop.ini
-*.log
 *.bak
-*.tmp
-*.swp
-
-# KHÔNG thêm *.jar: thư viện dùng chung nằm trong CineManaSystem/web/WEB-INF/lib và phải lên git.
+*.log
