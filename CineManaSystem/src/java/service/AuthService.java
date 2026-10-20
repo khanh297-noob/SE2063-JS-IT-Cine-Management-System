@@ -68,8 +68,8 @@ public class AuthService {
         if (fullName == null || fullName.trim().isEmpty()) {
             throw new IllegalArgumentException("Họ và tên không được để trống!");
         }
-        if (fullName.trim().length() > 150) {
-            throw new IllegalArgumentException("Họ và tên quá dài (tối đa 150 ký tự)!");
+        if (fullName.trim().length() > 100) {
+            throw new IllegalArgumentException("Họ và tên quá dài (tối đa 100 ký tự)!");
         }
         if (email == null || email.trim().isEmpty()) {
             throw new IllegalArgumentException("Email không được để trống!");
@@ -246,6 +246,9 @@ public class AuthService {
         // Bước 1: kiểm tra dữ liệu
         if (fullName == null || fullName.trim().isEmpty()) {
             throw new IllegalArgumentException("Họ và tên không được để trống!");
+        }
+        if (fullName.trim().length() > 100) {
+            throw new IllegalArgumentException("Họ và tên quá dài (tối đa 100 ký tự)!");
         }
         if (phone == null || phone.trim().isEmpty()) {
             throw new IllegalArgumentException("Số điện thoại không được để trống!");

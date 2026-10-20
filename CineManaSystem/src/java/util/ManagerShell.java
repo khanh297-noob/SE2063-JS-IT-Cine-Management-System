@@ -11,11 +11,10 @@ public class ManagerShell {
     /**
      * @param activeMenu         dashboard | branch-report | revenue | tickets
      * @param action             đường dẫn của trang hiện tại, dùng cho ô chọn chi nhánh trên navbar
-     * @param scopingConfigured  DB đã có bảng phân quyền người dùng theo chi nhánh hay chưa
      */
     public static void apply(HttpServletRequest request, User user, boolean admin, String branchPill,
                              List<Branch> branches, Integer selectedBranchId, String activeMenu,
-                             String action, boolean scopingConfigured) {
+                             String action) {
         request.setAttribute("navBadge", admin ? "ADMIN" : "MANAGER");
         request.setAttribute("roleLabel", admin ? "Administrator" : "Branch Manager");
         request.setAttribute("initials", initials(user.getFullName()));
@@ -24,10 +23,6 @@ public class ManagerShell {
         request.setAttribute("selectedBranchId", selectedBranchId);
         request.setAttribute("activeMenu", activeMenu);
         request.setAttribute("shellAction", action);
-        if (!admin && !scopingConfigured) {
-            request.setAttribute("scopeWarning",
-                    "Chưa cấu hình phân quyền chi nhánh (bảng UserBranch): hiện đang hiển thị dữ liệu của tất cả chi nhánh.");
-        }
     }
 
     public static String initials(String fullName) {

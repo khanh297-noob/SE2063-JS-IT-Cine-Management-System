@@ -91,7 +91,7 @@ public class TicketSalesReportServlet extends HttpServlet {
         request.setAttribute("selectedToDate", toDate);
 
         ManagerShell.apply(request, user, isAdmin, reportService.scopePill(branchScope), branches, branchId,
-                "tickets", "/report/ticket-sales", accessService.isBranchScopingConfigured());
+                "tickets", "/report/ticket-sales");
         request.getRequestDispatcher("/WEB-INF/view/report/sales-report-tuyet.jsp").forward(request, response);
     }
 

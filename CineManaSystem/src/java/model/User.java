@@ -8,6 +8,15 @@ public class User {
     private String passwordHash;
     private String role;
     private String status;
+    private Integer branchID; // chi nhánh của nhân viên, NULL với Customer và Administrator
+
+    public Integer getBranchID() {
+        return branchID;
+    }
+
+    public void setBranchID(Integer branchID) {
+        this.branchID = branchID;
+    }
 
     public User() {
     }

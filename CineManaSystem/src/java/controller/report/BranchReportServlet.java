@@ -76,7 +76,7 @@ public class BranchReportServlet extends HttpServlet {
         request.setAttribute("toDate", range.getTo().toString());
         request.setAttribute("filterError", range.getError());
         ManagerShell.apply(request, user, isAdmin, report.getBranchPill(), branches, branchId,
-                "branch-report", "/report/branch-report", accessService.isBranchScopingConfigured());
+                "branch-report", "/report/branch-report");
         request.getRequestDispatcher("/WEB-INF/view/report/branch-report-tuyet.jsp").forward(request, response);
     }
 }

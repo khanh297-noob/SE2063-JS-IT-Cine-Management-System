@@ -85,7 +85,7 @@ public class RevenueDashboardServlet extends HttpServlet {
         request.setAttribute("selectedBreakdown", breakdown);
 
         ManagerShell.apply(request, user, isAdmin, reportService.scopePill(branchScope), branches, branchId,
-                "revenue", "/report/revenue-dashboard", accessService.isBranchScopingConfigured());
+                "revenue", "/report/revenue-dashboard");
         request.getRequestDispatcher("/WEB-INF/view/report/revenue-dashboard-tuyet.jsp").forward(request, response);
     }
 }

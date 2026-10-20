@@ -63,7 +63,7 @@ public class BranchDashboardServlet extends HttpServlet {
         // Bước 4: gửi sang JSP
         request.setAttribute("dashboard", dashboard);
         ManagerShell.apply(request, user, isAdmin, dashboard.getBranchPill(), branches, branchId,
-                "dashboard", "/report/branch-dashboard", accessService.isBranchScopingConfigured());
+                "dashboard", "/report/branch-dashboard");
         request.getRequestDispatcher("/WEB-INF/view/report/branch-dashboard-tuyet.jsp").forward(request, response);
     }
 }

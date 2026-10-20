@@ -218,7 +218,7 @@ public class ReportDao extends DBContext {
            .append("LEFT JOIN SeatCnt sc ON sc.RoomID = r.RoomID ")
            .append("LEFT JOIN SoldCte sd ON sd.ShowtimeID = s.ShowtimeID ")
            .append(join)
-           .append("WHERE 1=1 ");
+           .append("WHERE s.Status <> 'Cancelled' ");
         List<Object> params = new ArrayList<>();
         appendBranchFilter(sql, params, branchIds);
         appendShowDateFilter(sql, params, fromDate, toDate);
@@ -320,7 +320,7 @@ public class ReportDao extends DBContext {
            .append("INNER JOIN Branch b ON b.BranchID = r.BranchID ")
            .append("LEFT JOIN SeatCnt sc ON sc.RoomID = r.RoomID ")
            .append("LEFT JOIN SoldCte sd ON sd.ShowtimeID = s.ShowtimeID ")
-           .append("WHERE s.ShowDate = ? ");
+           .append("WHERE s.ShowDate = ? AND s.Status <> 'Cancelled' ");
         List<Object> params = new ArrayList<>();
         params.add(Date.valueOf(date));
         appendBranchFilter(sql, params, branchIds);
@@ -382,35 +382,6 @@ public class ReportDao extends DBContext {
             params.add(branchIds.get(i));
         }
         sql.append(") ");
-    }
-
-    /** Bảng UserBranch (phân quyền người dùng theo chi nhánh) có tồn tại trong DB hay không. */
-    public boolean hasUserBranchTable() {
-        try {
-            PreparedStatement st = connection.prepareStatement("SELECT OBJECT_ID('dbo.UserBranch', 'U')");
-            ResultSet rs = st.executeQuery();
-            return rs.next() && rs.getObject(1) != null;
-        } catch (Exception e) {
-            System.err.println("ReportDao.hasUserBranchTable error: " + e.getMessage());
-            return false;
-        }
-    }
-
-    /** Danh sách chi nhánh mà user được phân quyền quản lý (bảng UserBranch). */
-    public List<Integer> getAuthorizedBranchIds(int userId) {
-        List<Integer> ids = new ArrayList<>();
-        try {
-            PreparedStatement st = connection.prepareStatement("SELECT BranchID FROM UserBranch WHERE UserID = ?");
-            st.setInt(1, userId);
-            ResultSet rs = st.executeQuery();
-            while (rs.next()) {
-                ids.add(rs.getInt("BranchID"));
-            }
-        } catch (Exception e) {
-            // Không đọc được phân quyền -> không cấp quyền chi nhánh nào (fail-closed)
-            System.err.println("ReportDao.getAuthorizedBranchIds error: " + e.getMessage());
-        }
-        return ids;
     }
 
     /** Danh sách chi nhánh cho bộ lọc; branchIds == null nghĩa là tất cả. */

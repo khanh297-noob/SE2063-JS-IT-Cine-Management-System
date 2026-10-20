@@ -21,21 +21,20 @@ public class ReportAccessService {
         this.reportDao = reportDao;
     }
 
-    /** Database đã có bảng UserBranch (phân quyền theo chi nhánh) hay chưa. */
-    public boolean isBranchScopingConfigured() {
-        return reportDao.hasUserBranchTable();
-    }
-
     /**
      * Các chi nhánh người dùng được phép xem (null = tất cả).
-     * Admin được xem tất cả. Quản lý chi nhánh thì lấy từ bảng UserBranch.
-     * Nếu database chưa có bảng UserBranch thì chưa giới hạn được, coi như xem tất cả.
+     * Admin được xem tất cả. Quản lý chi nhánh chỉ xem chi nhánh của mình (cột [User].BranchID).
+     * Quản lý chưa được gán chi nhánh thì nhận danh sách rỗng, nên không xem được dữ liệu nào.
      */
     public List<Integer> allowedBranchIds(User user, boolean isAdmin) {
-        if (isAdmin || !reportDao.hasUserBranchTable()) {
+        if (isAdmin) {
             return null;
         }
-        return reportDao.getAuthorizedBranchIds(user.getUserID());
+        List<Integer> own = new ArrayList<>();
+        if (user.getBranchID() != null) {
+            own.add(user.getBranchID());
+        }
+        return own;
     }
 
     /**

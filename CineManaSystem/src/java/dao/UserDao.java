@@ -198,6 +198,8 @@ public class UserDao extends DBContext {
         user.setPasswordHash(rs.getString("PasswordHash"));
         user.setRole(rs.getString("Role"));
         user.setStatus(rs.getString("Status"));
+        int branchId = rs.getInt("BranchID");
+        user.setBranchID(rs.wasNull() ? null : branchId);
         return user;
     }
 }
