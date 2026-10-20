@@ -1,0 +1,261 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+    background-color: #f4f6f9;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.login-card {
+    background-color: #ffffff;
+    width: 100%;
+    max-width: 440px;
+    padding: 40px 32px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    text-align: center;
+}
+
+/* Header / Logo */
+.brand-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 24px;
+}
+
+.logo-badge {
+    background-color: #e50914;
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 16px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    letter-spacing: 0.5px;
+}
+
+.logo-text {
+    color: #e50914;
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 3px;
+}
+
+.subtitle {
+    font-size: 13px;
+    color: #8c8c8c;
+    margin-bottom: 5px;
+}
+
+/* Form Controls */
+.form-group {
+    text-align: left;
+    margin-bottom: 18px;
+}
+
+.label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #4a4a4a;
+    letter-spacing: 0.5px;
+}
+
+.required {
+    color: #e50914;
+}
+
+.forgot-password {
+    font-size: 12px;
+    color: #e50914;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.forgot-password:hover {
+    text-decoration: underline;
+}
+
+.input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+input[type="email"],
+input[type="password"],
+input[type="text"] {
+    width: 100%;
+    padding: 12px 14px;
+    font-size: 14px;
+    border: 1px solid #d9d9d9;
+    border-radius: 8px;
+    outline: none;
+    transition: border-color 0.2s;
+    color: #333;
+}
+
+input::placeholder {
+    color: #bfbfbf;
+}
+
+input:focus {
+    border-color: #e50914;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 14px;
+    color: #8c8c8c;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+/* Main Submit Button */
+.btn-submit {
+    width: 100%;
+    background-color: #e50914;
+    color: #ffffff;
+    border: none;
+    padding: 14px;
+    font-size: 14px;
+    font-weight: 700;
+    border-radius: 25px;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background-color 0.2s;
+    letter-spacing: 0.5px;
+}
+
+.btn-submit:hover {
+    background-color: #c10712;
+}
+
+/* Divider */
+.divider {
+    display: flex;
+    align-items: center;
+    margin: 24px 0;
+}
+
+.divider::before,
+.divider::after {
+    content: "";
+    flex: 1;
+    border-bottom: 1px solid #e8e8e8;
+}
+
+.divider span {
+    padding: 0 12px;
+    color: #8c8c8c;
+    font-size: 12px;
+}
+
+/* Social Login Buttons */
+.btn-social {
+    width: 100%;
+    background-color: #ffffff;
+    border: 1px solid #d9d9d9;
+    padding: 11px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #4a4a4a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    margin-bottom: 12px;
+    transition: background-color 0.2s;
+}
+
+.btn-social:hover {
+    background-color: #f9f9f9;
+}
+
+.google-icon {
+    width: 18px;
+    height: 18px;
+}
+
+.facebook-icon {
+    color: #1877f2;
+    font-size: 18px;
+}
+
+/* Guest Option & Register Footer */
+.guest-link {
+    display: inline-block;
+    margin-top: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #4a4a4a;
+    text-decoration: none;
+}
+
+.guest-link:hover {
+    text-decoration: underline;
+}
+
+.footer-line {
+    margin-top: 32px;
+    padding-top: 20px;
+    border-top: 1px solid #f0f0f0;
+    font-size: 13px;
+    color: #595959;
+}
+
+.register-link {
+    color: #e50914;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.register-link:hover {
+    text-decoration: underline;
+}
+.error-alert {
+    background-color: #fff2f0;
+    border: 1px solid #ffccc7;
+    color: #ff4d4f;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 18px;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.message-success {
+    font-size: 14px;
+    color: green;
+    margin-bottom: 10px;
+}
+
+/* ===== Thay cho thuộc tính style="..." trước đây nằm trong JSP ===== */
+.link-accent { color: #e50914 !important; font-weight: 700 !important; text-decoration: underline !important; }
+.spacing-top-sm { margin-top: 6px !important; }
+.success-alert { background-color: #f6ffed !important; border-color: #b7eb8f !important; color: #52c41a !important; }

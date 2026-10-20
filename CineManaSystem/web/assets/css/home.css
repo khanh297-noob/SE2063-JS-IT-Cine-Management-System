@@ -1,0 +1,614 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    background-color: #f8fafc;
+    color: #334155;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    font-size: 13px;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* === 1. TOP NAVBAR === */
+.navbar {
+    background-color: #ffffff;
+    color: #334155;
+    height: 64px;
+    padding: 0 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    border-bottom: 1px solid #e2e8f0;
+    width: 100%;
+    white-space: nowrap;
+}
+
+.brand-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    transition: opacity 0.2s;
+    flex-shrink: 0;
+}
+
+.brand-logo:hover {
+    opacity: 0.9;
+}
+
+.logo-badge {
+    background-color: #e11d48;
+    color: #ffffff;
+    font-weight: 900;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 14px;
+    letter-spacing: -0.5px;
+}
+
+.logo-text {
+    color: #e11d48;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+}
+
+.nav-menu {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    list-style: none;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-item {
+    color: #475569;
+    font-weight: 600;
+    font-size: 13px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    position: relative;
+    transition: color 0.2s;
+    cursor: pointer;
+}
+
+.nav-item:hover {
+    color: #e11d48;
+}
+
+.nav-item.active {
+    color: #e11d48;
+    font-weight: 700;
+}
+
+.nav-item.active::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2.5px;
+    background-color: #e11d48;
+}
+
+.auth-group {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-shrink: 0;
+    position: relative;
+}
+
+.btn-register {
+    color: #475569;
+    font-weight: 600;
+    font-size: 13px;
+    transition: color 0.2s;
+}
+
+.btn-register:hover {
+    color: #e11d48;
+}
+
+.btn-login-pill {
+    background-color: #e11d48;
+    color: #ffffff;
+    padding: 8px 24px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 13px;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-login-pill:hover {
+    background-color: #be123c;
+    box-shadow: 0 4px 12px rgba(225, 29, 72, 0.25);
+}
+
+/* === USER DROPDOWN MENU === */
+.user-menu-container {
+    position: relative;
+    display: inline-block;
+    padding: 12px 0;
+}
+
+.user-profile-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    padding: 6px 12px;
+    border-radius: 20px;
+    transition: background-color 0.2s;
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+}
+
+.user-profile-btn:hover {
+    background-color: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+.user-name {
+    font-weight: 700;
+    color: #1e293b;
+    font-size: 13px;
+}
+
+.user-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    width: 230px;
+    background-color: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+    border: 1px solid #f1f5f9;
+    padding: 16px 0 12px 0;
+    z-index: 100;
+    display: none;
+}
+
+.user-menu-container:hover .user-dropdown {
+    display: block;
+}
+
+.dropdown-header {
+    padding: 0 20px 12px 20px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.dropdown-header-title {
+    font-weight: 800;
+    color: #0f172a;
+    font-size: 13px;
+}
+
+.dropdown-header-email {
+    color: #94a3b8;
+    font-size: 11px;
+    margin-top: 2px;
+}
+
+.dropdown-list {
+    list-style: none;
+    padding: 8px 0 0 0;
+    margin: 0;
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 20px;
+    color: #334155;
+    font-weight: 600;
+    font-size: 12.5px;
+    transition: background-color 0.15s, color 0.15s;
+}
+
+.dropdown-item:hover {
+    background-color: #f8fafc;
+    color: #e11d48;
+}
+
+.dropdown-item-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.dropdown-item i {
+    width: 16px;
+    text-align: center;
+    color: #64748b;
+}
+
+.dropdown-item:hover i {
+    color: #e11d48;
+}
+
+.dropdown-item.logout-item {
+    color: #e11d48;
+    margin-top: 4px;
+}
+
+.dropdown-item.logout-item i {
+    color: #e11d48;
+}
+
+.badge-count {
+    background-color: #e11d48;
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 800;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* === LAYOUT MAIN === */
+.main-container {
+    width: 100%;
+    padding: 24px 32px;
+    flex: 1;
+}
+
+/* === 2. BANNER POSTER CAROUSEL DƯỚI NAVBAR === */
+.carousel-banner-wrapper {
+    position: relative;
+    width: 100%;
+    height: 350px;
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 28px;
+    box-shadow: 0 8px 25px rgba(15, 23, 42, 0.12);
+    background-color: #0f172a;
+}
+
+.carousel-banner-track {
+    display: flex;
+    width: 300%;
+    height: 100%;
+    animation: heroCarouselAnimation 12s infinite ease-in-out;
+}
+
+.carousel-banner-wrapper:hover .carousel-banner-track {
+    animation-play-state: paused;
+}
+
+@keyframes heroCarouselAnimation {
+    0%, 28% { transform: translateX(0%); }
+    33%, 61% { transform: translateX(-33.333%); }
+    66%, 94% { transform: translateX(-66.666%); }
+    100% { transform: translateX(0%); }
+}
+
+.carousel-slide-item {
+    width: 33.333%;
+    height: 100%;
+    position: relative;
+    background-size: cover;
+    background-position: center;
+    padding: 40px 52px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    color: #ffffff;
+}
+
+.carousel-slide-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to right, rgba(15, 23, 42, 0.94) 38%, rgba(15, 23, 42, 0.25));
+    z-index: 1;
+}
+
+.slide-content-box {
+    position: relative;
+    z-index: 2;
+    max-width: 600px;
+}
+
+.badge-hot-tag {
+    background-color: #e11d48;
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 4px 10px;
+    border-radius: 4px;
+    width: fit-content;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.hero-banner-title {
+    font-size: 38px;
+    font-weight: 900;
+    line-height: 1.1;
+    margin-bottom: 10px;
+    letter-spacing: -0.5px;
+    color: #ffffff;
+}
+
+.hero-banner-meta {
+    font-size: 12px;
+    color: #cbd5e1;
+    margin-bottom: 12px;
+    font-weight: 500;
+}
+
+.hero-banner-desc {
+    font-size: 13px;
+    color: #94a3b8;
+    margin-bottom: 22px;
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.btn-banner-action {
+    background-color: #e11d48;
+    color: #ffffff;
+    padding: 10px 26px;
+    border-radius: 20px;
+    font-weight: 800;
+    font-size: 12.5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 14px rgba(225, 29, 72, 0.35);
+    transition: background-color 0.2s, transform 0.2s;
+}
+
+.btn-banner-action:hover {
+    background-color: #be123c;
+    transform: translateY(-1px);
+}
+
+/* === 3. FILM TOOLBAR (GỒM TABS + FILTER TÌM KIẾM THEO ẢNH) === */
+.film-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 12px;
+    margin-bottom: 24px;
+    width: 100%;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.tab-list {
+    display: flex;
+    gap: 28px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.tab-item {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #64748b;
+    padding-bottom: 12px;
+    position: relative;
+    display: block;
+}
+
+.tab-item.active {
+    color: #e11d48;
+}
+
+.tab-item.active::after {
+    content: "";
+    position: absolute;
+    bottom: -13px;
+    left: 0;
+    width: 100%;
+    height: 2.5px;
+    background-color: #e11d48;
+}
+
+/* Ô BỘ LỌC VÀ TÌM KIẾM BÊN PHẢI (CHUẨN THEO MẪU ÀNH) */
+.filter-search-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.select-category {
+    padding: 7px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 12.5px;
+    color: #334155;
+    background-color: #ffffff;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.select-category:focus {
+    border-color: #e11d48;
+}
+
+.input-search-film {
+    padding: 7px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 12.5px;
+    color: #334155;
+    outline: none;
+    width: 180px;
+    transition: border-color 0.2s;
+}
+
+.input-search-film:focus {
+    border-color: #e11d48;
+}
+
+/* === 4. MOVIE CARD GRID (8 PHIM) === */
+.movie-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    margin-bottom: 48px;
+    width: 100%;
+}
+
+@media (max-width: 1280px) { .movie-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 880px) { .movie-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 540px) { .movie-grid { grid-template-columns: 1fr; } }
+
+.movie-card {
+    background-color: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.movie-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 24px -4px rgba(0, 0, 0, 0.08);
+}
+
+.poster-wrapper {
+    position: relative;
+    height: 280px;
+    overflow: hidden;
+    background-color: #0f172a;
+    display: block;
+}
+
+.movie-poster {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.35s ease;
+}
+
+.movie-card:hover .movie-poster {
+    transform: scale(1.05);
+}
+
+.age-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    font-size: 9.5px;
+    font-weight: 800;
+    padding: 3px 7px;
+    border-radius: 4px;
+    color: #ffffff;
+    z-index: 2;
+}
+
+.age-t18 { background-color: #e11d48; }
+.age-p { background-color: #f59e0b; }
+.age-t13 { background-color: #2563eb; }
+
+.movie-info {
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.movie-title {
+    font-size: 14px;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+}
+
+.movie-title:hover {
+    color: #e11d48;
+}
+
+.movie-meta {
+    font-size: 11px;
+    color: #94a3b8;
+    font-weight: 500;
+}
+
+.btn-card-buy {
+    background-color: #e11d48;
+    color: #ffffff;
+    text-align: center;
+    padding: 9px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+    width: 100%;
+}
+
+.btn-card-buy:hover {
+    background-color: #be123c;
+}
+
+.footer {
+    background-color: #ffffff;
+    border-top: 1px solid #e2e8f0;
+    padding: 24px 32px;
+    margin-top: auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11.5px;
+    color: #64748b;
+    width: 100%;
+}
+
+/* ===== Thay cho thuộc tính style="..." trước đây nằm trong JSP ===== */
+.footer-title { color: #0f172a !important; }
+.footer-right { text-align: right !important; }
+.footer-brand { color: #0f172a !important; font-size: 12px !important; }
+.bg-amber { background-color: #f59e0b !important; }
+.slide-bg-3 { background-image: url('https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=1600&auto=format&fit=crop') !important; }
+.bg-blue { background-color: #2563eb !important; }
+.slide-bg-2 { background-image: url('https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=1600&auto=format&fit=crop') !important; }
+.slide-bg-1 { background-image: url('https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1600&auto=format&fit=crop') !important; }
+.chevron-small { color: #94a3b8 !important; font-size: 11px !important; margin-left: 2px !important; }
