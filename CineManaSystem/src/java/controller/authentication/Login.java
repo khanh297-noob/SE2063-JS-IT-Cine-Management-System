@@ -79,6 +79,13 @@ public class Login extends HttpServlet {
         }
         else if(PermissionUtil.isAdmin(request)){
             response.sendRedirect(contextPath + "/admin-home.jsp");
+        }
+        // Thu ngân vào ca bán vé tại quầy, nhân viên soát vé vào trang soát vé
+        else if (PermissionUtil.hasRole(request, "Ticket Cashier")) {
+            response.sendRedirect(contextPath + "/pos/shift");
+        }
+        else if (PermissionUtil.hasRole(request, "Ticket Checker")) {
+            response.sendRedirect(contextPath + "/checker");
         }else {
             response.sendRedirect(contextPath + "/index-tuyet.jsp");
         }

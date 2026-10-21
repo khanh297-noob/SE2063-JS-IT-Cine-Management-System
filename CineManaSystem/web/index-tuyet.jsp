@@ -105,6 +105,14 @@
                                 </a>
                             </li>
                             <li>
+                                <a href="<%= request.getContextPath() %>/payment/history" class="dropdown-item">
+                                    <div class="dropdown-item-left">
+                                        <i class="fa-solid fa-receipt"></i>
+                                        <span>Lịch sử thanh toán</span>
+                                    </div>
+                                </a>
+                            </li>
+                            <li>
                                 <a href="<%= request.getContextPath() %>/customer/change-password" class="dropdown-item">
                                     <div class="dropdown-item-left">
                                         <i class="fa-solid fa-key"></i>
