@@ -39,11 +39,6 @@ public class PosService {
 
     public static final int MAX_SEATS = 8;
 
-    /**
-     * Giá vé = giá suất chiếu + phụ thu loại ghế (bảng SeatType).
-     * Giá suất chiếu đã gồm phụ thu loại phòng và phụ thu cuối tuần (xem ShowtimePriceCalculator),
-     * dùng chung công thức với đặt vé online.
-     */
     public BigDecimal getTicketPrice(BigDecimal basePrice, BigDecimal seatSurcharge) {
         return ShowtimePriceCalculator.ticketPrice(basePrice, seatSurcharge);
     }

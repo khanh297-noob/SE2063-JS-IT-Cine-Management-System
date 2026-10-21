@@ -45,7 +45,6 @@
             </dl>
 
             <c:if test="${movie.nowShowing}">
-            <%-- Đặt vé online: chọn phim xong hiện lịch chiếu của phim (BookingServlet) --%>
             <a class="btn btn-primary" href="${ctx}/booking?movieId=${movie.movieId}">Đặt vé</a>
             <form class="fav-inline" method="post" action="${ctx}/movies/favorite">
                 <input type="hidden" name="movieId" value="${movie.movieId}">

@@ -441,14 +441,7 @@ public class BookingDAO extends DBContext {
         return false;
     }
 
-    // ===================== Đặt vé online =====================
 
-    /**
-     * Tạo đơn online từ các ghế khách đang giữ (gọi trong transaction của OnlineBookingService):
-     * Booking 'Pending' (Channel = 'Online') + Ticket 'Valid' cho từng ghế + Booking_F_B.
-     * Chưa tạo Payment: trang /payment/checkout (PaymentService) áp voucher rồi mới tạo Payment Pending khi chuyển sang VNPay.
-     * Nếu ghế vừa bị bán, INSERT Ticket vi phạm UX_Ticket_Seat_Active -> ném SQLException cho Service xử lý.
-     */
     public int createOnlineBooking(Connection con, int userId, int branchId, int showtimeId,
             List<model.booking.SeatView> seats, List<FnbItem> items, BigDecimal total) throws SQLException {
         int bookingId;
@@ -488,7 +481,6 @@ public class BookingDAO extends DBContext {
         return bookingId;
     }
 
-    // Đơn đặt online của khách (không gồm đơn tại quầy), mới nhất trước - dùng cho "Vé của tôi"
     public List<Booking> getOnlineBookings(int userId) {
         List<Integer> ids = new ArrayList<>();
         String sql = "SELECT BookingID FROM Booking WHERE UserID = ? AND (Channel IS NULL OR Channel <> 'Counter') "
@@ -514,7 +506,6 @@ public class BookingDAO extends DBContext {
         return list;
     }
 
-    // Đơn Pending của khách cho 1 suất chiếu (khách quay lại trang chọn ghế khi đơn còn chờ thanh toán)
     public Integer findPendingOnlineBooking(int userId, int showtimeId) {
         String sql = "SELECT TOP 1 b.BookingID FROM Booking b JOIN Ticket t ON t.BookingID = b.BookingID "
                 + "WHERE b.UserID = ? AND t.ShowtimeID = ? AND b.Status = 'Pending' AND b.Channel = 'Online' "
@@ -533,7 +524,6 @@ public class BookingDAO extends DBContext {
         return null;
     }
 
-    // Số đơn đã thanh toán còn suất chưa chiếu (chặn khách tự vô hiệu hoá tài khoản)
     public int countUpcomingConfirmed(int userId) {
         String sql = "SELECT COUNT(DISTINCT b.BookingID) FROM Booking b JOIN Ticket t ON t.BookingID = b.BookingID "
                 + "JOIN Showtime s ON s.ShowtimeID = t.ShowtimeID WHERE b.UserID = ? AND b.Status = 'Confirmed' "

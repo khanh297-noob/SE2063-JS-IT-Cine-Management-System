@@ -11,10 +11,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-/**
- * Sơ đồ ghế cho đặt vé online: ghế của phòng (kèm phụ thu + màu loại ghế) và các ghế đã có vé.
- * Vé đã huỷ không chiếm ghế (khớp filtered unique index UX_Ticket_Seat_Active).
- */
 public class OnlineSeatDAO {
 
     public List<SeatView> findByRoom(Connection con, int roomId) throws SQLException {
@@ -44,7 +40,6 @@ public class OnlineSeatDAO {
         return list;
     }
 
-    /** Ghế đã có vé còn hiệu lực (đơn Confirmed hoặc Pending đang chờ thanh toán). */
     public Set<Integer> soldSeatIds(Connection con, int showtimeId) throws SQLException {
         Set<Integer> set = new HashSet<>();
         try (PreparedStatement ps = con.prepareStatement(

@@ -21,13 +21,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Quản lý hồ sơ khách (phần vé): bổ sung cho trang Hồ sơ /customer/profile của module Auth.
- *  GET  /customer/bookings?filter=     Vé của tôi: all | upcoming | past | cancelled
- *  GET  /booking/detail?id=            chi tiết đơn + QR từng vé
- *  POST /booking/cancel                khách tự huỷ đơn (trước giờ chiếu 2 tiếng, hoàn 100%)
- *  GET/POST /customer/deactivate       khách tự vô hiệu hoá tài khoản
- */
 @WebServlet(urlPatterns = {"/customer/bookings", "/booking/detail", "/booking/cancel", "/customer/deactivate"})
 public class MyBookingServlet extends CustomerBaseServlet {
 

@@ -9,13 +9,11 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-/** Tiện ích web cho phần Đặt vé online và Quản lý suất chiếu: tham số nhiều giá trị, IP, trả JSON. */
 public final class WebUtil {
 
     private WebUtil() {
     }
 
-    /** Các giá trị số của tham số lặp lại (vd seatIds=1&seatIds=2), bỏ giá trị sai và trùng. */
     public static List<Integer> intParams(HttpServletRequest req, String name) {
         String[] values = req.getParameterValues(name);
         Set<Integer> result = new LinkedHashSet<>();
@@ -28,7 +26,6 @@ public final class WebUtil {
         return new ArrayList<>(result);
     }
 
-    /** IP khách (ghi AuditLog). IPv6 localhost đổi về 127.0.0.1. */
     public static String clientIp(HttpServletRequest req) {
         String xf = req.getHeader("X-Forwarded-For");
         String ip = (xf != null && !xf.isBlank()) ? xf.split(",")[0].trim() : req.getRemoteAddr();
@@ -42,7 +39,6 @@ public final class WebUtil {
         resp.getWriter().write(json);
     }
 
-    /** Chuỗi JSON đã escape (kể cả dấu < để nhúng an toàn trong HTML). */
     public static String js(String s) {
         if (s == null) return "null";
         StringBuilder sb = new StringBuilder("\"");

@@ -1,7 +1,6 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
-<%-- Lịch chiếu tổng hợp 7 ngày: lưới Phòng x Ngày + thống kê theo phim. Servlet: ScheduleServlet (branches, branchId, schedule). --%>
 <c:set var="pageTitle" value="Lịch chiếu tổng hợp"/>
 <c:set var="nav" value="schedule"/>
 <c:set var="extraCss" value="booking-hiep"/>

@@ -3,8 +3,7 @@
 <%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 <%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
 <fmt:setLocale value="vi_VN"/>
-<%-- Đặt vé bước 3: đồ ăn & nước + đồng hồ giữ ghế. Bấm "Thanh toán" thì tạo đơn chờ thanh toán
-     rồi chuyển sang trang Thanh toán chung (/payment/checkout: voucher + VNPay). Servlet: FnbServlet (hold, fnbMenu, maxQty). --%>
+
 <c:set var="st" value="${hold.showtime}"/>
 <c:set var="pageTitle" value="Đồ ăn & nước"/>
 <c:set var="extraCss" value="booking-hiep"/>

@@ -26,7 +26,6 @@
             <a href="${pageContext.request.contextPath}/index-tuyet.jsp" class="btn-nav">
                 <i class="fa-solid fa-house"></i> Trang chủ
             </a>
-            <%-- Quản lý vé của khách (lịch sử đặt vé, QR, huỷ vé) + tự vô hiệu hoá tài khoản --%>
             <c:if test="${sessionScope.User.role eq 'Customer'}">
                 <a href="${pageContext.request.contextPath}/customer/bookings" class="btn-nav">
                     <i class="fa-solid fa-ticket"></i> Vé của tôi

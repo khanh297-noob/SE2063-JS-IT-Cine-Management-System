@@ -113,7 +113,6 @@ public class UserDao extends DBContext {
         }
     }
 
-    /** Đổi trạng thái tài khoản (vd khách tự vô hiệu hoá: "Deactivated"). */
     public boolean updateStatus(int userId, String status) {
         String sql = "UPDATE [User] SET [Status] = ? WHERE UserID = ?";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {

@@ -289,7 +289,6 @@
         </div>
     </a>
 
-    <!-- Feature: Showtime Management -->
     <a class="feature-card" href="${ctx}/manager/showtimes">
         <div>
             <div class="feature-header">

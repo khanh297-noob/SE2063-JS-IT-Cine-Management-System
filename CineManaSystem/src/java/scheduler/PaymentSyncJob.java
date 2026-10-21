@@ -12,8 +12,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Job chạy nền "Payment Status Synchronization": cứ mỗi 1 phút
- * tìm các đơn Pending đã hết 10 phút giữ ghế -> hủy đơn, Payment -> Failed, nhả ghế;
- * đồng thời xoá các dòng SeatHold (ghế khách online đang chọn) đã hết hạn.
+ * tìm các đơn Pending đã hết 10 phút giữ ghế -> hủy đơn, Payment -> Failed, nhả ghế.
  *
  * @WebListener: Tomcat tự gọi contextInitialized() khi web khởi động
  *               và contextDestroyed() khi web dừng.
@@ -40,13 +39,11 @@ public class PaymentSyncJob implements ServletContextListener {
                 System.out.println("PaymentSyncJob lỗi: " + e.getMessage());
             }
             try {
-                // Dọn các ghế khách online giữ đã hết hạn (bảng SeatHold, JOB-01)
                 int holds = JdbcContext.transaction(con -> seatHoldDAO.deleteExpired(con));
                 if (holds > 0) {
                     System.out.println("PaymentSyncJob: đã nhả " + holds + " ghế giữ quá hạn");
                 }
             } catch (Exception | Error e) {
-                // Error: thiếu src/java/db.properties -> JdbcContext không khởi tạo được, không để job dừng hẳn
                 System.out.println("PaymentSyncJob lỗi dọn SeatHold: " + e);
             }
         }, 1, 1, TimeUnit.MINUTES);

@@ -32,16 +32,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-/**
- * Quản lý suất chiếu (Showtime Management): tạo / sửa / huỷ / xoá suất, gán phòng, gán phim,
- * kiểm tra trùng lịch (BR-02) và lịch chiếu tổng hợp.
- * Giá suất chiếu tự tính theo phòng + ngày trong tuần (ShowtimePriceCalculator), quản lý không nhập tay.
- * Quản lý chi nhánh chỉ thao tác trên chi nhánh của mình (GB-05); Admin chọn được mọi chi nhánh.
- */
 public class ShowtimeService {
 
     public static final List<String> EDITABLE_STATUSES = List.of("Scheduled", "Open", "Closed");
-    /** Thời gian dọn phòng tối thiểu giữa 2 suất liên tiếp cùng phòng (BR-02). */
     public static final int CLEANING_BUFFER_MINUTES = 15;
 
     private final ShowtimeDAO showtimeDAO = new ShowtimeDAO();
@@ -53,7 +46,6 @@ public class ShowtimeService {
     private final BookingDAO bookingDAO = new BookingDAO();
     private final AuditLogDAO auditLogDAO = new AuditLogDAO();
 
-    /** Dữ liệu form tạo / sửa suất chiếu. Giá không có ở đây vì hệ thống tự tính. */
     public static class ShowtimeInput {
         public int movieId;
         public int roomId;
@@ -66,9 +58,6 @@ public class ShowtimeService {
         return u != null && ("Administrator".equalsIgnoreCase(u.getRole()) || "Admin".equalsIgnoreCase(u.getRole()));
     }
 
-    // ===================== Chi nhánh đang thao tác =====================
-
-    /** Admin: chi nhánh yêu cầu (mặc định chi nhánh đầu tiên). Quản lý: luôn là chi nhánh của mình. */
     public int resolveBranchId(User actor, Integer requested) throws SQLException, BusinessException {
         if (isAdmin(actor)) {
             List<Branch> all = getAllBranches();
@@ -111,9 +100,6 @@ public class ShowtimeService {
         return r == null ? 0 : r.getBranchId();
     }
 
-    // ===================== Giá + trùng lịch =====================
-
-    /** Giá suất chiếu cho phòng + ngày (form gọi để hiển thị trước khi lưu). */
     public BigDecimal previewPrice(int roomId, LocalDate date) throws SQLException, BusinessException {
         ShowtimeRoom room = JdbcContext.query(con -> showtimeDAO.findRoom(con, roomId, false));
         if (room == null) throw new BusinessException("Phòng chiếu không tồn tại.");
@@ -129,7 +115,6 @@ public class ShowtimeService {
         });
     }
 
-    /** BR-02: hai suất cùng phòng phải cách nhau tối thiểu CLEANING_BUFFER_MINUTES phút. */
     private OverlapResult checkOverlap(Connection con, int roomId, int duration, LocalDate date, LocalTime start,
                                        Integer excludeId) throws SQLException {
         LocalDateTime startAt = date.atTime(start);
@@ -144,8 +129,6 @@ public class ShowtimeService {
         return new OverlapResult(startAt, endAt, buffer, conflicts);
     }
 
-    // ===================== Danh sách =====================
-
     public List<Showtime> list(int branchId, LocalDate date, Integer roomId) throws SQLException, BusinessException {
         return JdbcContext.query(con -> showtimeDAO.search(con, branchId, date, date, roomId, null, true));
     }
@@ -156,8 +139,6 @@ public class ShowtimeService {
         ensureBranch(actor, s.getBranchId());
         return s;
     }
-
-    // ===================== Tạo / sửa =====================
 
     public int create(User actor, ShowtimeInput in, String ip) throws SQLException, BusinessException {
         int id = JdbcContext.transaction(con -> {
@@ -196,7 +177,6 @@ public class ShowtimeService {
                 if (!ov.isOk()) throw new BusinessException(ov.describe());
                 s = toShowtime(in, ov, room);
             } else {
-                // Giữ lịch cũ, giá vẫn tính lại theo phụ thu phòng hiện tại (áp dụng cho vé bán sau)
                 s = cur;
                 ShowtimeRoom room = showtimeDAO.findRoom(con, cur.getRoomId(), false);
                 s.setBasePrice(ShowtimePriceCalculator.basePrice(room.getRoomSurcharge(), cur.getShowDate()));
@@ -221,13 +201,6 @@ public class ShowtimeService {
         update(actor, id, in, ip);
     }
 
-    // ===================== Huỷ / xoá =====================
-
-    /**
-     * Huỷ suất (GB-08): suất chuyển Cancelled, nhả ghế đang giữ; đơn đã thanh toán bị huỷ + hoàn tiền,
-     * đơn đang chờ thanh toán bị huỷ.
-     * @return số đơn bị huỷ
-     */
     public int cancel(User actor, int id, String ip) throws SQLException, BusinessException {
         Showtime cur = get(actor, id);
         if (cur.isCancelled()) throw new BusinessException("Suất chiếu đã được hủy trước đó.");
@@ -247,7 +220,6 @@ public class ShowtimeService {
         return count;
     }
 
-    /** Xoá hẳn: chỉ khi chưa phát sinh vé nào (GB-16, cần giữ lịch sử). */
     public void delete(User actor, int id, String ip) throws SQLException, BusinessException {
         get(actor, id);
         JdbcContext.transaction(con -> {
@@ -260,8 +232,6 @@ public class ShowtimeService {
         });
         auditLogDAO.insert(actor.getUserId(), "SHOWTIME_DELETE|showtime=" + id, ip);
     }
-
-    // ===================== Lịch tổng hợp =====================
 
     public ScheduleView buildSchedule(int branchId, LocalDate from, int days) throws SQLException, BusinessException {
         LocalDate to = from.plusDays(days - 1L);
@@ -303,8 +273,6 @@ public class ShowtimeService {
             return view;
         });
     }
-
-    // ===================== Kiểm tra dữ liệu =====================
 
     private int duration(Movie m) {
         return m.getDuration() == null ? 0 : m.getDuration();

@@ -6,8 +6,7 @@
   Khu Rạp (/branch...) có đầu trang riêng: branch-header-hoang.jspf.
   Trước khi include, trang cha đặt:
     pageTitle    tiêu đề tab
-    customerNav  mục đang chọn: home | genre | year | lang | tickets
-    extraCss     (tuỳ chọn) CSS thêm của trang, vd "booking-hiep" cho các trang đặt vé
+    customerNav  mục đang chọn: home | genre | year | lang
   Servlet đặt sẵn: menu (genres, years, languages).
 --%>
 <c:set var="moduleCss" value="customer-hoang${empty extraCss ? '' : ','}${extraCss}"/>

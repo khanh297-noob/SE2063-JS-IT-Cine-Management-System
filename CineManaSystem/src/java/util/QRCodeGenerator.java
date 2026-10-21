@@ -15,7 +15,6 @@ import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 
-/** Sinh ảnh PNG mã QR (thư viện ZXing: core + javase trong lib/) cho vé điện tử. */
 public final class QRCodeGenerator {
     private QRCodeGenerator() {
     }

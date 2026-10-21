@@ -1,7 +1,6 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
-<%-- Đặt vé bước 1a: chọn phim đang chiếu. Servlet: BookingServlet (movies = List<MovieSummaryDTO>). --%>
 <c:set var="pageTitle" value="Đặt vé"/>
 <c:set var="extraCss" value="booking-hiep"/>
 <%@ include file="/WEB-INF/views/common/customer-header-hoang.jspf" %>

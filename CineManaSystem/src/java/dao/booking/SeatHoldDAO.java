@@ -9,11 +9,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Bảng SeatHold: ghế khách online đang giữ tạm (UNIQUE(ShowtimeID, SeatID) nên 1 ghế chỉ 1 người giữ được).
- * Mọi so sánh hết hạn dùng GETDATE() của SQL Server để không lệch đồng hồ giữa máy chạy web và DB.
- * POS (PosShowtimeDAO, BookingDAO.createCounterBooking) cũng đọc bảng này để không bán trùng ghế khách đang giữ.
- */
 public class SeatHoldDAO {
 
     public int deleteExpired(Connection con) throws SQLException {
@@ -63,7 +58,6 @@ public class SeatHoldDAO {
         }
     }
 
-    /** SeatID -> UserID của các ghế đang được giữ (chưa hết hạn) trong suất chiếu. */
     public Map<Integer, Integer> findActiveByShowtime(Connection con, int showtimeId) throws SQLException {
         Map<Integer, Integer> map = new HashMap<>();
         try (PreparedStatement ps = con.prepareStatement(
@@ -76,7 +70,6 @@ public class SeatHoldDAO {
         return map;
     }
 
-    /** lock = true: khoá các dòng giữ ghế đến hết transaction (dùng khi tạo đơn từ ghế đang giữ). */
     public List<Integer> activeSeatsOfUser(Connection con, int userId, int showtimeId, boolean lock) throws SQLException {
         String sql = "SELECT SeatID FROM SeatHold" + (lock ? " WITH (UPDLOCK, HOLDLOCK)" : "")
                 + " WHERE UserID = ? AND ShowtimeID = ? AND ExpiresAt > GETDATE()";
@@ -91,7 +84,6 @@ public class SeatHoldDAO {
         return list;
     }
 
-    /** Số giây giữ ghế còn lại của khách trong suất chiếu, -1 nếu không còn giữ ghế nào. */
     public int remainingSeconds(Connection con, int userId, int showtimeId) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement("SELECT MIN(DATEDIFF(SECOND, GETDATE(), ExpiresAt)) "
                 + "FROM SeatHold WHERE UserID = ? AND ShowtimeID = ? AND ExpiresAt > GETDATE()")) {

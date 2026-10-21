@@ -3,7 +3,6 @@ package model.booking;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Một hàng ghế trên sơ đồ đặt vé online (A, B, C...). */
 public class SeatRow {
     private final String label;
     private final List<SeatView> seats = new ArrayList<>();

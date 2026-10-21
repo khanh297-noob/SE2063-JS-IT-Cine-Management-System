@@ -20,11 +20,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Bước 1 của đặt vé online (nút "Đặt vé" trên trang Phim trỏ về đây).
- *  GET /booking                       chọn phim đang chiếu
- *  GET /booking?movieId=&date=        phim đã chọn + lịch chiếu của phim theo ngày, gom theo rạp
- */
 @WebServlet("/booking")
 public class BookingServlet extends CustomerBaseServlet {
 
@@ -49,7 +44,6 @@ public class BookingServlet extends CustomerBaseServlet {
             date = available.isEmpty() ? today : available.iterator().next();
         }
 
-        // Thanh chọn ngày: 7 ngày tới, ngày nào có suất thì bấm được
         Map<String, String[]> days = new LinkedHashMap<>();
         List<String> enabled = new ArrayList<>();
         for (int i = 0; i < OnlineBookingService.SHOWTIME_DAYS; i++) {

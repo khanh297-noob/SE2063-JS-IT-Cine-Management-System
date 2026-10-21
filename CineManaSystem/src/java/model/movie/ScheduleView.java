@@ -7,7 +7,6 @@ import java.util.List;
 import model.branch.Branch;
 import util.DateTimeHelper;
 
-/** Lịch chiếu tổng hợp của 1 chi nhánh: lưới Phòng x 7 ngày + thống kê lấp đầy theo phim. */
 public class ScheduleView {
     public static class DayColumn {
         private final LocalDate date;

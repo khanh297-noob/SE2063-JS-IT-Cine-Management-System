@@ -3,8 +3,7 @@
 <%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 <%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
 <fmt:setLocale value="vi_VN"/>
-<%-- Đặt vé bước 1b: phim đã chọn + lịch chiếu của phim theo ngày, gom theo rạp.
-     Servlet: BookingServlet (detail, movie, days, enabledDays, date, dateLabel, showtimesByBranch). --%>
+
 <c:set var="pageTitle" value="Lịch chiếu ${movie.title}"/>
 <c:set var="extraCss" value="booking-hiep"/>
 <%@ include file="/WEB-INF/views/common/customer-header-hoang.jspf" %>

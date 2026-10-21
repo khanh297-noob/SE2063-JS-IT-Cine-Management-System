@@ -16,7 +16,6 @@ import java.sql.SQLException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 
-/** GET /manager/schedule?branchId=&from= : lịch chiếu tổng hợp 7 ngày (Phòng x Ngày) + tỷ lệ lấp đầy. */
 @WebServlet("/manager/schedule")
 public class ScheduleServlet extends BaseServlet {
 

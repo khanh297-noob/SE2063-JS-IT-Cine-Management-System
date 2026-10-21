@@ -3,8 +3,7 @@
 <%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 <%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
 <fmt:setLocale value="vi_VN"/>
-<%-- Quản lý suất chiếu: danh sách theo ngày. Servlet: ShowtimeController
-     (branches - chỉ Admin, branch, branchId, rooms, movies, date, prevDate, nextDate, dateLabel, roomId, showtimes, back). --%>
+
 <c:set var="pageTitle" value="Suất chiếu"/>
 <c:set var="nav" value="showtimes"/>
 <c:set var="extraCss" value="booking-hiep"/>

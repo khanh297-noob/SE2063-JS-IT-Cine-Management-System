@@ -20,13 +20,6 @@ import java.util.Enumeration;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/**
- * Bước 3: đồ ăn & nước, rồi tạo đơn chờ thanh toán.
- *  GET  /booking/fnb?showtimeId=   thực đơn chi nhánh (fnbMenu, khác "menu" lọc phim của header) + đồng hồ giữ ghế
- *  POST /booking/fnb               action = pay (tạo đơn Pending -> /payment/checkout, áp voucher + VNPay)
- *                                         | skip (không mua đồ ăn, tạo đơn luôn) | release (nhả ghế, chọn lại)
- * Giỏ đồ ăn lưu tạm trong session theo từng suất chiếu: "fnbCart_{showtimeId}" (ItemID -> số lượng).
- */
 @WebServlet("/booking/fnb")
 public class FnbServlet extends CustomerBaseServlet {
 
@@ -92,7 +85,6 @@ public class FnbServlet extends CustomerBaseServlet {
         try {
             int bookingId = bookingService.createPendingBooking(user, showtimeId, requested, WebUtil.clientIp(req));
             session.removeAttribute(cartKey(showtimeId));
-            // Sang trang thanh toán chung (voucher + VNPay) của phần Payment
             redirect(req, resp, "/payment/checkout?bookingId=" + bookingId);
         } catch (BusinessException e) {
             session.setAttribute(cartKey(showtimeId), requested);

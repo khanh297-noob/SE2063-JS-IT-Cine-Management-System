@@ -1,5 +1,3 @@
-/* booking-hiep.css: Đặt vé online (chọn phim, lịch chiếu, sơ đồ ghế, đồ ăn, vé của tôi)
-   và Quản lý suất chiếu / Lịch tổng hợp. Dùng bảng màu của base-hoang.css; tiền tố bk- để không đụng class cũ. */
 
 .bk-page { margin: 25px; }
 .bk-panel {
@@ -17,13 +15,11 @@
 .bk-small { font-size: 13px; }
 .bk-mono { font-variant-numeric: tabular-nums; }
 
-/* ---------- Các bước ---------- */
 .bk-steps { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 18px; padding: 0; list-style: none; font-size: 13.5px; }
 .bk-steps li { padding: 5px 14px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); color: var(--muted); }
 .bk-steps li.active { background: var(--ink); border-color: var(--ink); color: #fff; font-weight: 600; }
 .bk-steps li.done { color: var(--green); border-color: var(--green-soft); background: var(--green-soft); }
 
-/* ---------- Nhãn tuổi + trạng thái ---------- */
 .bk-age { display: inline-block; font-size: 11.5px; font-weight: 700; padding: 1px 7px; border-radius: 4px; color: #fff; background: var(--green); vertical-align: middle; }
 .bk-age.age-T13 { background: #c78a00; }
 .bk-age.age-T16 { background: #d9622b; }
@@ -35,12 +31,10 @@
 .bk-badge.running { background: var(--amber-soft); color: var(--amber); }
 .bk-badge.cancelled, .bk-badge.Cancelled { background: var(--velvet-soft); color: var(--velvet); }
 
-/* ---------- Chọn phim ---------- */
 .bk-movie-head { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 22px; align-items: start; }
 .bk-movie-head .cdetail-poster { width: 150px; }
 .bk-movie-head h1 { font-size: 26px; margin: 0 0 6px; line-height: 1.2; }
 
-/* ---------- Thanh chọn ngày ---------- */
 .bk-days { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin: 0 0 18px; }
 .bk-day {
     display: grid; justify-items: center; min-width: 78px; padding: 8px 12px;
@@ -54,7 +48,6 @@
 .bk-day.current span { color: rgba(255, 255, 255, .85); }
 .bk-day.disabled { opacity: .45; pointer-events: none; }
 
-/* ---------- Lịch chiếu theo rạp ---------- */
 .bk-branch { border-top: 1px solid var(--line); padding: 14px 0; }
 .bk-branch:first-of-type { border-top: 0; padding-top: 0; }
 .bk-branch h3 { margin: 0 0 10px; font-size: 16px; }
@@ -67,7 +60,6 @@
 .bk-time span { font-size: 12px; color: var(--muted); }
 .bk-time:hover { border-color: var(--velvet); background: var(--velvet-soft); color: var(--ink); }
 
-/* ---------- Sơ đồ ghế ---------- */
 .bk-seat-panel { background: var(--ink); border-color: var(--ink); color: #c9cce0; overflow-x: auto; }
 .bk-screen {
     margin: 4px auto 30px; width: 78%; text-align: center; font-size: 12px; letter-spacing: .4em; color: #e9ebf5;
@@ -101,7 +93,6 @@
 .bk-price-legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13.5px; }
 .bk-price-legend span { display: inline-flex; align-items: center; gap: 6px; }
 
-/* ---------- Tóm tắt bên phải ---------- */
 .bk-summary { position: sticky; top: 16px; }
 .bk-sel { font-size: 18px; font-weight: 600; min-height: 26px; margin: 0 0 6px; }
 .bk-line { display: flex; justify-content: space-between; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--line); }
@@ -111,14 +102,12 @@
 .bk-timer b { font-size: 24px; color: #f3c46b; font-variant-numeric: tabular-nums; }
 .bk-timer.urgent b { color: #ff6b81; }
 
-/* ---------- Đồ ăn ---------- */
 .bk-fnb-table td, .bk-fnb-table th { padding: 10px 8px; }
 .bk-fnb-cat { font-size: 12.5px; color: var(--muted); }
 .bk-qty { display: inline-flex; align-items: center; gap: 4px; }
 .bk-qty input { width: 56px; text-align: center; font: inherit; padding: 5px; border: 1px solid var(--line); border-radius: var(--radius); }
 .bk-num { text-align: right; white-space: nowrap; }
 
-/* ---------- Vé của tôi ---------- */
 .bk-filter { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 16px; }
 .bk-filter a { padding: 6px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); text-decoration: none; font-weight: 500; }
 .bk-filter a.current { background: var(--ink); color: #fff; border-color: var(--ink); }
@@ -135,7 +124,6 @@
 .bk-h-main, .bk-h-side { display: grid; gap: 2px; }
 .bk-h-side { justify-items: end; }
 
-/* ---------- Vé điện tử ---------- */
 .bk-kv { display: grid; grid-template-columns: max-content 1fr; gap: 6px 18px; margin: 12px 0 0; }
 .bk-kv dt { color: var(--muted); }
 .bk-kv dd { margin: 0; }
@@ -147,7 +135,6 @@
 .bk-ticket-info { display: grid; gap: 2px; }
 .bk-seat-code { font-size: 28px; line-height: 1; }
 
-/* ---------- Quản lý suất chiếu ---------- */
 .bk-toolbar { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 18px; }
 .bk-toolbar label { display: grid; gap: 4px; font-weight: 600; font-size: 13.5px; }
 .bk-toolbar select, .bk-toolbar input { font: inherit; padding: 7px 10px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
@@ -173,7 +160,6 @@
 .bk-rules { padding-left: 18px; margin: 0; }
 .bk-rules li { margin-bottom: 6px; }
 
-/* ---------- Lịch tổng hợp ---------- */
 .bk-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 18px; }
 .bk-stat { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 16px; display: grid; }
 .bk-stat span { color: var(--muted); font-size: 13px; }

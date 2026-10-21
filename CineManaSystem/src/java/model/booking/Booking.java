@@ -25,7 +25,7 @@ public class Booking {
     private Timestamp bookingDate;
     private BigDecimal totalAmount;   // số tiền cuối cùng phải trả (đã trừ voucher)
     private String status;
-    private String channel;           // Online | Counter
+    private String channel;
     private Timestamp cancelledAt;
     private BigDecimal refundAmount;
 
@@ -124,7 +124,6 @@ public class Booking {
         return true;
     }
 
-    // Suất chiếu đã chiếu xong chưa (dùng cho lọc "Vé của tôi")
     public boolean isShowFinished() {
         LocalDateTime start = getStartDateTime();
         return start != null && !start.isAfter(LocalDateTime.now());

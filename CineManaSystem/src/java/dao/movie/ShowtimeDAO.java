@@ -18,22 +18,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Bảng Showtime. Mọi hàm nhận Connection từ Service (giống các DAO khác của module Phim)
- * để một nghiệp vụ dùng nhiều DAO vẫn nằm trong cùng một transaction.
- *
- * Gồm 3 nhóm:
- *  1. Đếm suất chiếu: module Chi nhánh & Phim dùng để chặn các thao tác làm hỏng lịch chiếu
- *     (gỡ phòng, gỡ chi nhánh, ngưng chiếu phim...). "Sắp tới" = ShowDate từ hôm nay trở đi và chưa bị huỷ.
- *     countByMovie / countByRoom đếm cả suất đã huỷ vì khoá ngoại vẫn chặn xoá phim/phòng còn suất chiếu.
- *  2. Quản lý suất chiếu (tạo / sửa / huỷ / xoá, kiểm tra trùng lịch, lịch tổng hợp).
- *  3. Tra cứu cho Đặt vé online (suất chiếu của 1 phim, suất khách đã có vé).
- */
 public class ShowtimeDAO {
 
     private static final String UPCOMING = " AND s.ShowDate >= CAST(GETDATE() AS DATE) AND s.Status <> 'Cancelled'";
-
-    // ===================== 1. Đếm suất chiếu =====================
 
     public int countByMovie(Connection con, int movieId) throws SQLException {
         return count(con, "SELECT COUNT(*) FROM Showtime s WHERE s.MovieID = ?", movieId);
@@ -56,7 +43,6 @@ public class ShowtimeDAO {
                 + "WHERE r.BranchID = ?" + UPCOMING, branchId);
     }
 
-    /** BranchID -> số suất chiếu sắp tới của phim. */
     public Map<Integer, Integer> countUpcomingByMovieGroupedByBranch(Connection con, int movieId) throws SQLException {
         String sql = "SELECT r.BranchID, COUNT(*) FROM Showtime s JOIN Room r ON r.RoomID = s.RoomID "
                 + "WHERE s.MovieID = ?" + UPCOMING + " GROUP BY r.BranchID";
@@ -70,10 +56,6 @@ public class ShowtimeDAO {
         return map;
     }
 
-    /**
-     * Suất chiếu sắp tới của phim tại chi nhánh. Nếu có from/to thì chỉ đếm
-     * những suất nằm NGOÀI khoảng [from, to].
-     */
     public int countUpcomingAtBranch(Connection con, int movieId, int branchId,
                                      LocalDate from, LocalDate to) throws SQLException {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM Showtime s JOIN Room r ON r.RoomID = s.RoomID "
@@ -98,15 +80,11 @@ public class ShowtimeDAO {
         }
     }
 
-    /** Số vé của suất chiếu. activeOnly = chỉ vé chưa huỷ. */
     public int countTickets(Connection con, int showtimeId, boolean activeOnly) throws SQLException {
         String sql = "SELECT COUNT(*) FROM Ticket WHERE ShowtimeID = ?" + (activeOnly ? " AND Status <> 'Cancelled'" : "");
         return count(con, sql, showtimeId);
     }
 
-    // ===================== 2. Quản lý suất chiếu =====================
-
-    // Kèm phim, phòng, phụ thu loại phòng, chi nhánh, số vé đã bán và số ghế dùng được
     private static final String SELECT =
             "SELECT s.ShowtimeID, s.MovieID, s.RoomID, s.ShowDate, s.StartTime, s.EndTime, s.BasePrice, s.Status, "
             + "m.Title, m.Duration, m.AgeRating, m.PosterURL, r.RoomName, r.RoomType, rt.Surcharge AS RoomSurcharge, "
@@ -125,7 +103,6 @@ public class ShowtimeDAO {
         }
     }
 
-    /** Lọc theo chi nhánh / khoảng ngày / phòng / phim; tham số null = bỏ qua điều kiện đó. */
     public List<Showtime> search(Connection con, Integer branchId, LocalDate from, LocalDate to, Integer roomId,
                                  Integer movieId, boolean includeCancelled) throws SQLException {
         StringBuilder sql = new StringBuilder(SELECT).append("WHERE 1 = 1");
@@ -160,7 +137,6 @@ public class ShowtimeDAO {
         }
     }
 
-    /** Suất chưa huỷ của 1 phòng từ hôm trước đến hôm sau (để kiểm tra trùng cả suất qua nửa đêm). */
     public List<Showtime> findByRoomAround(Connection con, int roomId, LocalDate date, Integer excludeId)
             throws SQLException {
         String sql = SELECT + "WHERE s.RoomID = ? AND s.ShowDate BETWEEN ? AND ? AND s.Status <> 'Cancelled'"
@@ -209,7 +185,6 @@ public class ShowtimeDAO {
         }
     }
 
-    /** Đơn Pending / Confirmed còn vé của suất chiếu (để huỷ + hoàn tiền khi huỷ suất). */
     public List<Integer> findActiveBookingIds(Connection con, int showtimeId) throws SQLException {
         List<Integer> ids = new ArrayList<>();
         try (PreparedStatement ps = con.prepareStatement("SELECT DISTINCT b.BookingID FROM Booking b "
@@ -222,8 +197,6 @@ public class ShowtimeDAO {
         }
         return ids;
     }
-
-    // ---------- Phòng chiếu + phim dùng cho form xếp suất ----------
 
     private static final String SELECT_ROOM =
             "SELECT r.RoomID, r.BranchID, b.Name AS BranchName, r.RoomName, r.RoomType, r.Status, "
@@ -242,7 +215,6 @@ public class ShowtimeDAO {
         return list;
     }
 
-    /** lock = true: khoá dòng phòng đến hết transaction để 2 quản lý không xếp trùng giờ cùng lúc. */
     public ShowtimeRoom findRoom(Connection con, int roomId, boolean lock) throws SQLException {
         String sql = (lock ? SELECT_ROOM.replace("FROM Room r ", "FROM Room r WITH (UPDLOCK, ROWLOCK) ") : SELECT_ROOM)
                 + "WHERE r.RoomID = ?";
@@ -254,7 +226,6 @@ public class ShowtimeDAO {
         }
     }
 
-    /** Phim còn xếp lịch được (Now Showing / Coming Soon) và đã được phân cho chi nhánh. */
     public List<Movie> findSchedulableMovies(Connection con, int branchId) throws SQLException {
         String sql = "SELECT m.MovieID, m.Title, m.Duration, m.ReleaseDate, m.AgeRating, m.Status FROM Movie m "
                 + "WHERE m.Status IN ('Now Showing', 'Coming Soon') "
@@ -279,9 +250,6 @@ public class ShowtimeDAO {
         return list;
     }
 
-    // ===================== 3. Đặt vé online =====================
-
-    /** Suất còn mở bán của 1 phim trong khoảng ngày (khách chọn phim xong thì hiện lịch chiếu này). */
     public List<Showtime> findOpenByMovie(Connection con, int movieId, LocalDate from, LocalDate to) throws SQLException {
         String sql = SELECT + "WHERE s.MovieID = ? AND s.ShowDate BETWEEN ? AND ? AND s.Status = 'Open' "
                 + "AND r.Status = 'Active' AND b.Status = 'Active' "
@@ -294,7 +262,6 @@ public class ShowtimeDAO {
         }
     }
 
-    /** Suất khách đã có vé (đơn Confirmed) quanh 1 ngày, để cảnh báo trùng giờ khi đặt thêm. */
     public List<Showtime> findBookedByUserAround(Connection con, int userId, LocalDate date) throws SQLException {
         String sql = SELECT + "WHERE s.ShowtimeID IN (SELECT t.ShowtimeID FROM Ticket t "
                 + "JOIN Booking bk ON bk.BookingID = t.BookingID "
@@ -307,8 +274,6 @@ public class ShowtimeDAO {
             return mapList(ps);
         }
     }
-
-    // ===================== Hàm phụ =====================
 
     private int count(Connection con, String sql, int id) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement(sql)) {

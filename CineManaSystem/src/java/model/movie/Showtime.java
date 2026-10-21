@@ -7,11 +7,6 @@ import java.time.LocalTime;
 
 import util.DateTimeHelper;
 
-/**
- * Suất chiếu (bảng Showtime) dùng cho Quản lý suất chiếu và Đặt vé online.
- * POS dùng model.booking.Showtime (kiểu java.sql.Date/Time) nên hai class tách riêng.
- * EndTime <= StartTime nghĩa là suất kết thúc sau nửa đêm.
- */
 public class Showtime {
     private int showtimeId;
     private int movieId;

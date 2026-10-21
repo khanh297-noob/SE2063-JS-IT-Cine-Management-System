@@ -3,8 +3,7 @@
 <%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 <%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
 <fmt:setLocale value="vi_VN"/>
-<%-- Tạo / sửa suất chiếu. Giá suất KHÔNG nhập tay: tự tính theo phòng (phụ thu loại phòng) + ngày chiếu (T7/CN +20.000đ).
-     Servlet: ShowtimeController (showtime, branch, rooms, movies, statuses, standardPrice, weekendSurcharge, defaultDate, errors). --%>
+
 <c:set var="editing" value="${not empty showtime}"/>
 <c:set var="pageTitle" value="${editing ? 'Sửa suất chiếu' : 'Tạo suất chiếu'}"/>
 <c:set var="nav" value="showtimes"/>

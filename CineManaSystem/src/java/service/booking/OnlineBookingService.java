@@ -33,18 +33,12 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-/**
- * Đặt vé online của khách: chọn phim -> chọn suất -> chọn ghế (giữ ghế 10 phút) -> đồ ăn & nước
- * -> tạo đơn Pending rồi chuyển sang trang thanh toán chung (/payment/checkout, PaymentService):
- * áp voucher + thanh toán VNPay giống VNPay QR của POS. Thanh toán xong PaymentService chuyển đơn sang Confirmed.
- * Ngoài ra: Vé của tôi, xem đơn + QR, khách tự huỷ đơn, tự vô hiệu hoá tài khoản.
- */
 public class OnlineBookingService {
 
-    public static final int MAX_SEATS = 8;                 // GB-10, giống POS
-    public static final int MAX_FNB_QUANTITY = 10;         // tối đa mỗi món
-    public static final int CANCEL_CUTOFF_HOURS = 2;       // GB-33: khách tự huỷ trước giờ chiếu 2 tiếng
-    public static final int SHOWTIME_DAYS = 7;             // số ngày hiện lịch chiếu cho khách chọn
+    public static final int MAX_SEATS = 8;
+    public static final int MAX_FNB_QUANTITY = 10;
+    public static final int CANCEL_CUTOFF_HOURS = 2;
+    public static final int SHOWTIME_DAYS = 7;
 
     private final ShowtimeDAO showtimeDAO = new ShowtimeDAO();
     private final OnlineSeatDAO seatDAO = new OnlineSeatDAO();
@@ -57,20 +51,16 @@ public class OnlineBookingService {
         return PaymentService.HOLD_MINUTES;
     }
 
-    // ===================== Chọn suất chiếu =====================
-
-    /** Suất còn mở bán của phim trong ngày date, gom theo chi nhánh: { "Tên rạp" -> [suất...] }. */
     public Map<String, List<Showtime>> showtimesOfMovie(int movieId, LocalDate date) throws SQLException, BusinessException {
         List<Showtime> list = JdbcContext.query(con -> showtimeDAO.findOpenByMovie(con, movieId, date, date));
         Map<String, List<Showtime>> byBranch = new LinkedHashMap<>();
         for (Showtime s : list) {
-            if (!s.isBookable()) continue;      // suất hôm nay đã qua giờ chiếu
+            if (!s.isBookable()) continue;
             byBranch.computeIfAbsent(s.getBranchName(), k -> new ArrayList<>()).add(s);
         }
         return byBranch;
     }
 
-    /** Các ngày có suất mở bán của phim trong SHOWTIME_DAYS ngày tới (để hiện thanh chọn ngày). */
     public Set<LocalDate> datesWithShowtimes(int movieId) throws SQLException, BusinessException {
         LocalDate today = LocalDate.now();
         List<Showtime> list = JdbcContext.query(con ->
@@ -93,8 +83,6 @@ public class OnlineBookingService {
         }
         return st;
     }
-
-    // ===================== Sơ đồ ghế =====================
 
     private BigDecimal priceOf(Showtime st, SeatView seat) {
         return ShowtimePriceCalculator.ticketPrice(st.getBasePrice(), seat.getSurcharge());
@@ -128,7 +116,6 @@ public class OnlineBookingService {
         return max;
     }
 
-    /** Bảng giá theo loại ghế (1 ghế đại diện / loại), rẻ trước. */
     public List<SeatView> priceTable(List<SeatRow> rows) {
         Map<String, SeatView> m = new LinkedHashMap<>();
         for (SeatRow row : rows) {
@@ -139,7 +126,6 @@ public class OnlineBookingService {
         return list;
     }
 
-    /** SeatID -> trạng thái (sold / held / mine) để trang chọn ghế tự cập nhật mỗi 10 giây. */
     public Map<Integer, String> seatStates(User user, int showtimeId) throws SQLException, BusinessException {
         return JdbcContext.query(con -> {
             Map<Integer, String> states = new HashMap<>();
@@ -151,7 +137,6 @@ public class OnlineBookingService {
         });
     }
 
-    /** Suất khác khách đã có vé bị trùng giờ với suất đang chọn (chỉ cảnh báo, vẫn cho đặt). */
     public List<Showtime> personalConflicts(User user, Showtime st) throws SQLException, BusinessException {
         List<Showtime> result = new ArrayList<>();
         for (Showtime o : JdbcContext.query(con -> showtimeDAO.findBookedByUserAround(con, user.getUserId(), st.getShowDate()))) {
@@ -161,12 +146,6 @@ public class OnlineBookingService {
         return result;
     }
 
-    // ===================== Giữ ghế =====================
-
-    /**
-     * Giữ các ghế đã chọn trong holdMinutes() phút. Chống 2 người chọn cùng ghế:
-     * UNIQUE(ShowtimeID, SeatID) của SeatHold chỉ cho 1 người giữ, sau đó kiểm tra lại ghế chưa có vé.
-     */
     public void holdSeats(User user, int showtimeId, List<Integer> seatIds) throws SQLException, BusinessException {
         if (seatIds == null || seatIds.isEmpty()) {
             throw new BusinessException("Vui lòng chọn ít nhất 1 ghế.");
@@ -206,7 +185,6 @@ public class OnlineBookingService {
         });
     }
 
-    /** Ghế khách đang giữ của suất, null nếu không còn giữ ghế nào (hết giờ / chưa chọn). */
     public HoldSummary getHold(User user, int showtimeId) throws SQLException, BusinessException {
         Showtime st = JdbcContext.query(con -> showtimeDAO.findById(con, showtimeId));
         if (st == null) return null;
@@ -235,9 +213,6 @@ public class OnlineBookingService {
         });
     }
 
-    // ===================== Đồ ăn & nước =====================
-
-    /** Thực đơn của chi nhánh (bảng Branch_F_B, dùng chung với POS) kèm số lượng khách đã chọn. */
     public List<FnbItem> fnbMenu(int branchId, Map<Integer, Integer> cart) {
         List<FnbItem> menu = fnbDAO.getMenu(branchId);
         for (FnbItem item : menu) {
@@ -247,7 +222,6 @@ public class OnlineBookingService {
         return menu;
     }
 
-    /** Kiểm tra giỏ đồ ăn: món phải thuộc thực đơn chi nhánh, số lượng 0..MAX_FNB_QUANTITY. Bỏ các món số lượng 0. */
     public Map<Integer, Integer> normalizeCart(Showtime st, Map<Integer, Integer> requested) throws BusinessException {
         Map<Integer, FnbItem> menu = new LinkedHashMap<>();
         for (FnbItem item : fnbDAO.getMenu(st.getBranchId())) menu.put(item.getItemId(), item);
@@ -268,7 +242,6 @@ public class OnlineBookingService {
         return cart;
     }
 
-    /** Các dòng đồ ăn của giỏ, giá theo thực đơn chi nhánh hiện tại. */
     public List<FnbItem> cartLines(int branchId, Map<Integer, Integer> cart) {
         List<FnbItem> lines = new ArrayList<>();
         if (cart == null || cart.isEmpty()) return lines;
@@ -282,13 +255,6 @@ public class OnlineBookingService {
         return lines;
     }
 
-    // ===================== Tạo đơn chờ thanh toán =====================
-
-    /**
-     * Chuyển ghế đang giữ + giỏ đồ ăn thành đơn Pending (1 transaction), xoá giữ ghế.
-     * Từ giờ ghế được giữ bằng chính vé của đơn Pending; PaymentSyncJob tự huỷ đơn nếu quá 10 phút chưa trả tiền.
-     * @return BookingID để chuyển sang /payment/checkout?bookingId=
-     */
     public int createPendingBooking(User user, int showtimeId, Map<Integer, Integer> cart, String ip)
             throws SQLException, BusinessException {
         Showtime st = getBookableShowtime(showtimeId);
@@ -330,18 +296,14 @@ public class OnlineBookingService {
         return bookingId;
     }
 
-    /** Đơn đang chờ thanh toán của khách cho suất này (để hiện nút "Tiếp tục thanh toán"). */
     public Integer pendingBookingId(User user, int showtimeId) {
         return bookingDAO.findPendingOnlineBooking(user.getUserId(), showtimeId);
     }
-
-    // ===================== Vé của tôi =====================
 
     public List<Booking> history(User user) {
         return bookingDAO.getOnlineBookings(user.getUserId());
     }
 
-    /** Chủ đơn, Admin, hoặc nhân sự của chi nhánh có suất chiếu mới được xem. */
     public Booking getBooking(User user, int bookingId) throws BusinessException {
         Booking b = bookingDAO.getBooking(bookingId);
         if (b == null || !canView(user, b)) {
@@ -358,7 +320,6 @@ public class OnlineBookingService {
         return !"Customer".equalsIgnoreCase(role) && Objects.equals(user.getBranchID(), b.getBranchId());
     }
 
-    /** Lý do không huỷ được đơn, null = huỷ được. Khách chỉ huỷ đơn của mình, trước giờ chiếu CANCEL_CUTOFF_HOURS giờ. */
     public String cancelBlockReason(User user, Booking b) {
         if (!"Confirmed".equals(b.getStatus())) return "Đơn không ở trạng thái đã thanh toán.";
         if (b.getStartDateTime() == null) return "Đơn không có vé.";
@@ -370,11 +331,6 @@ public class OnlineBookingService {
         return null;
     }
 
-    /**
-     * Khách tự huỷ đơn đã thanh toán: vé -> Cancelled (nhả ghế), Payment -> Refunded,
-     * Booking -> Cancelled với RefundAmount = toàn bộ tiền (hoàn 100% trước hạn huỷ).
-     * @return số tiền hoàn
-     */
     public BigDecimal cancel(User user, int bookingId, String ip) throws BusinessException {
         Booking b = getBooking(user, bookingId);
         String reason = cancelBlockReason(user, b);
@@ -388,8 +344,6 @@ public class OnlineBookingService {
                 + "|refund=" + b.getTotalAmount().toPlainString(), ip);
         return b.getTotalAmount();
     }
-
-    // ===================== Vô hiệu hoá tài khoản =====================
 
     public void deactivate(User user, String password, boolean confirmed, String ip) throws SQLException, BusinessException {
         if (!confirmed) {

@@ -3,8 +3,7 @@
 <%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 <%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
 <fmt:setLocale value="vi_VN"/>
-<%-- Đặt vé bước 2: sơ đồ ghế. Servlet: SeatServlet
-     (showtime, rows, seatCols, prices, maxSeats, holdMinutes, hold, conflicts, pendingBookingId). --%>
+
 <c:set var="st" value="${showtime}"/>
 <c:set var="pageTitle" value="Chọn ghế - ${st.movieTitle}"/>
 <c:set var="extraCss" value="booking-hiep"/>
@@ -115,7 +114,6 @@
     });
     refresh();
 
-    // Cập nhật ghế người khác vừa giữ / vừa mua mỗi 10 giây
     setInterval(function () {
         fetch('${ctx}/booking/seat-status?showtimeId=${st.showtimeId}', {headers: {'X-Requested-With': 'XMLHttpRequest'}})
             .then(function (r) { return r.json(); })

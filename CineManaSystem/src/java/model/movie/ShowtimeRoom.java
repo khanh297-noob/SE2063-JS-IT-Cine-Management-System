@@ -2,10 +2,6 @@ package model.movie;
 
 import java.math.BigDecimal;
 
-/**
- * Phòng chiếu kèm thông tin cần khi xếp suất chiếu: tên loại phòng, phụ thu loại phòng
- * (RoomType.Surcharge, dùng để tự tính giá suất chiếu) và số ghế dùng được.
- */
 public class ShowtimeRoom {
     private int roomId;
     private int branchId;

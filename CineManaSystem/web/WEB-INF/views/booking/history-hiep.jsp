@@ -2,7 +2,6 @@
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
 <fmt:setLocale value="vi_VN"/>
-<%-- Vé của tôi (lịch sử đặt vé online). Servlet: MyBookingServlet (filter, bookings, totalCount). --%>
 <c:set var="pageTitle" value="Vé của tôi"/>
 <c:set var="extraCss" value="booking-hiep"/>
 <c:set var="customerNav" value="tickets"/>

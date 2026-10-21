@@ -23,13 +23,6 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
-/**
- * Quản lý suất chiếu (Admin + Quản lý chi nhánh, AuthFilter chặn quyền theo /manager/*).
- *  GET  /manager/showtimes                 danh sách theo ngày / phòng
- *  GET  /manager/showtimes/new | /edit     form tạo / sửa
- *  GET  /manager/showtimes/check-overlap   AJAX: giờ kết thúc + trùng lịch + giá tự tính
- *  POST /manager/showtimes/save | assign-room | assign-movie | cancel | delete
- */
 @WebServlet("/manager/showtimes/*")
 public class ShowtimeController extends BaseServlet {
 
@@ -80,7 +73,6 @@ public class ShowtimeController extends BaseServlet {
                     }
                     redirect(req, resp, LIST + "?date=" + in.date + "&branchId=" + showtimeService.getBranchIdOfRoom(in.roomId));
                 } catch (BusinessException e) {
-                    // Lỗi nhập liệu: hiện lại form với dữ liệu khách vừa nhập
                     req.setAttribute("errors", e.getErrors());
                     Showtime existing = null;
                     if (id != null) {
@@ -163,7 +155,6 @@ public class ShowtimeController extends BaseServlet {
         req.setAttribute("nav", "showtimes");
     }
 
-    /** JSON cho form: {ready, ok, end, nextDay, buffer, price, weekend, conflicts:[...]} */
     private void checkOverlap(HttpServletRequest req, HttpServletResponse resp) throws IOException, SQLException {
         Integer roomId = intParam(req, "roomId");
         Integer movieId = intParam(req, "movieId");

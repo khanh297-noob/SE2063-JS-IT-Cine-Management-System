@@ -111,7 +111,6 @@ public class AuthFilter implements Filter {
                     || PermissionUtil.isBranchManager(request);
         }
 
-        // Đặt vé online: chỉ khách hàng. Xem chi tiết đơn / QR vé thì Service tự kiểm tra quyền xem đơn
         if (path.equals("/booking/detail") || path.equals("/ticket/qr")) {
             return true;
         }
@@ -120,7 +119,7 @@ public class AuthFilter implements Filter {
             return PermissionUtil.isCustomer(request);
         }
 
-        // Giờ làm nhân viên, Quản lý suất chiếu, Lịch chiếu tổng hợp: Admin và Quản lý chi nhánh
+        // Giờ làm nhân viên: Admin và Quản lý chi nhánh
         if (path.startsWith("/manager/")) {
             return PermissionUtil.isAdmin(request) || PermissionUtil.isBranchManager(request);
         }

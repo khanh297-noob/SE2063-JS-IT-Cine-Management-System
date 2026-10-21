@@ -1,6 +1,5 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
-<%-- Khách tự vô hiệu hoá tài khoản. Servlet: MyBookingServlet (POST /customer/deactivate). --%>
 <c:set var="pageTitle" value="Vô hiệu hóa tài khoản"/>
 <c:set var="extraCss" value="booking-hiep"/>
 <%@ include file="/WEB-INF/views/common/customer-header-hoang.jspf" %>

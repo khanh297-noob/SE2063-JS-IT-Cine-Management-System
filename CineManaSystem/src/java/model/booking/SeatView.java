@@ -2,17 +2,13 @@ package model.booking;
 
 import java.math.BigDecimal;
 
-/**
- * Một ô ghế trên sơ đồ đặt vé online: vị trí trong ma trận (RowNum/ColNum, cột trống = lối đi),
- * loại ghế + màu, giá và trạng thái với người đang xem.
- */
 public class SeatView {
 
     public static final String AVAILABLE = "available";
-    public static final String SOLD = "sold";       // đã có vé (đơn đã thanh toán hoặc đang chờ thanh toán)
-    public static final String HELD = "held";       // người khác đang giữ
-    public static final String MINE = "mine";       // chính mình đang giữ
-    public static final String BROKEN = "broken";   // ghế hỏng, không bán
+    public static final String SOLD = "sold";
+    public static final String HELD = "held";
+    public static final String MINE = "mine";
+    public static final String BROKEN = "broken";
 
     private int seatId;
     private String rowLabel;

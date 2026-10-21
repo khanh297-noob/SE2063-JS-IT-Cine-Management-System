@@ -4,8 +4,7 @@
   Đầu trang dùng chung. Trước khi include, trang cha đặt:
     pageTitle  tiêu đề tab trình duyệt
     nav        mục menu đang chọn: branches | rooms | room-types (quản lý chi nhánh)
-                                    hoặc movies | genres | showtimes | schedule (quản lý phim + suất chiếu)
-    extraCss   (tuỳ chọn) CSS thêm của trang, vd "booking-hiep"
+                                    hoặc movies | genres (quản lý phim)
 --%>
 <c:set var="moduleCss" value="branch-hoang,movie-hoang${empty extraCss ? '' : ','}${extraCss}"/>
 <%@ include file="/WEB-INF/views/common/head-hoang.jspf" %>

@@ -16,10 +16,6 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 
-/**
- * GET /ticket/qr?id={TicketID}&size= : ảnh PNG mã QR của vé (nội dung = TicketCode, cửa soát vé quét mã này).
- * Chỉ người xem được đơn mới lấy được QR, và chỉ vé còn hiệu lực của đơn đã thanh toán.
- */
 @WebServlet("/ticket/qr")
 public class QrServlet extends HttpServlet {
 
@@ -46,7 +42,7 @@ public class QrServlet extends HttpServlet {
             return;
         }
         try {
-            bookingService.getBooking(user, t.getBookingId());    // kiểm tra quyền xem đơn
+            bookingService.getBooking(user, t.getBookingId());
         } catch (BusinessException e) {
             resp.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;

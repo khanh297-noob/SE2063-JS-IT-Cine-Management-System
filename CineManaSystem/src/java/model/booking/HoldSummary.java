@@ -5,7 +5,6 @@ import java.util.List;
 
 import model.movie.Showtime;
 
-/** Các ghế khách đang giữ của 1 suất chiếu + tiền vé tạm tính + số giây giữ ghế còn lại. */
 public class HoldSummary {
     private final Showtime showtime;
     private final List<SeatView> seats;

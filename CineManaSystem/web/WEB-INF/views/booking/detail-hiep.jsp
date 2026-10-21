@@ -1,7 +1,6 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
-<%-- Chi tiết 1 đơn + vé điện tử (QR) + huỷ đơn. Servlet: MyBookingServlet (b, cancelBlockReason, cutoffHours). --%>
 <fmt:setLocale value="vi_VN"/>
 <c:set var="pageTitle" value="Đơn ${b.bookingCode}"/>
 <c:set var="extraCss" value="booking-hiep"/>

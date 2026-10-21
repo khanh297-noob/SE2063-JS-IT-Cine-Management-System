@@ -19,12 +19,6 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Bước 2: chọn ghế.
- *  GET  /booking/seats?showtimeId=        sơ đồ ghế (giá theo loại ghế, tự cập nhật mỗi 10 giây)
- *  GET  /booking/seat-status?showtimeId=  AJAX: trạng thái ghế
- *  POST /booking/hold                     giữ ghế đã chọn rồi sang bước đồ ăn & nước
- */
 @WebServlet(urlPatterns = {"/booking/seats", "/booking/seat-status", "/booking/hold"})
 public class SeatServlet extends CustomerBaseServlet {
 
