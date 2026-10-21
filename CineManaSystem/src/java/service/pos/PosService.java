@@ -1,10 +1,18 @@
-package service;
+package service.pos;
 
-import dao.AuditLogDAO;
-import dao.BookingDAO;
-import dao.FnbDAO;
-import dao.PosShowtimeDAO;
-import dao.StaffDAO;
+import dao.booking.BookingDAO;
+import dao.booking.FnbDAO;
+import dao.booking.PosShowtimeDAO;
+import dao.pos.AuditLogDAO;
+import dao.pos.StaffDAO;
+import model.User;
+import model.booking.Booking;
+import model.booking.FnbItem;
+import model.booking.Seat;
+import model.booking.Showtime;
+import model.payment.Promotion;
+import model.pos.WorkShift;
+import service.payment.PaymentService;
 import java.math.BigDecimal;
 import java.sql.Date;
 import java.time.LocalDate;
@@ -13,13 +21,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import model.Booking;
-import model.FnbItem;
-import model.Promotion;
-import model.Seat;
-import model.Showtime;
-import model.User;
-import model.WorkShift;
 import util.PasswordUtil;
 
 /**

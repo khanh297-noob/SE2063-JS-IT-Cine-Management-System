@@ -1,8 +1,12 @@
-package service;
+package service.pos;
 
-import dao.AuditLogDAO;
-import dao.BranchDAO;
-import dao.PaymentDAO;
+import dao.management.BranchDAO;
+import dao.payment.PaymentDAO;
+import dao.pos.AuditLogDAO;
+import model.Branch;
+import model.User;
+import model.pos.AuditLog;
+import model.pos.WorkShift;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.LocalDate;
@@ -10,10 +14,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import model.AuditLog;
-import model.Branch;
-import model.User;
-import model.WorkShift;
 
 /**
  * Ca làm việc (Working hours) + két tiền (Check cash balance) của nhân viên quầy / soát vé.

@@ -1,5 +1,6 @@
-package dao;
+package dao.management;
 
+import model.Branch;
 import util.DBContext;
 
 import java.sql.Connection;
@@ -8,7 +9,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import model.Branch;
 
 public class BranchDAO extends DBContext {
 

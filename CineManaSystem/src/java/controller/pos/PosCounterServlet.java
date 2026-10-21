@@ -1,5 +1,15 @@
 package controller.pos;
 
+import model.User;
+import model.booking.Booking;
+import model.booking.FnbItem;
+import model.booking.Seat;
+import model.booking.Showtime;
+import model.payment.Promotion;
+import model.pos.WorkShift;
+import service.payment.PaymentService;
+import service.pos.PosService;
+import service.pos.ShiftService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -13,16 +23,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import model.Booking;
-import model.FnbItem;
-import model.Promotion;
-import model.Seat;
-import model.Showtime;
-import model.User;
-import model.WorkShift;
-import service.PaymentService;
-import service.PosService;
-import service.ShiftService;
 
 /**
  * Màn hình bán vé tại quầy.

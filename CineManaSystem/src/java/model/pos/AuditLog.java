@@ -1,4 +1,4 @@
-package model;
+package model.pos;
 
 import java.sql.Timestamp;
 

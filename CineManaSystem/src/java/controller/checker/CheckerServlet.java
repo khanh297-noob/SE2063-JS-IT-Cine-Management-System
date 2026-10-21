@@ -1,5 +1,11 @@
 package controller.checker;
 
+import model.Branch;
+import model.User;
+import model.booking.Ticket;
+import model.pos.WorkShift;
+import service.checker.TicketService;
+import service.pos.ShiftService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -8,12 +14,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
-import model.Branch;
-import model.Ticket;
-import model.User;
-import model.WorkShift;
-import service.ShiftService;
-import service.TicketService;
 
 /**
  * Màn hình soát vé.

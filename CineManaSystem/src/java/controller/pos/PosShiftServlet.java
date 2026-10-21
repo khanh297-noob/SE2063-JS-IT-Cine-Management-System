@@ -1,5 +1,8 @@
 package controller.pos;
 
+import model.User;
+import model.pos.WorkShift;
+import service.pos.ShiftService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -10,9 +13,6 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-import model.User;
-import model.WorkShift;
-import service.ShiftService;
 
 /**
  * Vào ca / kết ca của thu ngân và nhân viên soát vé.

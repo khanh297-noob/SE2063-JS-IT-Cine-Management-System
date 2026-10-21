@@ -1,4 +1,4 @@
-package model;
+package model.booking;
 
 import java.math.BigDecimal;
 import java.sql.Date;

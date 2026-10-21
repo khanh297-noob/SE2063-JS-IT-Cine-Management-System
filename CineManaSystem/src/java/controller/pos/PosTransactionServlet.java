@@ -1,5 +1,9 @@
 package controller.pos;
 
+import model.User;
+import model.booking.Booking;
+import service.pos.PosService;
+import service.pos.ShiftService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -10,10 +14,6 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-import model.Booking;
-import model.User;
-import service.PosService;
-import service.ShiftService;
 
 /**
  * Giao dịch tại quầy của thu ngân.
