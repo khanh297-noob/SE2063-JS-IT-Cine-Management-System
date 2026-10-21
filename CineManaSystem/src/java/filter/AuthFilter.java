@@ -17,7 +17,8 @@ import util.PermissionUtil;
 import util.SessionUtil;
 
 /**
- * Chạy trước MỌI request: kiểm tra đăng nhập, trạng thái tài khoản và quyền truy cập.
+ * Chạy trước MỌI request: kiểm tra đăng nhập, trạng thái tài khoản và quyền
+ * truy cập.
  */
 @WebFilter(filterName = "authFilter", urlPatterns = "/*")
 public class AuthFilter implements Filter {
@@ -75,25 +76,42 @@ public class AuthFilter implements Filter {
         chain.doFilter(request, response);
     }
 
-    /** Kiểm tra quyền truy cập theo từng nhóm đường dẫn. */
+    /**
+     * Kiểm tra quyền truy cập theo từng nhóm đường dẫn.
+     */
     private boolean hasPermission(HttpServletRequest request, String path) {
-        // /report/... : chỉ Admin và Quản lý chi nhánh
+
+        // Trang Admin: chỉ Admin được truy cập
+        if (path.equals("/admin-home.jsp")
+                || path.startsWith("/admin/")
+                || path.equals("/admin")
+                || path.equals("/test-email")) {
+            return PermissionUtil.isAdmin(request);
+        }
+
+        // Trang Branch Manager: Admin và Quản lý chi nhánh
+        if (path.equals("/branch-home.jsp")) {
+            return PermissionUtil.isAdmin(request)
+                    || PermissionUtil.isBranchManager(request);
+        }
+
+        // Báo cáo: Admin và Quản lý chi nhánh
         if (path.startsWith("/report/")) {
             return PermissionUtil.canViewSalesReport(request);
         }
-        // /admin/... và /test-email : chỉ Admin
-        if (path.startsWith("/admin/") || path.equals("/admin") || path.equals("/test-email")) {
-            return PermissionUtil.isAdmin(request);
-        }
-        // /staff/... : nhân sự nội bộ (Admin, Quản lý, Nhân viên)
+
+        // Chức năng nhân viên nội bộ
         if (path.startsWith("/staff/") || path.equals("/staff")) {
             return PermissionUtil.isInternalUser(request);
         }
-        // Các đường dẫn khác: chỉ cần đã đăng nhập
+
+        // Các đường dẫn khác: chỉ cần đăng nhập
         return true;
     }
 
-    /** Lưu đường dẫn đang vào để đăng nhập xong quay lại đúng trang đó. */
+    /**
+     * Lưu đường dẫn đang vào để đăng nhập xong quay lại đúng trang đó.
+     */
     private void saveRequestedUrl(HttpServletRequest request) {
         String requestedUrl = request.getRequestURI();
         if (request.getQueryString() != null) {
@@ -102,7 +120,9 @@ public class AuthFilter implements Filter {
         request.getSession(true).setAttribute("redirectAfterLogin", requestedUrl);
     }
 
-    /** Lấy user mới nhất từ database, dùng xong đóng kết nối. */
+    /**
+     * Lấy user mới nhất từ database, dùng xong đóng kết nối.
+     */
     private User loadUserFromDatabase(int userId) {
         UserDao userDao = new UserDao();
         try {
@@ -112,7 +132,9 @@ public class AuthFilter implements Filter {
         }
     }
 
-    /** Đường dẫn có nằm trong danh sách công khai không (so sánh chính xác). */
+    /**
+     * Đường dẫn có nằm trong danh sách công khai không (so sánh chính xác).
+     */
     private boolean isPublicPath(String path) {
         if (path == null || path.isEmpty()) {
             return true;
@@ -125,13 +147,26 @@ public class AuthFilter implements Filter {
         return false;
     }
 
-    /** File tĩnh: nằm trong thư mục css/js/images... hoặc là file có đuôi ở thư mục gốc (vd /logo.png). */
+    /**
+     * Kiểm tra file tĩnh: CSS, JS, ảnh, font...
+     */
     private boolean isStaticResource(String path) {
+        if (path == null || path.isEmpty()) {
+            return false;
+        }
+
+        // Các thư mục chứa file tĩnh
         for (String prefix : STATIC_PREFIXES) {
             if (path.startsWith(prefix)) {
                 return true;
             }
         }
-        return path.contains(".") && path.indexOf("/", 1) < 0;
+
+        // Chỉ cho phép một số loại file tĩnh ở thư mục gốc
+        String lowerPath = path.toLowerCase();
+
+        return lowerPath.matches(
+                "^/[^/]+\\.(css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|map)$"
+        );
     }
 }
