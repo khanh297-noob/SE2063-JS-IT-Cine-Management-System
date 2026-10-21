@@ -249,7 +249,44 @@
     </a>
     <a class="feature-card" href="${ctx}/promotion-price-manage">Promotion & Pricing Management
     </a>
-    <a class="feature-card" href="${ctx}/payment-manage">Payment-Management
+    <!-- Feature: Quản lý thanh toán (phần 6 - Nam) -->
+    <a class="feature-card" href="${ctx}/admin/payments">
+        <div>
+            <div class="feature-header">
+                <div class="feature-icon" aria-hidden="true">&#128179;</div>
+                <div class="feature-title-wrap">
+                    <h2>Quản lý thanh toán</h2>
+                    <span class="feature-badge">VNPay / Tại quầy</span>
+                </div>
+            </div>
+            <p class="feature-desc">
+                Tra cứu giao dịch theo ngày, chi nhánh, phương thức; xem chi tiết và đối soát giao dịch đang chờ.
+            </p>
+        </div>
+        <div class="feature-action">
+            <span>Truy cập Quản lý thanh toán</span>
+            <span class="feature-arrow">&rarr;</span>
+        </div>
+    </a>
+
+    <!-- Feature: Giờ làm nhân viên (phần 7 - Nam) -->
+    <a class="feature-card" href="${ctx}/manager/working-hours">
+        <div>
+            <div class="feature-header">
+                <div class="feature-icon" aria-hidden="true">&#9201;</div>
+                <div class="feature-title-wrap">
+                    <h2>Giờ làm nhân viên</h2>
+                    <span class="feature-badge">Ca thu ngân &amp; soát vé</span>
+                </div>
+            </div>
+            <p class="feature-desc">
+                Xem các ca làm việc, thời gian vào/ra ca và tổng giờ làm của nhân viên quầy và soát vé.
+            </p>
+        </div>
+        <div class="feature-action">
+            <span>Xem giờ làm</span>
+            <span class="feature-arrow">&rarr;</span>
+        </div>
     </a>
 </div>
 

@@ -349,6 +349,27 @@
         </div>
     </a>
 
+    <!-- Feature: Payment Management (phần 6 - Nam) -->
+    <a class="feature-card" href="${ctx}/admin/payments">
+        <div>
+            <div class="feature-header">
+                <div class="feature-icon" aria-hidden="true">&#128179;</div>
+                <div class="feature-title-wrap">
+                    <h2>Payment Management</h2>
+                    <span class="feature-badge">VNPay / Counter</span>
+                </div>
+            </div>
+            <p class="feature-desc">
+                Search transactions by date, branch and method, view details,
+                reconcile pending payments and check staff working hours.
+            </p>
+        </div>
+        <div class="feature-action">
+            <span>Access Payment Management</span>
+            <span class="feature-arrow">&rarr;</span>
+        </div>
+    </a>
+
 </div>
 
 <div class="note-box">
