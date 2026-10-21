@@ -586,3 +586,53 @@ a {
 .bg-amber { background-color: #f59e0b !important; }
 .bg-blue { background-color: #2563eb !important; }
 .chevron-small { color: #94a3b8 !important; font-size: 11px !important; margin-left: 2px !important; }
+
+/* ===== Trang chủ lấy phim từ database ===== */
+.age-t16 { background-color: #7c3aed; }
+.age-k { background-color: #059669; }
+.age-c { background-color: #475569; }
+
+/* Khung tên phim nằm dưới poster: hiện ra khi phim chưa có poster hoặc link ảnh lỗi */
+.poster-placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    text-align: center;
+    color: #cbd5e1;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.poster-wrapper .movie-poster {
+    position: relative;
+    z-index: 1;
+}
+
+.btn-card-outline {
+    background-color: #ffffff;
+    color: #e11d48;
+    border: 1px solid #e11d48;
+}
+
+.btn-card-outline:hover {
+    background-color: #fff1f2;
+}
+
+.movie-empty {
+    width: 100%;
+    padding: 48px 16px;
+    margin-bottom: 48px;
+    text-align: center;
+    color: #64748b;
+    background-color: #ffffff;
+    border: 1px dashed #cbd5e1;
+    border-radius: 12px;
+}
+
+.movie-empty a {
+    color: #e11d48;
+    font-weight: 700;
+}

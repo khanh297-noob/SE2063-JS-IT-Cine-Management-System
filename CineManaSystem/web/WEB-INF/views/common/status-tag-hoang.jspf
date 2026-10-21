@@ -1,0 +1,8 @@
+<%@ page pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%-- Nhãn trạng thái phim. Trang cha đặt biến tagStatus. --%>
+<c:choose>
+    <c:when test="${tagStatus == 'Now Showing'}"><span class="tag tag-now">Đang chiếu</span></c:when>
+    <c:when test="${tagStatus == 'Coming Soon'}"><span class="tag tag-soon">Sắp chiếu</span></c:when>
+    <c:otherwise><span class="tag tag-ended">Ngưng chiếu</span></c:otherwise>
+</c:choose>
