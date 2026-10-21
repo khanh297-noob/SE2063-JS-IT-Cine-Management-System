@@ -122,7 +122,7 @@ public class PosService {
                 throw new IllegalArgumentException("The selected seat is not available. (" + s.getLabel() + ")");
             }
         }
-        if (!"Cash".equals(method) && !"Credit Card".equals(method)) {
+        if (!"Cash".equals(method) && !"Credit Card".equals(method) && !"VNPay".equals(method)) {
             throw new IllegalArgumentException("The Payment method is required.");
         }
 
@@ -140,8 +140,15 @@ public class PosService {
             throw new IllegalArgumentException("Tiền khách đưa không đủ (cần " + String.format("%,.0f ₫", total) + ").");
         }
 
-        // Lưu DB (1 transaction)
-        String txnCode = ("Cash".equals(method) ? "CASH-" : "CARD-") + System.currentTimeMillis();
+        // Lưu DB (1 transaction). VNPay: mã tạm, sẽ được thay bằng txnRef khi tạo link thanh toán VNPay
+        String txnCode;
+        if ("Cash".equals(method)) {
+            txnCode = "CASH-" + System.currentTimeMillis();
+        } else if ("Credit Card".equals(method)) {
+            txnCode = "CARD-" + System.currentTimeMillis();
+        } else {
+            txnCode = "VNPAY-PENDING";
+        }
         int bookingId = bookingDAO.createCounterBooking(cashier.getUserId(), shift.getBranchId(), promoId, total,
                 st.getShowtimeId(), seats, items, method, txnCode);
         if (bookingId < 0) {
@@ -154,6 +161,41 @@ public class PosService {
 
     public Booking getBooking(int bookingId) {
         return bookingDAO.getBooking(bookingId);
+    }
+
+    // ===================== Thanh toán VNPay QR tại quầy =====================
+    /**
+     * Tạo link thanh toán VNPay sandbox cho đơn tại quầy vừa tạo (đơn đang Pending).
+     * Lỗi thì hủy đơn để nhả ghế rồi báo lỗi.
+     * @return link thanh toán - JSP vẽ link này thành mã QR
+     */
+    public String createVnpayQr(int bookingId, String returnUrl, String clientIp) {
+        Booking b = bookingDAO.getBooking(bookingId);
+        try {
+            return paymentService.createVnpayUrl(b, returnUrl, clientIp);
+        } catch (RuntimeException e) {
+            bookingDAO.cancelUnpaid(bookingId);
+            throw new IllegalArgumentException("Không tạo được thanh toán VNPay: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Hỏi VNPay khách đã trả tiền chưa (màn hình QR tự tải lại mỗi 5 giây sẽ gọi hàm này).
+     * @return "PAID" | "WAITING" | "FAILED"
+     */
+    public String checkVnpayPayment(Booking b) {
+        return paymentService.checkVnpayPayment(b);
+    }
+
+    // Thu ngân bấm Hủy trên màn hình QR (khách đổi ý / muốn trả tiền mặt) -> hủy đơn, nhả ghế
+    public void cancelVnpayPayment(User cashier, int bookingId, String ip) {
+        Booking b = bookingDAO.getBooking(bookingId);
+        if (b == null || b.getUserId() != cashier.getUserId()) {
+            throw new IllegalArgumentException("No search results.");
+        }
+        if (bookingDAO.cancelUnpaid(bookingId)) {
+            auditLogDAO.insert(cashier.getUserId(), "COUNTER_VNPAY_CANCEL|booking=" + bookingId, ip);
+        }
     }
 
     // Giao dịch tại quầy của thu ngân trong 1 ngày

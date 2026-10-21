@@ -192,6 +192,42 @@ public class PaymentService {
     }
 
     // Xác nhận đã nhận tiền. Nếu tiền về khi đơn đã bị hủy (hết giờ giữ ghế) thì ghi log để hoàn tiền thủ công.
+    /**
+     * Hỏi VNPay xem đơn đã được thanh toán chưa (dùng cho VNPay QR tại quầy).
+     * @return "PAID" (đã trả, đơn Confirmed) | "WAITING" (khách chưa trả xong) | "FAILED" (thất bại / hết giờ, đơn đã hủy)
+     */
+    public String checkVnpayPayment(Booking b) {
+        if ("Confirmed".equals(b.getStatus())) {
+            return "PAID";      // Return URL đã xác nhận trước rồi
+        }
+        if (!"Pending".equals(b.getStatus()) || !"Pending".equals(b.getPaymentStatus())) {
+            return "FAILED";
+        }
+        Map<String, String> r;
+        try {
+            r = VNPayGateway.queryPayment(b.getTransactionCode(), "127.0.0.1");
+        } catch (IllegalArgumentException e) {
+            return "WAITING";   // mất mạng tạm thời -> lần tải lại sau hỏi tiếp
+        }
+        if ("00".equals(r.get("responseCode")) && "00".equals(r.get("transactionStatus"))) {
+            // Đã trả: kiểm tra đúng số tiền rồi xác nhận đơn
+            if (r.get("amount") != null && new BigDecimal(r.get("amount")).compareTo(b.getTotalAmount()) != 0) {
+                return "WAITING";
+            }
+            confirm(b.getBookingId(), b.getTransactionCode() + "-" + r.get("transactionNo"));
+            return "PAID";
+        }
+        if ("00".equals(r.get("responseCode")) && "02".equals(r.get("transactionStatus"))) {
+            bookingDAO.cancelUnpaid(b.getBookingId());     // giao dịch lỗi
+            return "FAILED";
+        }
+        if (getSecondsLeft(b) <= 0) {
+            bookingDAO.cancelUnpaid(b.getBookingId());     // hết 10 phút giữ ghế
+            return "FAILED";
+        }
+        return "WAITING";       // "91" chưa có giao dịch / "01" khách đang thanh toán
+    }
+
     private void confirm(int bookingId, String txnCode) {
         String result = bookingDAO.confirmPaid(bookingId, txnCode);
         if ("LATE".equals(result)) {

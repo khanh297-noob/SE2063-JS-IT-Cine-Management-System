@@ -107,6 +107,20 @@ public class PosCounterServlet extends HttpServlet {
                 int bookingId = posService.createCounterBooking(user, shift, st, seats, items,
                         method, cashReceived, voucher, request.getRemoteAddr());
 
+                // VNPay: tạo link thanh toán VNPay, lưu vào session rồi sang màn hình hiện QR
+                if ("VNPay".equals(method)) {
+                    String baseUrl = request.getScheme() + "://" + request.getServerName() + ":"
+                            + request.getServerPort() + request.getContextPath();
+                    String ip = request.getRemoteAddr();
+                    if (ip.equals("0:0:0:0:0:0:0:1")) {
+                        ip = "127.0.0.1";   // IPv6 localhost -> IPv4 cho VNPay
+                    }
+                    String payUrl = posService.createVnpayQr(bookingId, baseUrl + "/payment/vnpay-return", ip);
+                    session.setAttribute("vnpayPayUrl_" + bookingId, payUrl);
+                    response.sendRedirect(request.getContextPath() + "/pos/vnpay-qr?bookingId=" + bookingId);
+                    return;
+                }
+
                 String msg = "Booking created successfully.";
                 if ("Cash".equals(method)) {
                     Booking b = posService.getBooking(bookingId);

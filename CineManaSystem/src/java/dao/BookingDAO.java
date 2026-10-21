@@ -212,12 +212,14 @@ public class BookingDAO extends DBContext {
     /**
      * Tạo đơn tại quầy trong 1 transaction:
      * Booking + Ticket 'Valid' cho từng ghế + Booking_F_B + Payment.
-     *  Tiền mặt / thẻ đã thu tiền ngay nên Booking 'Confirmed', Payment 'Success'.
+     *  - Tiền mặt / thẻ (đã thu tiền): Booking 'Confirmed', Payment 'Success'
+     *  - VNPay QR (khách chưa trả):   Booking 'Pending',   Payment 'Pending' (giữ ghế chờ khách trả)
      * Khách tại quầy không có tài khoản nên UserID = thu ngân; StaffID = thu ngân, Channel = 'Counter'.
      * @return BookingID, hoặc -1 nếu ghế vừa bị người khác đặt / lỗi DB
      */
     public int createCounterBooking(int cashierId, int branchId, Integer promoId, BigDecimal total, int showtimeId,
             List<Seat> seats, List<FnbItem> items, String method, String txnCode) {
+        boolean paid = !"VNPay".equals(method);
         try (Connection con = getConnection()) {
             con.setAutoCommit(false);
             con.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
@@ -256,7 +258,7 @@ public class BookingDAO extends DBContext {
                     }
                     ps.setInt(3, branchId);
                     ps.setBigDecimal(4, total);
-                    ps.setString(5, "Confirmed");
+                    ps.setString(5, paid ? "Confirmed" : "Pending");
                     ps.setInt(6, cashierId);
                     ps.executeUpdate();
                     try (ResultSet rs = ps.getGeneratedKeys()) {
@@ -290,7 +292,7 @@ public class BookingDAO extends DBContext {
                     }
                 }
 
-                // 5. Thanh toán (tiền mặt / thẻ => Success luôn)
+                // 5. Thanh toán (tiền mặt / thẻ => Success luôn; VNPay => Pending chờ khách trả)
                 String paySql = "INSERT INTO Payment (BookingID, Amount, PaymentMethod, PaymentTime, TransactionCode, GatewayStatus) "
                         + "VALUES (?, ?, ?, GETDATE(), ?, ?)";
                 try (PreparedStatement ps = con.prepareStatement(paySql)) {
@@ -298,7 +300,7 @@ public class BookingDAO extends DBContext {
                     ps.setBigDecimal(2, total);
                     ps.setString(3, method);
                     ps.setString(4, txnCode);
-                    ps.setString(5, "Success");
+                    ps.setString(5, paid ? "Success" : "Pending");
                     ps.executeUpdate();
                 }
 
