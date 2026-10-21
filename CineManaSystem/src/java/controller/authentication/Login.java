@@ -74,9 +74,12 @@ public class Login extends HttpServlet {
         }
 
         // Không có trang trước đó: Admin/Quản lý vào dashboard, còn lại về trang chủ
-        if (PermissionUtil.canViewSalesReport(request)) {
-            response.sendRedirect(contextPath + "/report/branch-dashboard");
-        } else {
+        if (PermissionUtil.isBranchManager(request)) {
+            response.sendRedirect(contextPath + "/branch-home.jsp");
+        }
+        else if(PermissionUtil.isAdmin(request)){
+            response.sendRedirect(contextPath + "/admin-home.jsp");
+        }else {
             response.sendRedirect(contextPath + "/index-tuyet.jsp");
         }
     }
