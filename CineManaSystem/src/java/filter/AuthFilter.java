@@ -26,7 +26,9 @@ public class AuthFilter implements Filter {
     // Các trang ai cũng vào được, không cần đăng nhập
     private static final List<String> PUBLIC_PATHS = Arrays.asList(
             "/login", "/register", "/verify-email", "/resend-otp", "/logout",
-            "/access-denied", "/forgot-password", "/index.html", "/index-tuyet.jsp", "/",
+            "/access-denied", "/forgot-password", "/index.html", "/index-tuyet.jsp", "/home", "/",
+            // Giao diện khách hàng của module Chi nhánh & Phim
+            "/movies", "/movies/detail", "/movies/favorite", "/branch", "/branch/details",
             // Phần thanh toán: VNPay gọi về (Servlet tự kiểm tra chữ ký nên không cần đăng nhập)
             "/payment/vnpay-return", "/api/v1/payment/webhook/vnpay");
 
@@ -99,6 +101,12 @@ public class AuthFilter implements Filter {
 
         // Trang Branch Manager: Admin và Quản lý chi nhánh
         if (path.equals("/branch-home.jsp")) {
+            return PermissionUtil.isAdmin(request)
+                    || PermissionUtil.isBranchManager(request);
+        }
+
+        // Quản lý chi nhánh, phòng chiếu, phim, thể loại: Admin và Quản lý chi nhánh
+        if (path.startsWith("/manage/")) {
             return PermissionUtil.isAdmin(request)
                     || PermissionUtil.isBranchManager(request);
         }

@@ -1,0 +1,86 @@
+<%@ page pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+<%--
+  Đầu trang của trang Phim cho khách (/movies...). Không dùng thanh menu quản trị.
+  Khu Rạp (/branch...) có đầu trang riêng: branch-header-hoang.jspf.
+  Trước khi include, trang cha đặt:
+    pageTitle    tiêu đề tab
+    customerNav  mục đang chọn: home | genre | year | lang
+  Servlet đặt sẵn: menu (genres, years, languages).
+--%>
+<c:set var="moduleCss" value="customer-hoang"/>
+<%@ include file="/WEB-INF/views/common/head-hoang.jspf" %>
+<body>
+<header class="topbar">
+    <div class="topbar-inner customer-topbar-inner">
+        <%-- Logo giống trang chủ (home-tuyet.jsp): ô "CG" + chữ CineGo --%>
+        <a class="brand-logo" href="${ctx}/home" title="Trang chủ CineGo">
+            <span class="logo-badge" aria-hidden="true">CG</span>
+            <span class="logo-text">CineGo</span>
+        </a>
+        <nav class="cnav" aria-label="Duyệt phim">
+            <a class="cnav-link ${customerNav == 'home' ? 'current' : ''}" href="${ctx}/">Trang chủ</a>
+
+            <div class="cnav-item">
+                <button type="button" class="cnav-link ${customerNav == 'genre' ? 'current' : ''}" aria-haspopup="true">Thể loại</button>
+                <ul class="cnav-menu">
+                    <c:forEach var="g" items="${menu.genres}">
+                        <li><a href="${ctx}/movies?genreId=${g.genreId}"><c:out value="${g.name}"/></a></li>
+                    </c:forEach>
+                    <c:if test="${empty menu.genres}"><li class="cnav-empty">Chưa có phim</li></c:if>
+                </ul>
+            </div>
+
+            <div class="cnav-item">
+                <button type="button" class="cnav-link ${customerNav == 'year' ? 'current' : ''}" aria-haspopup="true">Năm phát hành</button>
+                <ul class="cnav-menu">
+                    <c:forEach var="y" items="${menu.years}">
+                        <li><a href="${ctx}/movies?year=${y}">${y}</a></li>
+                    </c:forEach>
+                    <c:if test="${empty menu.years}"><li class="cnav-empty">Chưa có phim</li></c:if>
+                </ul>
+            </div>
+
+            <div class="cnav-item">
+                <button type="button" class="cnav-link ${customerNav == 'lang' ? 'current' : ''}" aria-haspopup="true">Ngôn ngữ</button>
+                <ul class="cnav-menu">
+                    <c:forEach var="l" items="${menu.languages}">
+                        <c:url var="langUrl" value="/movies"><c:param name="lang" value="${l}"/></c:url>
+                        <li><a href="${langUrl}"><c:out value="${l}"/></a></li>
+                    </c:forEach>
+                    <c:if test="${empty menu.languages}"><li class="cnav-empty">Chưa có phim</li></c:if>
+                </ul>
+            </div>
+        </nav>
+
+        <%-- Tài khoản (góc phải). Đăng nhập do module Auth xử lý (/login);
+             sessionScope.User do Auth đặt khi đăng nhập thành công. Bấm tên để vào hồ sơ cá nhân. --%>
+        <div class="account">
+            <c:choose>
+                <c:when test="${not empty sessionScope.User}">
+                    <c:if test="${isAdmin}"><a class="account-btn" href="${ctx}/manage">Quản lý</a></c:if>
+                    <a class="account-name" href="${ctx}/customer/profile" title="${fn:escapeXml(sessionScope.User.email)}"><c:out value="${sessionScope.User.fullName}"/></a>
+                </c:when>
+                <c:otherwise>
+                    <a class="account-btn account-login" href="${ctx}/login">Đăng nhập</a>
+                </c:otherwise>
+            </c:choose>
+        </div>
+    </div>
+</header>
+<main class="page page-wide">
+<c:if test="${not empty sessionScope.flashSuccess}">
+    <div class="notice notice-ok" role="status"><c:out value="${sessionScope.flashSuccess}"/></div>
+    <c:remove var="flashSuccess" scope="session"/>
+</c:if>
+<c:if test="${not empty sessionScope.flashError}">
+    <div class="notice notice-error" role="alert"><c:out value="${sessionScope.flashError}"/></div>
+    <c:remove var="flashError" scope="session"/>
+</c:if>
+<c:if test="${not empty errors}">
+    <div class="notice notice-error" role="alert">
+        Chưa gửi được. Sửa các mục sau rồi thử lại:
+        <ul><c:forEach var="e" items="${errors}"><li><c:out value="${e}"/></li></c:forEach></ul>
+    </div>
+</c:if>

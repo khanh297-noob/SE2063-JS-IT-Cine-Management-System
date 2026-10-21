@@ -259,7 +259,37 @@
         </div>
     </a>
 
-    <!-- Feature 2: Promotion & Pricing Management -->
+    <!-- Feature 2: Movie Management -->
+    <a class="feature-card" href="${ctx}/manage/movie">
+        <div>
+            <div class="feature-header">
+                <div class="feature-icon" aria-hidden="true">
+                    &#127916;
+                </div>
+
+                <div class="feature-title-wrap">
+                    <h2>Movie Management</h2>
+                    <span class="feature-badge">
+                        Movie Catalog
+                    </span>
+                </div>
+            </div>
+
+            <p class="feature-desc">
+                Manage the movie catalog, movie details, posters and
+                trailers, screening status and the branches showing
+                each movie. Maintain genres used to classify and
+                filter movies.
+            </p>
+        </div>
+
+        <div class="feature-action">
+            <span>Access Movie Management</span>
+            <span class="feature-arrow">&rarr;</span>
+        </div>
+    </a>
+
+    <!-- Feature 3: Promotion & Pricing Management -->
     <a class="feature-card" href="${ctx}/manage/promotion-pricing">
         <div>
             <div class="feature-header">
@@ -289,7 +319,7 @@
         </div>
     </a>
 
-    <!-- Feature 3: System Administration -->
+    <!-- Feature 4: System Administration -->
     <a class="feature-card" href="${ctx}/admin/system">
         <div>
             <div class="feature-header">

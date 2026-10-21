@@ -13,3 +13,5 @@ Thumbs.db
 # Key VNPay Sandbox (moi nguoi tu tao tu vnpay.properties.example)
 vnpay.properties
 CineManaSystem/web/WEB-INF/ConnectDB.properties
+# Cấu hình DB riêng từng máy cho module của Hoàng
+CineManaSystem/src/java/db.local.properties
