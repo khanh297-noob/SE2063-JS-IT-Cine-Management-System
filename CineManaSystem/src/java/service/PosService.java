@@ -3,7 +3,7 @@ package service;
 import dao.AuditLogDAO;
 import dao.BookingDAO;
 import dao.FnbDAO;
-import dao.ShowtimeDAO;
+import dao.PosShowtimeDAO;
 import dao.StaffDAO;
 import java.math.BigDecimal;
 import java.sql.Date;
@@ -28,7 +28,7 @@ import util.PasswordUtil;
  */
 public class PosService {
 
-    private final ShowtimeDAO showtimeDAO = new ShowtimeDAO();
+    private final PosShowtimeDAO posShowtimeDAO = new PosShowtimeDAO();
     private final FnbDAO fnbDAO = new FnbDAO();
     private final BookingDAO bookingDAO = new BookingDAO();
     private final StaffDAO staffDAO = new StaffDAO();
@@ -55,7 +55,7 @@ public class PosService {
     // Suất chiếu trong ngày của rạp, gom theo tên phim: { "Tên phim" -> [suất 1, suất 2...] }
     public Map<String, List<Showtime>> getShowtimesByMovie(int branchId, LocalDate date, String keyword) {
         Map<String, List<Showtime>> movies = new LinkedHashMap<>();
-        for (Showtime s : showtimeDAO.getByBranchAndDate(branchId, Date.valueOf(date), keyword)) {
+        for (Showtime s : posShowtimeDAO.getByBranchAndDate(branchId, Date.valueOf(date), keyword)) {
             if (!movies.containsKey(s.getMovieTitle())) {
                 movies.put(s.getMovieTitle(), new ArrayList<>());
             }
@@ -65,12 +65,12 @@ public class PosService {
     }
 
     public Showtime getShowtime(int showtimeId) {
-        return showtimeDAO.getById(showtimeId);
+        return posShowtimeDAO.getById(showtimeId);
     }
 
     // Sơ đồ ghế kèm giá từng ghế
     public List<Seat> getSeats(Showtime st) {
-        List<Seat> seats = showtimeDAO.getSeats(st.getShowtimeId(), st.getRoomId());
+        List<Seat> seats = posShowtimeDAO.getSeats(st.getShowtimeId(), st.getRoomId());
         for (Seat s : seats) {
             s.setPrice(getTicketPrice(st.getBasePrice(), s.getSurcharge(), st.getRoomSurcharge()));
         }

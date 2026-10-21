@@ -12,7 +12,11 @@ import java.util.List;
 import model.Seat;
 import model.Showtime;
 
-public class ShowtimeDAO extends DBContext {
+/**
+ * Suất chiếu + sơ đồ ghế cho POS bán vé tại quầy và soát vé.
+ * Đặt tên PosShowtimeDAO để không trùng dao.ShowtimeDAO của module Chi nhánh & Phim.
+ */
+public class PosShowtimeDAO extends DBContext {
 
     // Phụ thu loại phòng lấy từ bảng RoomType (Room.RoomType = RoomType.Name)
     private static final String SELECT_SHOWTIME
@@ -57,7 +61,7 @@ public class ShowtimeDAO extends DBContext {
                 }
             }
         } catch (SQLException e) {
-            System.out.println("Lỗi ShowtimeDAO.getById: " + e.getMessage());
+            System.out.println("Lỗi PosShowtimeDAO.getById: " + e.getMessage());
         }
         return null;
     }
