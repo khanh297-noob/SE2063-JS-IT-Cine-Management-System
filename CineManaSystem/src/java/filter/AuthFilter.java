@@ -111,6 +111,14 @@ public class AuthFilter implements Filter {
                     || PermissionUtil.isBranchManager(request);
         }
 
+        if (path.equals("/booking/detail") || path.equals("/ticket/qr")) {
+            return true;
+        }
+        if (path.equals("/booking") || path.startsWith("/booking/")
+                || path.equals("/customer/bookings") || path.equals("/customer/deactivate")) {
+            return PermissionUtil.isCustomer(request);
+        }
+
         // Giờ làm nhân viên: Admin và Quản lý chi nhánh
         if (path.startsWith("/manager/")) {
             return PermissionUtil.isAdmin(request) || PermissionUtil.isBranchManager(request);

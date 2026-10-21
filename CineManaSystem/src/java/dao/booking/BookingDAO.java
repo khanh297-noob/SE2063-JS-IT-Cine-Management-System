@@ -29,6 +29,7 @@ public class BookingDAO extends DBContext {
     // Lấy đầy đủ 1 đơn: khách, voucher, thanh toán, vé, đồ ăn
     public Booking getBooking(int bookingId) {
         String sql = "SELECT b.BookingID, b.UserID, b.PromoID, b.BranchID, b.BookingDate, b.TotalAmount, b.Status, "
+                + "       b.Channel, b.CancelledAt, b.RefundAmount, "
                 + "       u.FullName, u.Email, u.Phone, u.Role, pr.PromoCode, "
                 + "       p.PaymentMethod, p.GatewayStatus, p.TransactionCode, p.PaymentTime "
                 + "FROM Booking b "
@@ -52,6 +53,9 @@ public class BookingDAO extends DBContext {
                         b.setBookingDate(rs.getTimestamp("BookingDate"));
                         b.setTotalAmount(rs.getBigDecimal("TotalAmount"));
                         b.setStatus(rs.getString("Status"));
+                        b.setChannel(rs.getString("Channel"));
+                        b.setCancelledAt(rs.getTimestamp("CancelledAt"));
+                        b.setRefundAmount(rs.getBigDecimal("RefundAmount"));
                         b.setCustomerName(rs.getString("FullName"));
                         b.setCustomerEmail(rs.getString("Email"));
                         b.setCustomerPhone(rs.getString("Phone"));
@@ -435,6 +439,106 @@ public class BookingDAO extends DBContext {
             System.out.println("Lỗi kết nối cancelCounterBooking: " + e.getMessage());
         }
         return false;
+    }
+
+
+    public int createOnlineBooking(Connection con, int userId, int branchId, int showtimeId,
+            List<model.booking.SeatView> seats, List<FnbItem> items, BigDecimal total) throws SQLException {
+        int bookingId;
+        String bookingSql = "INSERT INTO Booking (UserID, PromoID, BranchID, BookingDate, TotalAmount, Status, Channel, StaffID) "
+                + "VALUES (?, NULL, ?, SYSDATETIME(), ?, 'Pending', 'Online', NULL)";
+        try (PreparedStatement ps = con.prepareStatement(bookingSql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setInt(1, userId);
+            ps.setInt(2, branchId);
+            ps.setBigDecimal(3, total);
+            ps.executeUpdate();
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                rs.next();
+                bookingId = rs.getInt(1);
+            }
+        }
+        String ticketSql = "INSERT INTO Ticket (BookingID, ShowtimeID, SeatID, TicketCode, FinalPrice, Status) "
+                + "VALUES (?, ?, ?, ?, ?, 'Valid')";
+        for (model.booking.SeatView s : seats) {
+            try (PreparedStatement ps = con.prepareStatement(ticketSql)) {
+                ps.setInt(1, bookingId);
+                ps.setInt(2, showtimeId);
+                ps.setInt(3, s.getSeatId());
+                ps.setString(4, newTicketCode());
+                ps.setBigDecimal(5, s.getPrice());
+                ps.executeUpdate();
+            }
+        }
+        String fnbSql = "INSERT INTO Booking_F_B (BookingID, ItemID, Quantity) VALUES (?, ?, ?)";
+        for (FnbItem f : items) {
+            try (PreparedStatement ps = con.prepareStatement(fnbSql)) {
+                ps.setInt(1, bookingId);
+                ps.setInt(2, f.getItemId());
+                ps.setInt(3, f.getQuantity());
+                ps.executeUpdate();
+            }
+        }
+        return bookingId;
+    }
+
+    public List<Booking> getOnlineBookings(int userId) {
+        List<Integer> ids = new ArrayList<>();
+        String sql = "SELECT BookingID FROM Booking WHERE UserID = ? AND (Channel IS NULL OR Channel <> 'Counter') "
+                + "AND EXISTS (SELECT 1 FROM Ticket t WHERE t.BookingID = Booking.BookingID) "
+                + "ORDER BY BookingDate DESC";
+        try (Connection con = getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ids.add(rs.getInt(1));
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Lỗi getOnlineBookings: " + e.getMessage());
+        }
+        List<Booking> list = new ArrayList<>();
+        for (int id : ids) {
+            Booking b = getBooking(id);
+            if (b != null) {
+                list.add(b);
+            }
+        }
+        return list;
+    }
+
+    public Integer findPendingOnlineBooking(int userId, int showtimeId) {
+        String sql = "SELECT TOP 1 b.BookingID FROM Booking b JOIN Ticket t ON t.BookingID = b.BookingID "
+                + "WHERE b.UserID = ? AND t.ShowtimeID = ? AND b.Status = 'Pending' AND b.Channel = 'Online' "
+                + "ORDER BY b.BookingDate DESC";
+        try (Connection con = getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            ps.setInt(2, showtimeId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Lỗi findPendingOnlineBooking: " + e.getMessage());
+        }
+        return null;
+    }
+
+    public int countUpcomingConfirmed(int userId) {
+        String sql = "SELECT COUNT(DISTINCT b.BookingID) FROM Booking b JOIN Ticket t ON t.BookingID = b.BookingID "
+                + "JOIN Showtime s ON s.ShowtimeID = t.ShowtimeID WHERE b.UserID = ? AND b.Status = 'Confirmed' "
+                + "AND t.Status = 'Valid' AND s.Status <> 'Cancelled' "
+                + "AND (s.ShowDate > CAST(GETDATE() AS DATE) "
+                + "     OR (s.ShowDate = CAST(GETDATE() AS DATE) AND s.StartTime > CAST(GETDATE() AS TIME)))";
+        try (Connection con = getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        } catch (SQLException e) {
+            System.out.println("Lỗi countUpcomingConfirmed: " + e.getMessage());
+        }
+        return 0;
     }
 
     // Mã vé ngẫu nhiên dùng làm nội dung QR, vd TK7KQ2M9XH4PZA

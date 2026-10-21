@@ -113,6 +113,18 @@ public class UserDao extends DBContext {
         }
     }
 
+    public boolean updateStatus(int userId, String status) {
+        String sql = "UPDATE [User] SET [Status] = ? WHERE UserID = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, status);
+            ps.setInt(2, userId);
+            return ps.executeUpdate() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     // ==================== BẢNG EmailVerification (OTP) ====================
 
     /** Lưu OTP mới. Các OTP cũ chưa dùng của email này bị vô hiệu hóa trước. */

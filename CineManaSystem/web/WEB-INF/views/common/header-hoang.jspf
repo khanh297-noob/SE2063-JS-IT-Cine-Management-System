@@ -6,7 +6,7 @@
     nav        mục menu đang chọn: branches | rooms | room-types (quản lý chi nhánh)
                                     hoặc movies | genres (quản lý phim)
 --%>
-<c:set var="moduleCss" value="branch-hoang,movie-hoang"/>
+<c:set var="moduleCss" value="branch-hoang,movie-hoang${empty extraCss ? '' : ','}${extraCss}"/>
 <%@ include file="/WEB-INF/views/common/head-hoang.jspf" %>
 <body>
 <header class="topbar">
@@ -15,10 +15,12 @@
         <%-- Quản lý chi nhánh và quản lý phim là hai chức năng riêng (hai ô trên trang chủ quản trị),
              nên menu chỉ hiện các mục của chức năng đang mở. --%>
         <c:choose>
-            <c:when test="${nav == 'movies' or nav == 'genres'}">
+            <c:when test="${nav == 'movies' or nav == 'genres' or nav == 'showtimes' or nav == 'schedule'}">
                 <nav class="topnav" aria-label="Quản lý phim">
                     <a href="${ctx}/manage/movie" class="${nav == 'movies' ? 'current' : ''}">Phim</a>
                     <a href="${ctx}/manage/genres" class="${nav == 'genres' ? 'current' : ''}">Thể loại</a>
+                    <a href="${ctx}/manager/showtimes" class="${nav == 'showtimes' ? 'current' : ''}">Suất chiếu</a>
+                    <a href="${ctx}/manager/schedule" class="${nav == 'schedule' ? 'current' : ''}">Lịch tổng hợp</a>
                 </nav>
             </c:when>
             <c:otherwise>

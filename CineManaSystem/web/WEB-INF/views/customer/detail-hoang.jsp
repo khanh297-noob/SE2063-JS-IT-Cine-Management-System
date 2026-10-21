@@ -45,6 +45,7 @@
             </dl>
 
             <c:if test="${movie.nowShowing}">
+            <a class="btn btn-primary" href="${ctx}/booking?movieId=${movie.movieId}">Đặt vé</a>
             <form class="fav-inline" method="post" action="${ctx}/movies/favorite">
                 <input type="hidden" name="movieId" value="${movie.movieId}">
                 <input type="hidden" name="back" value="/movies/detail?id=${movie.movieId}">

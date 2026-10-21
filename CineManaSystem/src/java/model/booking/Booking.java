@@ -25,6 +25,9 @@ public class Booking {
     private Timestamp bookingDate;
     private BigDecimal totalAmount;   // số tiền cuối cùng phải trả (đã trừ voucher)
     private String status;
+    private String channel;
+    private Timestamp cancelledAt;
+    private BigDecimal refundAmount;
 
     // Thông tin suất chiếu (lấy từ vé đầu tiên)
     private String movieTitle;
@@ -119,6 +122,35 @@ public class Booking {
             }
         }
         return true;
+    }
+
+    public boolean isShowFinished() {
+        LocalDateTime start = getStartDateTime();
+        return start != null && !start.isAfter(LocalDateTime.now());
+    }
+
+    public String getChannel() {
+        return channel;
+    }
+
+    public void setChannel(String channel) {
+        this.channel = channel;
+    }
+
+    public Timestamp getCancelledAt() {
+        return cancelledAt;
+    }
+
+    public void setCancelledAt(Timestamp cancelledAt) {
+        this.cancelledAt = cancelledAt;
+    }
+
+    public BigDecimal getRefundAmount() {
+        return refundAmount;
+    }
+
+    public void setRefundAmount(BigDecimal refundAmount) {
+        this.refundAmount = refundAmount;
     }
 
     // ===== Getter / Setter =====

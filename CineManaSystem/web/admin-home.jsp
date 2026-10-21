@@ -289,6 +289,35 @@
         </div>
     </a>
 
+    <a class="feature-card" href="${ctx}/manager/showtimes">
+        <div>
+            <div class="feature-header">
+                <div class="feature-icon" aria-hidden="true">
+                    &#128197;
+                </div>
+
+                <div class="feature-title-wrap">
+                    <h2>Showtime Management</h2>
+                    <span class="feature-badge">
+                        Schedule &amp; Ticket Price
+                    </span>
+                </div>
+            </div>
+
+            <p class="feature-desc">
+                Create, edit and cancel showtimes for every branch,
+                assign rooms and movies, check schedule overlaps.
+                Ticket price is calculated from the room and the day
+                (+20,000 VND on Saturday / Sunday).
+            </p>
+        </div>
+
+        <div class="feature-action">
+            <span>Access Showtime Management</span>
+            <span class="feature-arrow">&rarr;</span>
+        </div>
+    </a>
+
     <!-- Feature 3: Promotion & Pricing Management -->
     <a class="feature-card" href="${ctx}/manage/promotion-pricing">
         <div>

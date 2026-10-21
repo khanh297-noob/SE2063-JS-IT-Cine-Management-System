@@ -1,6 +1,6 @@
 package service.branch;
 
-import dao.ShowtimeDAO;
+import dao.movie.ShowtimeDAO;
 import dao.branch.BranchDAO;
 import dao.branch.RoomDAO;
 import dao.branch.RoomTypeDAO;
