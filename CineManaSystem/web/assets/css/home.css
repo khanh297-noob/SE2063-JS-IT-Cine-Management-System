@@ -280,119 +280,96 @@ a {
     flex: 1;
 }
 
-/* === 2. BANNER POSTER CAROUSEL DƯỚI NAVBAR === */
-.carousel-banner-wrapper {
+/* === 2. CAROUSEL KHUYẾN MÃI DƯỚI NAVBAR (dùng cùng assets/js/carousel-hoang.js) === */
+.promo-carousel {
     position: relative;
     width: 100%;
-    height: 350px;
-    border-radius: 16px;
     overflow: hidden;
+    border-radius: 16px;
     margin-bottom: 28px;
     box-shadow: 0 8px 25px rgba(15, 23, 42, 0.12);
     background-color: #0f172a;
 }
 
-.carousel-banner-track {
+.promo-carousel .carousel-track {
     display: flex;
-    width: 300%;
-    height: 100%;
-    animation: heroCarouselAnimation 12s infinite ease-in-out;
+    transition: transform 0.6s ease;
 }
 
-.carousel-banner-wrapper:hover .carousel-banner-track {
-    animation-play-state: paused;
+.promo-carousel .carousel-slide {
+    flex: 0 0 100%;
+    min-width: 100%;
 }
 
-@keyframes heroCarouselAnimation {
-    0%, 28% { transform: translateX(0%); }
-    33%, 61% { transform: translateX(-33.333%); }
-    66%, 94% { transform: translateX(-66.666%); }
-    100% { transform: translateX(0%); }
+.promo-carousel .carousel-slide img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1024 / 360;
+    object-fit: cover;
 }
 
-.carousel-slide-item {
-    width: 33.333%;
-    height: 100%;
-    position: relative;
-    background-size: cover;
-    background-position: center;
-    padding: 40px 52px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    color: #ffffff;
-}
-
-.carousel-slide-overlay {
+.promo-carousel .carousel-prev,
+.promo-carousel .carousel-next {
     position: absolute;
-    inset: 0;
-    background: linear-gradient(to right, rgba(15, 23, 42, 0.94) 38%, rgba(15, 23, 42, 0.25));
-    z-index: 1;
-}
-
-.slide-content-box {
-    position: relative;
-    z-index: 2;
-    max-width: 600px;
-}
-
-.badge-hot-tag {
-    background-color: #e11d48;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 42px;
+    height: 42px;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.45);
     color: #ffffff;
-    font-size: 10px;
-    font-weight: 800;
-    padding: 4px 10px;
-    border-radius: 4px;
-    width: fit-content;
-    margin-bottom: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.hero-banner-title {
-    font-size: 38px;
-    font-weight: 900;
-    line-height: 1.1;
-    margin-bottom: 10px;
-    letter-spacing: -0.5px;
-    color: #ffffff;
-}
-
-.hero-banner-meta {
-    font-size: 12px;
-    color: #cbd5e1;
-    margin-bottom: 12px;
-    font-weight: 500;
-}
-
-.hero-banner-desc {
-    font-size: 13px;
-    color: #94a3b8;
-    margin-bottom: 22px;
-    line-height: 1.5;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-
-.btn-banner-action {
-    background-color: #e11d48;
-    color: #ffffff;
-    padding: 10px 26px;
-    border-radius: 20px;
-    font-weight: 800;
-    font-size: 12.5px;
-    display: inline-flex;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
     align-items: center;
-    gap: 8px;
-    box-shadow: 0 4px 14px rgba(225, 29, 72, 0.35);
-    transition: background-color 0.2s, transform 0.2s;
+    justify-content: center;
+    transition: background-color 0.2s;
 }
 
-.btn-banner-action:hover {
-    background-color: #be123c;
-    transform: translateY(-1px);
+.promo-carousel .carousel-prev { left: 12px; }
+.promo-carousel .carousel-next { right: 12px; }
+
+.promo-carousel .carousel-prev:hover,
+.promo-carousel .carousel-next:hover {
+    background: rgba(0, 0, 0, 0.75);
+}
+
+.promo-carousel .carousel-dots {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 10px;
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+}
+
+.promo-carousel .carousel-dots button {
+    width: 10px;
+    height: 10px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    transition: width 0.2s, background-color 0.2s;
+}
+
+.promo-carousel .carousel-dots button[aria-current="true"] {
+    width: 26px;
+    border-radius: 6px;
+    background: #e11d48;
+}
+
+@media (max-width: 600px) {
+    .promo-carousel { border-radius: 10px; }
+    .promo-carousel .carousel-prev,
+    .promo-carousel .carousel-next { width: 32px; height: 32px; font-size: 13px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .promo-carousel .carousel-track { transition: none; }
 }
 
 /* === 3. FILM TOOLBAR (GỒM TABS + FILTER TÌM KIẾM THEO ẢNH) === */
@@ -607,8 +584,5 @@ a {
 .footer-right { text-align: right !important; }
 .footer-brand { color: #0f172a !important; font-size: 12px !important; }
 .bg-amber { background-color: #f59e0b !important; }
-.slide-bg-3 { background-image: url('https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=1600&auto=format&fit=crop') !important; }
 .bg-blue { background-color: #2563eb !important; }
-.slide-bg-2 { background-image: url('https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=1600&auto=format&fit=crop') !important; }
-.slide-bg-1 { background-image: url('https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1600&auto=format&fit=crop') !important; }
 .chevron-small { color: #94a3b8 !important; font-size: 11px !important; margin-left: 2px !important; }
