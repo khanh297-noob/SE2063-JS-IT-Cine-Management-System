@@ -1,4 +1,4 @@
-package controller;
+package controller.payment;
 
 import model.Booking;
 import model.User;

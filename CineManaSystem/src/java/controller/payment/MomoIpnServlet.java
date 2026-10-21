@@ -1,4 +1,4 @@
-package controller;
+package controller.payment;
 
 import service.PaymentService;
 import jakarta.servlet.ServletException;

@@ -1,4 +1,4 @@
-package controller;
+package controller.pos;
 
 import dao.AuditLogDAO;
 import jakarta.servlet.ServletException;
