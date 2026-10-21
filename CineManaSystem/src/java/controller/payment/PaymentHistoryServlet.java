@@ -1,5 +1,7 @@
 package controller.payment;
 
+import model.User;
+import service.payment.PaymentService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -7,8 +9,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
-import model.User;
-import service.PaymentService;
 
 /**
  * Lịch sử thanh toán của khách đang đăng nhập.

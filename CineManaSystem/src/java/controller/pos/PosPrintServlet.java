@@ -1,6 +1,9 @@
 package controller.pos;
 
-import dao.AuditLogDAO;
+import dao.pos.AuditLogDAO;
+import model.User;
+import model.booking.Booking;
+import service.pos.PosService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -8,9 +11,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
-import model.Booking;
-import model.User;
-import service.PosService;
 
 /**
  * In vé giấy (có QR) + hóa đơn. Thêm &reprint=1 để in lại (chỉ ghi log, không tạo vé mới).

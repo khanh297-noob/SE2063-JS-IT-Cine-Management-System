@@ -1,13 +1,13 @@
-package service;
+package service.payment;
 
-import dao.AuditLogDAO;
-import dao.BookingDAO;
-import dao.PaymentDAO;
-import dao.PromotionDAO;
-import model.Booking;
-import model.Payment;
-import model.Promotion;
+import dao.booking.BookingDAO;
+import dao.payment.PaymentDAO;
+import dao.payment.PromotionDAO;
+import dao.pos.AuditLogDAO;
 import model.User;
+import model.booking.Booking;
+import model.payment.Payment;
+import model.payment.Promotion;
 import thirdparty.VNPayGateway;
 import java.math.BigDecimal;
 import java.time.Duration;

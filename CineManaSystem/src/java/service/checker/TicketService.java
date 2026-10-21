@@ -1,14 +1,14 @@
-package service;
+package service.checker;
 
-import dao.AuditLogDAO;
-import dao.BookingDAO;
-import dao.TicketDAO;
+import dao.booking.BookingDAO;
+import dao.booking.TicketDAO;
+import dao.pos.AuditLogDAO;
+import model.User;
+import model.booking.Booking;
+import model.booking.Ticket;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import model.Booking;
-import model.Ticket;
-import model.User;
 
 /**
  * Soát vé (phần 7.3): kiểm tra mã QR và check-in. Mỗi vé chỉ check-in được 1 lần.

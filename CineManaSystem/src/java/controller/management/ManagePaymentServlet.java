@@ -1,7 +1,10 @@
 package controller.management;
 
-import dao.BranchDAO;
-import dao.PaymentDAO;
+import dao.management.BranchDAO;
+import dao.payment.PaymentDAO;
+import model.User;
+import model.payment.Payment;
+import service.payment.PaymentService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -10,9 +13,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.time.LocalDate;
-import model.Payment;
-import model.User;
-import service.PaymentService;
 
 /**
  * Quản lý thanh toán (Admin / Quản lý chi nhánh):

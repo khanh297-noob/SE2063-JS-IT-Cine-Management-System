@@ -1,5 +1,6 @@
-package dao;
+package dao.payment;
 
+import model.payment.Payment;
 import util.DBContext;
 
 import java.math.BigDecimal;
@@ -10,7 +11,6 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
-import model.Payment;
 
 /**
  * Bảng Payment. BookingID là UNIQUE => mỗi đơn chỉ có 1 dòng Payment,

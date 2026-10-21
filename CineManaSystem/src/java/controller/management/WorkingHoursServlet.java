@@ -1,6 +1,8 @@
 package controller.management;
 
-import dao.StaffDAO;
+import dao.pos.StaffDAO;
+import model.pos.WorkShift;
+import service.pos.ShiftService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -12,8 +14,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import model.WorkShift;
-import service.ShiftService;
 
 /**
  * Quản lý xem ca làm & tổng giờ làm của nhân viên quầy / soát vé.

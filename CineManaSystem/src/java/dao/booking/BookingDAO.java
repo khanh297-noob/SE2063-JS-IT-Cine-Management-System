@@ -1,5 +1,10 @@
-package dao;
+package dao.booking;
 
+import dao.management.BranchDAO;
+import model.booking.Booking;
+import model.booking.FnbItem;
+import model.booking.Seat;
+import model.booking.Ticket;
 import util.DBContext;
 
 import java.math.BigDecimal;
@@ -13,10 +18,6 @@ import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
-import model.Booking;
-import model.FnbItem;
-import model.Seat;
-import model.Ticket;
 
 /**
  * Bảng Booking (+ Ticket, Booking_F_B, Payment trong các thao tác cần transaction).

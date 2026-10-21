@@ -1,5 +1,7 @@
-package dao;
+package dao.booking;
 
+import model.booking.Seat;
+import model.booking.Showtime;
 import util.DBContext;
 
 import java.sql.Connection;
@@ -9,8 +11,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import model.Seat;
-import model.Showtime;
 
 /**
  * Suất chiếu + sơ đồ ghế cho POS bán vé tại quầy và soát vé.

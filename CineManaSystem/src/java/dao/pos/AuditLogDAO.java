@@ -1,5 +1,6 @@
-package dao;
+package dao.pos;
 
+import model.pos.AuditLog;
 import util.DBContext;
 
 import java.sql.Connection;
@@ -9,7 +10,6 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
-import model.AuditLog;
 
 /**
  * Bảng AuditLog: nhật ký thao tác. Phần POS còn dùng bảng này để lưu

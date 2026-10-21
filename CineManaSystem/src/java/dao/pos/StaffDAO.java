@@ -1,5 +1,6 @@
-package dao;
+package dao.pos;
 
+import model.User;
 import util.DBContext;
 
 import java.sql.Connection;
@@ -8,7 +9,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import model.User;
 
 /**
  * Truy vấn nhân viên cho phần POS / giờ làm.

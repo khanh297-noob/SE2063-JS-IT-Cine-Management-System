@@ -1,8 +1,9 @@
 package controller.payment;
 
-import model.Booking;
 import model.User;
-import service.PaymentService;
+import model.booking.Booking;
+import model.payment.Payment;
+import service.payment.PaymentService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;

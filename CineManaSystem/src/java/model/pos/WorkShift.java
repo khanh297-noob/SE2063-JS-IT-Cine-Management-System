@@ -1,4 +1,4 @@
-package model;
+package model.pos;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
