@@ -1,0 +1,30 @@
+<%@ page pageEncoding="UTF-8" %>
+<%-- Header màn POS (SRS 5.1): nền tối, "POS CineGo Counter", chip rạp hiện tại --%>
+<header class="topbar dark no-print">
+    <div class="brand">
+        <span class="logo">POS</span> CineGo Counter
+        <span class="crumb">
+            <span class="chip">&#128205; Rạp hiện tại: <b><c:out value="${shift.branchName}" default="Chưa vào ca"/></b></span>
+        </span>
+    </div>
+    <div style="display:flex;align-items:center">
+        <div class="user">
+            <b>${me.role == 'Ticket Checker' ? 'NV Soát Vé' : 'NV Bán Vé'}: <c:out value="${me.fullName}"/></b><br>
+            <c:choose>
+                <c:when test="${not empty shift}">Ca làm việc: từ <fmt:formatDate value="${shift.startTime}" pattern="HH:mm dd/MM"/></c:when>
+                <c:otherwise>Chưa vào ca</c:otherwise>
+            </c:choose>
+        </div>
+        <span class="badge-pos">POS</span>
+    </div>
+</header>
+<nav class="subnav no-print">
+    <c:if test="${me.role == 'Ticket Cashier'}">
+        <a href="${ctx}/pos" class="${posTab == 'sell' ? 'active' : ''}">Bán vé</a>
+        <a href="${ctx}/pos/transactions" class="${posTab == 'tx' ? 'active' : ''}">Giao dịch</a>
+        <a href="${ctx}/pos/cash-balance" class="${posTab == 'cash' ? 'active' : ''}">Két tiền</a>
+    </c:if>
+    <a href="${ctx}/pos/shift" class="${posTab == 'shift' ? 'active' : ''}">Ca làm việc</a>
+    <a href="${ctx}/checker" class="${posTab == 'gate' ? 'active' : ''}">Soát vé</a>
+    <a href="${ctx}/logout" style="margin-left:auto">Đăng xuất</a>
+</nav>

@@ -1,0 +1,4 @@
+# Copy file nay thanh vnpay.properties (cung thu muc) roi dien key VNPay Sandbox cua ban.
+# Dang ky tai https://sandbox.vnpayment.vn/devreg/ - KHONG commit vnpay.properties len GitHub.
+vnp_TmnCode=YOUR_TMN_CODE
+vnp_HashSecret=YOUR_HASH_SECRET
