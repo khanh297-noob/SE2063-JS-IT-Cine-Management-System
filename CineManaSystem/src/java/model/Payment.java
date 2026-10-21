@@ -12,7 +12,7 @@ public class Payment {
     private int paymentId;
     private int bookingId;
     private BigDecimal amount;
-    private String paymentMethod;     // VNPay | MoMo | Cash | Credit Card
+    private String paymentMethod;     // VNPay | Cash | Credit Card (DB còn cho phép MoMo)
     private Timestamp paymentTime;
     private String transactionCode;
     private String gatewayStatus;     // Pending | Success | Failed

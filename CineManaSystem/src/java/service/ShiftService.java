@@ -79,7 +79,6 @@ public class ShiftService {
         Timestamp to = new Timestamp(System.currentTimeMillis() + 60_000);
         BigDecimal cashSales = paymentDAO.sumCounterSales(u.getUserId(), "Cash", from, to);
         BigDecimal cardSales = paymentDAO.sumCounterSales(u.getUserId(), "Credit Card", from, to);
-        BigDecimal momoSales = paymentDAO.sumCounterSales(u.getUserId(), "MoMo", from, to);   // khách quét QR MoMo tại quầy
 
         BigDecimal cashRefund = BigDecimal.ZERO;
         BigDecimal cardRefund = BigDecimal.ZERO;
@@ -97,13 +96,12 @@ public class ShiftService {
         bal.put("openingFloat", s.getOpeningFloat());
         bal.put("cashSales", cashSales);
         bal.put("cardSales", cardSales);
-        bal.put("momoSales", momoSales);
         bal.put("cashRefund", cashRefund);
         bal.put("cardRefund", cardRefund);
         bal.put("refundCount", refunds.size());
         bal.put("transactionCount", paymentDAO.countCounterSales(u.getUserId(), from, to));
         bal.put("expected", s.getOpeningFloat().add(cashSales).subtract(cashRefund));
-        bal.put("netRevenue", cashSales.add(cardSales).add(momoSales).subtract(cashRefund).subtract(cardRefund));
+        bal.put("netRevenue", cashSales.add(cardSales).subtract(cashRefund).subtract(cardRefund));
         return bal;
     }
 

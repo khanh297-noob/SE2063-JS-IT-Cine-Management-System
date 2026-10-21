@@ -61,11 +61,7 @@
                 <div class="warn-text">&#9888; Bắt buộc thanh toán ngay. Không hỗ trợ giữ vé thanh toán sau tại quầy.</div>
                 <%-- form="payForm": radio nằm ngoài form nhưng vẫn được gửi cùng form thanh toán --%>
                 <label class="pay-option">
-                    <span><input type="radio" name="paymentMethod" value="MoMo" form="payForm" checked> &nbsp;Ví điện tử MoMo</span>
-                    <span class="logo-tag logo-momo">Ví MoMo</span>
-                </label>
-                <label class="pay-option">
-                    <span><input type="radio" name="paymentMethod" value="VNPay" form="payForm"> &nbsp;Cổng thanh toán VNPay</span>
+                    <span><input type="radio" name="paymentMethod" value="VNPay" form="payForm" checked> &nbsp;Cổng thanh toán VNPay</span>
                     <span class="logo-tag logo-vnpay">VNPAY QR / ATM</span>
                 </label>
                 <label class="pay-option disabled" title="Sắp ra mắt">

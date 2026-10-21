@@ -122,7 +122,7 @@ public class PosService {
                 throw new IllegalArgumentException("The selected seat is not available. (" + s.getLabel() + ")");
             }
         }
-        if (!"Cash".equals(method) && !"Credit Card".equals(method) && !"MoMo".equals(method)) {
+        if (!"Cash".equals(method) && !"Credit Card".equals(method)) {
             throw new IllegalArgumentException("The Payment method is required.");
         }
 
@@ -140,15 +140,8 @@ public class PosService {
             throw new IllegalArgumentException("Tiền khách đưa không đủ (cần " + String.format("%,.0f ₫", total) + ").");
         }
 
-        // Lưu DB (1 transaction). MoMo: mã giao dịch tạm, sẽ được thay bằng orderId khi gọi API MoMo
-        String txnCode;
-        if ("Cash".equals(method)) {
-            txnCode = "CASH-" + System.currentTimeMillis();
-        } else if ("Credit Card".equals(method)) {
-            txnCode = "CARD-" + System.currentTimeMillis();
-        } else {
-            txnCode = "MOMO-PENDING";
-        }
+        // Lưu DB (1 transaction)
+        String txnCode = ("Cash".equals(method) ? "CASH-" : "CARD-") + System.currentTimeMillis();
         int bookingId = bookingDAO.createCounterBooking(cashier.getUserId(), shift.getBranchId(), promoId, total,
                 st.getShowtimeId(), seats, items, method, txnCode);
         if (bookingId < 0) {
@@ -161,41 +154,6 @@ public class PosService {
 
     public Booking getBooking(int bookingId) {
         return bookingDAO.getBooking(bookingId);
-    }
-
-    // ===================== Thanh toán MoMo QR tại quầy =====================
-    /**
-     * Gọi API MoMo sandbox lấy link thanh toán cho đơn tại quầy vừa tạo (đơn đang Pending).
-     * Gọi MoMo lỗi thì hủy đơn để nhả ghế rồi báo lỗi.
-     * @return payUrl - JSP sẽ vẽ link này thành mã QR cho khách quét
-     */
-    public String createMomoQr(int bookingId, String redirectUrl, String ipnUrl) {
-        Booking b = bookingDAO.getBooking(bookingId);
-        try {
-            return paymentService.createMomoUrl(b, redirectUrl, ipnUrl);
-        } catch (IllegalArgumentException e) {
-            bookingDAO.cancelUnpaid(bookingId);
-            throw e;
-        }
-    }
-
-    /**
-     * Hỏi MoMo xem khách đã trả tiền chưa (màn hình QR tự tải lại mỗi 5 giây sẽ gọi hàm này).
-     * @return "PAID" | "WAITING" | "FAILED"
-     */
-    public String checkMomoPayment(Booking b) {
-        return paymentService.checkMomoPayment(b);
-    }
-
-    // Thu ngân bấm Hủy trên màn hình QR (khách đổi ý / muốn trả tiền mặt) -> hủy đơn, nhả ghế
-    public void cancelMomoPayment(User cashier, int bookingId, String ip) {
-        Booking b = bookingDAO.getBooking(bookingId);
-        if (b == null || b.getUserId() != cashier.getUserId()) {
-            throw new IllegalArgumentException("No search results.");
-        }
-        if (bookingDAO.cancelUnpaid(bookingId)) {
-            auditLogDAO.insert(cashier.getUserId(), "COUNTER_MOMO_CANCEL|booking=" + bookingId, ip);
-        }
     }
 
     // Giao dịch tại quầy của thu ngân trong 1 ngày

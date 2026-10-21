@@ -256,7 +256,7 @@
                 <div class="feature-icon" aria-hidden="true">&#128179;</div>
                 <div class="feature-title-wrap">
                     <h2>Quản lý thanh toán</h2>
-                    <span class="feature-badge">VNPay / MoMo / Tại quầy</span>
+                    <span class="feature-badge">VNPay / Tại quầy</span>
                 </div>
             </div>
             <p class="feature-desc">

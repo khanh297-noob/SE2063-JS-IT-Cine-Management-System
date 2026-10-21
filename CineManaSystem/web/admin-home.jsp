@@ -326,7 +326,7 @@
                 <div class="feature-icon" aria-hidden="true">&#128179;</div>
                 <div class="feature-title-wrap">
                     <h2>Payment Management</h2>
-                    <span class="feature-badge">VNPay / MoMo / Counter</span>
+                    <span class="feature-badge">VNPay / Counter</span>
                 </div>
             </div>
             <p class="feature-desc">

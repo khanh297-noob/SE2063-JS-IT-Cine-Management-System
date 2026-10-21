@@ -32,7 +32,7 @@
 
             <c:if test="${p.gatewayStatus == 'Pending'}">
                 <hr style="border:none;border-top:1px solid var(--border);margin:18px 0">
-                <div class="alert alert-info">Giao dịch đang chờ kết quả từ cổng. Đối chiếu trên trang quản trị VNPay / MoMo rồi cập nhật thủ công nếu cần.</div>
+                <div class="alert alert-info">Giao dịch đang chờ kết quả từ cổng. Đối chiếu trên trang quản trị VNPay rồi cập nhật thủ công nếu cần.</div>
                 <form method="post" action="${ctx}/admin/payments" class="row">
                     <input type="hidden" name="id" value="${p.paymentId}">
                     <button class="btn btn-green" name="newStatus" value="Success"

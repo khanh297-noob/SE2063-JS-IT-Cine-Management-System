@@ -5,18 +5,12 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
 /**
- * Tạo chữ ký HMAC dùng cho cổng thanh toán:
- *  - VNPay ký bằng HMAC-SHA512
- *  - MoMo  ký bằng HMAC-SHA256
+ * Tạo chữ ký HMAC-SHA512 dùng cho cổng thanh toán VNPay.
  */
 public class HashUtil {
 
     public static String hmacSHA512(String key, String data) {
         return hmac("HmacSHA512", key, data);
-    }
-
-    public static String hmacSHA256(String key, String data) {
-        return hmac("HmacSHA256", key, data);
     }
 
     // Tính HMAC rồi đổi mảng byte sang chuỗi hex (mỗi byte = 2 ký tự)

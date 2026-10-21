@@ -19,7 +19,7 @@ import service.PaymentService;
  *  GET  /admin/payments                   : danh sách + bộ lọc
  *  GET  /admin/payments?action=detail&id= : chi tiết 1 giao dịch
  *  POST /admin/payments (id, newStatus)   : xác nhận giao dịch Pending -> Success / Failed
- *                                          (dùng khi nhận được tiền chuyển khoản MoMo)
+ *                                          (đối chiếu với trang quản trị VNPay)
  */
 @WebServlet(name = "ManagePaymentServlet", urlPatterns = {"/admin/payments"})
 public class ManagePaymentServlet extends HttpServlet {

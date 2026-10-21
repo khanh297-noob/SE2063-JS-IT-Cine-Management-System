@@ -107,17 +107,6 @@ public class PosCounterServlet extends HttpServlet {
                 int bookingId = posService.createCounterBooking(user, shift, st, seats, items,
                         method, cashReceived, voucher, request.getRemoteAddr());
 
-                // MoMo: gọi API MoMo lấy link thanh toán, lưu vào session rồi sang màn hình hiện QR
-                if ("MoMo".equals(method)) {
-                    String baseUrl = request.getScheme() + "://" + request.getServerName() + ":"
-                            + request.getServerPort() + request.getContextPath();
-                    String payUrl = posService.createMomoQr(bookingId, baseUrl + "/payment/momo-return",
-                            baseUrl + "/api/v1/payment/webhook/momo");
-                    session.setAttribute("momoPayUrl_" + bookingId, payUrl);
-                    response.sendRedirect(request.getContextPath() + "/pos/momo-qr?bookingId=" + bookingId);
-                    return;
-                }
-
                 String msg = "Booking created successfully.";
                 if ("Cash".equals(method)) {
                     Booking b = posService.getBooking(bookingId);

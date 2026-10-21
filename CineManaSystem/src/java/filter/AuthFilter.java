@@ -27,9 +27,8 @@ public class AuthFilter implements Filter {
     private static final List<String> PUBLIC_PATHS = Arrays.asList(
             "/login", "/register", "/verify-email", "/resend-otp", "/logout",
             "/access-denied", "/forgot-password", "/index.html", "/index-tuyet.jsp", "/",
-            // Phần thanh toán: VNPay / MoMo gọi về (Servlet tự kiểm tra chữ ký nên không cần đăng nhập)
-            "/payment/vnpay-return", "/payment/momo-return",
-            "/api/v1/payment/webhook/vnpay", "/api/v1/payment/webhook/momo");
+            // Phần thanh toán: VNPay gọi về (Servlet tự kiểm tra chữ ký nên không cần đăng nhập)
+            "/payment/vnpay-return", "/api/v1/payment/webhook/vnpay");
 
     // Các thư mục chứa file tĩnh (css, js, ảnh...)
     private static final List<String> STATIC_PREFIXES = Arrays.asList(

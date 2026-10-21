@@ -152,13 +152,10 @@
                 <label>Phương thức thanh toán *</label>
                 <div class="row" style="margin-bottom:12px;flex-wrap:wrap">
                     <label class="pay-option" style="margin:0;text-transform:none;color:var(--text)">
-                        <span><input type="radio" name="paymentMethod" value="Cash" ${paymentMethod != 'Credit Card' && paymentMethod != 'MoMo' ? 'checked' : ''}> &#128181; Tiền mặt</span>
+                        <span><input type="radio" name="paymentMethod" value="Cash" ${paymentMethod != 'Credit Card' ? 'checked' : ''}> &#128181; Tiền mặt</span>
                     </label>
                     <label class="pay-option" style="margin:0;text-transform:none;color:var(--text)">
                         <span><input type="radio" name="paymentMethod" value="Credit Card" ${paymentMethod == 'Credit Card' ? 'checked' : ''}> &#128179; Thẻ</span>
-                    </label>
-                    <label class="pay-option" style="margin:0;text-transform:none;color:var(--text)">
-                        <span><input type="radio" name="paymentMethod" value="MoMo" ${paymentMethod == 'MoMo' ? 'checked' : ''}> <b style="color:#a50064">MoMo</b> (khách quét QR)</span>
                     </label>
                 </div>
 

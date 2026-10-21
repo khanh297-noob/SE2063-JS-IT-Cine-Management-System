@@ -115,7 +115,6 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--r
 .pay-option.disabled { opacity: .5; cursor: not-allowed; }
 .pay-option .logo-tag { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 6px; }
 .logo-vnpay { background: #e0f2fe; color: #0369a1; }
-.logo-momo { background: #fce7f3; color: #be185d; }
 .logo-zalo { background: #dbeafe; color: #1d4ed8; }
 .warn-text { color: var(--amber); font-size: 12px; margin-bottom: 12px; }
 

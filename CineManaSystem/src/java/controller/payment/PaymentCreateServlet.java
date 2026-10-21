@@ -14,7 +14,7 @@ import java.io.IOException;
 /**
  * API-01: POST /api/v1/payment/create
  * Nút "Xác nhận & Thanh toán" ở trang Checkout gửi về đây (bookingId + paymentMethod).
- * Tạo giao dịch Pending rồi chuyển khách sang cổng thanh toán (VNPay hoặc MoMo sandbox).
+ * Tạo giao dịch Pending rồi chuyển khách sang cổng thanh toán (VNPay sandbox).
  */
 @WebServlet(name = "PaymentCreateServlet", urlPatterns = {"/api/v1/payment/create"})
 public class PaymentCreateServlet extends HttpServlet {
@@ -66,10 +66,6 @@ public class PaymentCreateServlet extends HttpServlet {
                     ip = "127.0.0.1";   // IPv6 localhost -> IPv4 cho VNPay
                 }
                 String url = paymentService.createVnpayUrl(b, baseUrl + "/payment/vnpay-return", ip);
-                response.sendRedirect(url);
-            } else if ("MoMo".equals(method)) {
-                String url = paymentService.createMomoUrl(b, baseUrl + "/payment/momo-return",
-                        baseUrl + "/api/v1/payment/webhook/momo");
                 response.sendRedirect(url);
             } else {
                 throw new IllegalArgumentException("Invalid Payment method format.");

@@ -8,7 +8,6 @@ import model.Booking;
 import model.Payment;
 import model.Promotion;
 import model.User;
-import thirdparty.MomoGateway;
 import thirdparty.VNPayGateway;
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -18,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Nghiệp vụ thanh toán online (phần 6): checkout, voucher, VNPay / MoMo (sandbox), đối soát.
+ * Nghiệp vụ thanh toán online (phần 6): checkout, voucher, VNPay (sandbox), đối soát.
  * Lỗi nghiệp vụ được báo bằng IllegalArgumentException(message) - Servlet bắt và hiển thị message.
  */
 public class PaymentService {
@@ -138,7 +137,7 @@ public class PaymentService {
     // ===================== Tạo thanh toán =====================
     // Đơn 0đ (voucher giảm hết) thì xác nhận luôn, không cần thanh toán
     public void payFreeBooking(Booking b) {
-        // Cột PaymentMethod chỉ cho phép VNPay / MoMo / Cash / Credit Card -> ghi Cash, mã FREE-... để phân biệt
+        // Cột PaymentMethod chỉ cho phép VNPay / MoMo / Cash / Credit Card (CHECK trong DB) -> ghi Cash, mã FREE-... để phân biệt
         paymentDAO.savePending(b.getBookingId(), BigDecimal.ZERO, "Cash", "FREE-" + b.getBookingCode());
         bookingDAO.confirmPaid(b.getBookingId(), null);
     }
@@ -149,81 +148,6 @@ public class PaymentService {
         paymentDAO.savePending(b.getBookingId(), b.getTotalAmount(), "VNPay", txnRef);
         return VNPayGateway.createPaymentUrl(txnRef, b.getTotalAmount(),
                 "Thanh toan ve xem phim don " + b.getBookingCode(), returnUrl, clientIp);
-    }
-
-    // MoMo: lưu Payment Pending, gọi API MoMo sandbox lấy link thanh toán (payUrl)
-    public String createMomoUrl(Booking b, String redirectUrl, String ipnUrl) {
-        String orderId = b.getBookingId() + "_" + System.currentTimeMillis();
-        paymentDAO.savePending(b.getBookingId(), b.getTotalAmount(), "MoMo", orderId);
-        return MomoGateway.createPayment(orderId, b.getTotalAmount().longValue(),
-                "Thanh toan ve xem phim don " + b.getBookingCode(), redirectUrl, ipnUrl);
-    }
-
-    // ===================== Kết quả MoMo =====================
-    /**
-     * Xử lý kết quả MoMo gửi về (dùng cho cả redirectUrl và IPN). Trả mã giống VNPay cho dễ nhớ:
-     * 00 ok, 01 không thấy đơn, 02 đã xử lý, 04 sai số tiền, 97 sai chữ ký
-     */
-    public String processMomoResult(Map<String, String> params) {
-        if (!MomoGateway.verifySignature(params)) {
-            return "97";
-        }
-        String orderId = params.get("orderId");
-        int bookingId = getBookingIdFromTxnRef(orderId);
-        Payment p = paymentDAO.getByBookingId(bookingId);
-        if (p == null || p.getTransactionCode() == null || !p.getTransactionCode().startsWith(orderId)) {
-            return "01";
-        }
-        if (new BigDecimal(params.get("amount")).compareTo(p.getAmount()) != 0) {
-            return "04";
-        }
-        if (!"Pending".equals(p.getGatewayStatus())) {
-            return "02";
-        }
-        // resultCode = 0 là thanh toán thành công, khác 0 là thất bại / khách hủy
-        if ("0".equals(params.get("resultCode"))) {
-            confirm(bookingId, orderId + "-" + params.get("transId"));
-        } else {
-            bookingDAO.cancelUnpaid(bookingId);
-        }
-        return "00";
-    }
-
-    /**
-     * Hỏi MoMo xem đơn đã được thanh toán chưa (dùng cho QR tại quầy).
-     * @return "PAID" (đã trả, đơn đã Confirmed) | "WAITING" (khách chưa trả xong) | "FAILED" (thất bại / đơn đã hủy)
-     */
-    public String checkMomoPayment(Booking b) {
-        if ("Confirmed".equals(b.getStatus())) {
-            return "PAID";
-        }
-        if (!"Pending".equals(b.getStatus()) || !"Pending".equals(b.getPaymentStatus())) {
-            return "FAILED";
-        }
-        Map<String, String> r;
-        try {
-            r = MomoGateway.queryPayment(b.getTransactionCode());
-        } catch (IllegalArgumentException e) {
-            return "WAITING";   // mất mạng tạm thời -> lần tải lại sau hỏi tiếp
-        }
-        String code = r.get("resultCode");
-        if ("0".equals(code) || "9000".equals(code)) {
-            // Đã trả: kiểm tra đúng số tiền rồi xác nhận đơn
-            if (r.get("amount") != null && new BigDecimal(r.get("amount")).compareTo(b.getTotalAmount()) != 0) {
-                return "WAITING";
-            }
-            confirm(b.getBookingId(), b.getTransactionCode() + "-" + r.get("transId"));
-            return "PAID";
-        }
-        // Các mã MoMo báo thất bại hẳn: hết hạn, khách từ chối, bị hủy, không đủ tiền...
-        String[] failedCodes = {"1001", "1002", "1003", "1004", "1005", "1006", "1007", "1017", "1026"};
-        for (String f : failedCodes) {
-            if (f.equals(code)) {
-                bookingDAO.cancelUnpaid(b.getBookingId());
-                return "FAILED";
-            }
-        }
-        return "WAITING";       // 1000 / 7000 / 7002...: khách đang thanh toán
     }
 
     // ===================== Kết quả VNPay =====================
@@ -279,7 +203,7 @@ public class PaymentService {
 
     // ===================== Admin đối soát =====================
     /**
-     * Admin / Quản lý cập nhật thủ công giao dịch đang Pending (đối chiếu với trang quản trị VNPay / MoMo).
+     * Admin / Quản lý cập nhật thủ công giao dịch đang Pending (đối chiếu với trang quản trị VNPay).
      * Success -> xác nhận đơn; Failed -> hủy đơn và nhả ghế.
      */
     public void reconcile(int paymentId, String newStatus, User admin, String ip) {
