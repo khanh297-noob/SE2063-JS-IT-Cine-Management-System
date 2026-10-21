@@ -43,7 +43,7 @@
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/home.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/home.css?v=2">
 </head>
 <body>
 
@@ -57,7 +57,7 @@
         <nav>
             <ul class="nav-menu">
                 <li><a href="#movies" class="nav-item active">Lịch chiếu theo rạp</a></li>
-                <li><a href="#movies" class="nav-item">Phim</a></li>
+                <li><a href="<%= request.getContextPath() %>/movies" class="nav-item">Phim</a></li>
                 <li><a href="#cinemas" class="nav-item">Rạp</a></li>
                 <li><a href="#pricing" class="nav-item">Giá vé</a></li>
                 <li><a href="#news" class="nav-item">Tin mới & Ưu đãi</a></li>
@@ -142,46 +142,27 @@
     <!-- MAIN CONTAINER -->
     <main class="main-container">
 
-        <!-- 2. POSTER TO CAROUSEL NGAY DƯỚI NAVBAR -->
-        <section class="carousel-banner-wrapper">
-            <div class="carousel-banner-track">
-                
-                <!-- Slide 1: Deadpool & Wolverine -->
-                <div class="carousel-slide-item slide-bg-1">
-                    <div class="carousel-slide-overlay"></div>
-                    <div class="slide-content-box">
-                        <span class="badge-hot-tag">BOM TẤN HOT</span>
-                        <h1 class="hero-banner-title">DEADPOOL & WOLVERINE</h1>
-                        <p class="hero-banner-meta">Khởi chiếu: 26/07/2026 • Hành Động • 2g 07p • T18</p>
-                        <p class="hero-banner-desc">Trận chiến bom tấn đỉnh cao giữa Deadpool và Wolverine mang lại những pha hành động nghẹt thở và hài hước không thể bỏ lỡ tại CineGo.</p>
-                        <a href="#movies" class="btn-banner-action"><i class="fa-solid fa-ticket"></i> ĐẶT VÉ NGAY</a>
-                    </div>
+        <!-- 2. CAROUSEL KHUYẾN MÃI (3 ảnh banner) -->
+        <section class="promo-carousel" id="promoCarousel" aria-roledescription="carousel" aria-label="Khuyến mãi CineGo">
+            <div class="carousel-track">
+                <div class="carousel-slide" aria-hidden="false">
+                    <img src="${pageContext.request.contextPath}/assets/img/banners/banner-1.webp" alt="CineGo - Chào mừng bạn mới, khuyến mãi 10%">
                 </div>
-
-                <!-- Slide 2: Godzilla x Kong 2 -->
-                <div class="carousel-slide-item slide-bg-2">
-                    <div class="carousel-slide-overlay"></div>
-                    <div class="slide-content-box">
-                        <span class="badge-hot-tag bg-blue">SẮP CHIẾU</span>
-                        <h1 class="hero-banner-title">GODZILLA X KONG 2</h1>
-                        <p class="hero-banner-meta">Khởi chiếu: 15/08/2026 • Viễn Tưởng • 1g 55p • P</p>
-                        <p class="hero-banner-desc">Cuộc đại chiến siêu quái thú trở lại màn ảnh rộng với chuẩn định dạng IMAX đỉnh cao kỹ xảo âm thanh siêu việt.</p>
-                        <a href="#movies" class="btn-banner-action bg-blue"><i class="fa-solid fa-calendar-check"></i> ĐẶT TRƯỚC VÉ</a>
-                    </div>
+                <div class="carousel-slide" aria-hidden="true">
+                    <img src="${pageContext.request.contextPath}/assets/img/banners/banner-2.webp" alt="Khách hàng dưới 23 tuổi - giá vé tiêu chuẩn chỉ 70.000 đồng" loading="lazy">
                 </div>
-
-                <!-- Slide 3: Lật Mặt 7 -->
-                <div class="carousel-slide-item slide-bg-3">
-                    <div class="carousel-slide-overlay"></div>
-                    <div class="slide-content-box">
-                        <span class="badge-hot-tag bg-amber">SUẤT ĐẶC BIỆT</span>
-                        <h1 class="hero-banner-title">LẬT MẶT 7: MỘT ĐIỀU ƯỚC</h1>
-                        <p class="hero-banner-meta">Khởi chiếu: 30/04/2026 • Tình Cảm, Gia Đình • 2g 18p • P</p>
-                        <p class="hero-banner-desc">Tác phẩm điện ảnh xúc động về tình thân gia đình của đạo diễn Lý Hải đang làm khuấy đảo cảm xúc khán giả Việt.</p>
-                        <a href="#movies" class="btn-banner-action bg-amber"><i class="fa-solid fa-fire"></i> MUA VÉ NGAY</a>
-                    </div>
+                <div class="carousel-slide" aria-hidden="true">
+                    <img src="${pageContext.request.contextPath}/assets/img/banners/banner-3.webp" alt="Happiness Combo - chỉ từ 149K" loading="lazy">
                 </div>
+            </div>
 
+            <button type="button" class="carousel-prev" aria-label="Ảnh trước"><i class="fa-solid fa-chevron-left"></i></button>
+            <button type="button" class="carousel-next" aria-label="Ảnh sau"><i class="fa-solid fa-chevron-right"></i></button>
+
+            <div class="carousel-dots">
+                <button type="button" aria-label="Ảnh 1" aria-current="true"></button>
+                <button type="button" aria-label="Ảnh 2"></button>
+                <button type="button" aria-label="Ảnh 3"></button>
             </div>
         </section>
 
@@ -212,13 +193,13 @@
 
             <!-- Card 1 -->
             <div class="movie-card">
-                <a href="<%= request.getContextPath() %>/movie/detail?id=1" class="poster-wrapper">
+                <a href="<%= request.getContextPath() %>/movies/detail?id=1" class="poster-wrapper">
                     <span class="age-badge age-t18">T18</span>
                     <img src="https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=600&auto=format&fit=crop" alt="Người Nhện Trở Về" class="movie-poster">
                 </a>
                 <div class="movie-info">
                     <div>
-                        <a href="<%= request.getContextPath() %>/movie/detail?id=1" class="movie-title">Người Nhện: Trở Về</a>
+                        <a href="<%= request.getContextPath() %>/movies/detail?id=1" class="movie-title">Người Nhện: Trở Về</a>
                         <p class="movie-meta">Hành Động • 2g 15p</p>
                     </div>
                     <a href="<%= request.getContextPath() %>/login" class="btn-card-buy">Mua Vé</a>
@@ -227,13 +208,13 @@
 
             <!-- Card 2 -->
             <div class="movie-card">
-                <a href="<%= request.getContextPath() %>/movie/detail?id=2" class="poster-wrapper">
+                <a href="<%= request.getContextPath() %>/movies/detail?id=2" class="poster-wrapper">
                     <span class="age-badge age-p">P</span>
                     <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=600&auto=format&fit=crop" alt="Godzilla x Kong 2" class="movie-poster">
                 </a>
                 <div class="movie-info">
                     <div>
-                        <a href="<%= request.getContextPath() %>/movie/detail?id=2" class="movie-title">Godzilla x Kong 2</a>
+                        <a href="<%= request.getContextPath() %>/movies/detail?id=2" class="movie-title">Godzilla x Kong 2</a>
                         <p class="movie-meta">Hành Động • 1g 55p</p>
                     </div>
                     <a href="<%= request.getContextPath() %>/login" class="btn-card-buy">Mua Vé</a>
@@ -242,13 +223,13 @@
 
             <!-- Card 3 -->
             <div class="movie-card">
-                <a href="<%= request.getContextPath() %>/movie/detail?id=3" class="poster-wrapper">
+                <a href="<%= request.getContextPath() %>/movies/detail?id=3" class="poster-wrapper">
                     <span class="age-badge age-t13">T13</span>
                     <img src="https://images.unsplash.com/photo-1511919884226-fd3cad34687c?q=80&w=600&auto=format&fit=crop" alt="Ma Nhà Hát" class="movie-poster">
                 </a>
                 <div class="movie-info">
                     <div>
-                        <a href="<%= request.getContextPath() %>/movie/detail?id=3" class="movie-title">Ma Nhà Hát</a>
+                        <a href="<%= request.getContextPath() %>/movies/detail?id=3" class="movie-title">Ma Nhà Hát</a>
                         <p class="movie-meta">Kinh Dị • 1g 40p</p>
                     </div>
                     <a href="<%= request.getContextPath() %>/login" class="btn-card-buy">Mua Vé</a>
@@ -257,13 +238,13 @@
 
             <!-- Card 4 -->
             <div class="movie-card">
-                <a href="<%= request.getContextPath() %>/movie/detail?id=4" class="poster-wrapper">
+                <a href="<%= request.getContextPath() %>/movies/detail?id=4" class="poster-wrapper">
                     <span class="age-badge age-t18">T18</span>
                     <img src="https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=600&auto=format&fit=crop" alt="Biệt Đội Siêu Anh Hùng" class="movie-poster">
                 </a>
                 <div class="movie-info">
                     <div>
-                        <a href="<%= request.getContextPath() %>/movie/detail?id=4" class="movie-title">Biệt Đội Siêu Anh Hùng</a>
+                        <a href="<%= request.getContextPath() %>/movies/detail?id=4" class="movie-title">Biệt Đội Siêu Anh Hùng</a>
                         <p class="movie-meta">Hành Động • 2g 30p</p>
                     </div>
                     <a href="<%= request.getContextPath() %>/login" class="btn-card-buy">Mua Vé</a>
@@ -272,13 +253,13 @@
 
             <!-- Card 5 -->
             <div class="movie-card">
-                <a href="<%= request.getContextPath() %>/movie/detail?id=5" class="poster-wrapper">
+                <a href="<%= request.getContextPath() %>/movies/detail?id=5" class="poster-wrapper">
                     <span class="age-badge age-p">P</span>
                     <img src="https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=600&auto=format&fit=crop" alt="Vùng Đất Câm Lặng" class="movie-poster">
                 </a>
                 <div class="movie-info">
                     <div>
-                        <a href="<%= request.getContextPath() %>/movie/detail?id=5" class="movie-title">Vùng Đất Câm Lặng: Ngày 1</a>
+                        <a href="<%= request.getContextPath() %>/movies/detail?id=5" class="movie-title">Vùng Đất Câm Lặng: Ngày 1</a>
                         <p class="movie-meta">Kinh Dị, Giật Gân • 1g 40p</p>
                     </div>
                     <a href="<%= request.getContextPath() %>/login" class="btn-card-buy">Mua Vé</a>
@@ -287,13 +268,13 @@
 
             <!-- Card 6 -->
             <div class="movie-card">
-                <a href="<%= request.getContextPath() %>/movie/detail?id=6" class="poster-wrapper">
+                <a href="<%= request.getContextPath() %>/movies/detail?id=6" class="poster-wrapper">
                     <span class="age-badge age-t13">T13</span>
                     <img src="https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?q=80&w=600&auto=format&fit=crop" alt="Dune 2" class="movie-poster">
                 </a>
                 <div class="movie-info">
                     <div>
-                        <a href="<%= request.getContextPath() %>/movie/detail?id=6" class="movie-title">Dune: Hành Tinh Cát 2</a>
+                        <a href="<%= request.getContextPath() %>/movies/detail?id=6" class="movie-title">Dune: Hành Tinh Cát 2</a>
                         <p class="movie-meta">Viễn Tưởng, Phiêu Lưu • 2g 46p</p>
                     </div>
                     <a href="<%= request.getContextPath() %>/login" class="btn-card-buy">Mua Vé</a>
@@ -302,13 +283,13 @@
 
             <!-- Card 7 -->
             <div class="movie-card">
-                <a href="<%= request.getContextPath() %>/movie/detail?id=7" class="poster-wrapper">
+                <a href="<%= request.getContextPath() %>/movies/detail?id=7" class="poster-wrapper">
                     <span class="age-badge age-p">P</span>
                     <img src="https://images.unsplash.com/photo-1535016120720-40c646be5580?q=80&w=600&auto=format&fit=crop" alt="Doraemon" class="movie-poster">
                 </a>
                 <div class="movie-info">
                     <div>
-                        <a href="<%= request.getContextPath() %>/movie/detail?id=7" class="movie-title">Doraemon: Bản Tình Ca Đảo Táo</a>
+                        <a href="<%= request.getContextPath() %>/movies/detail?id=7" class="movie-title">Doraemon: Bản Tình Ca Đảo Táo</a>
                         <p class="movie-meta">Hoạt Hình, Gia Đình • 1g 55p</p>
                     </div>
                     <a href="<%= request.getContextPath() %>/login" class="btn-card-buy">Mua Vé</a>
@@ -317,13 +298,13 @@
 
             <!-- Card 8 -->
             <div class="movie-card">
-                <a href="<%= request.getContextPath() %>/movie/detail?id=8" class="poster-wrapper">
+                <a href="<%= request.getContextPath() %>/movies/detail?id=8" class="poster-wrapper">
                     <span class="age-badge age-t18">T18</span>
                     <img src="https://images.unsplash.com/photo-1478720568477-152d9b164e26?q=80&w=600&auto=format&fit=crop" alt="Minions 4" class="movie-poster">
                 </a>
                 <div class="movie-info">
                     <div>
-                        <a href="<%= request.getContextPath() %>/movie/detail?id=8" class="movie-title">Kẻ Trộm Mặt Trăng 4</a>
+                        <a href="<%= request.getContextPath() %>/movies/detail?id=8" class="movie-title">Kẻ Trộm Mặt Trăng 4</a>
                         <p class="movie-meta">Hoạt Hình, Hài Hước • 1g 35p</p>
                     </div>
                     <a href="<%= request.getContextPath() %>/login" class="btn-card-buy">Mua Vé</a>
@@ -346,5 +327,6 @@
         </div>
     </footer>
 
+    <script src="${pageContext.request.contextPath}/assets/js/carousel-hoang.js?v=2"></script>
 </body>
 </html>
