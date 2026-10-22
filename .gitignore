@@ -10,3 +10,10 @@ target/
 Thumbs.db
 *.bak
 *.log
+out/
+/out/
+.idea/
+*.iws
+*.iml
+*.ipr
+.smarttomcat/
