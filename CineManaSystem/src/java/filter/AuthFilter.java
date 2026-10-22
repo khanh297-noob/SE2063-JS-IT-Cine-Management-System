@@ -26,7 +26,11 @@ public class AuthFilter implements Filter {
     // Các trang ai cũng vào được, không cần đăng nhập
     private static final List<String> PUBLIC_PATHS = Arrays.asList(
             "/login", "/register", "/verify-email", "/resend-otp", "/logout",
-            "/access-denied", "/forgot-password", "/index.html", "/index-tuyet.jsp", "/");
+            "/access-denied", "/forgot-password", "/index.html", "/index-tuyet.jsp", "/home", "/",
+            // Giao diện khách hàng của module Chi nhánh & Phim
+            "/movies", "/movies/detail", "/movies/favorite", "/branch", "/branch/details",
+            // Phần thanh toán: VNPay gọi về (Servlet tự kiểm tra chữ ký nên không cần đăng nhập)
+            "/payment/vnpay-return", "/api/v1/payment/webhook/vnpay");
 
     // Các thư mục chứa file tĩnh (css, js, ảnh...)
     private static final List<String> STATIC_PREFIXES = Arrays.asList(
@@ -73,6 +77,7 @@ public class AuthFilter implements Filter {
         }
 
         // Bước 5: hợp lệ, cho đi tiếp
+        request.setAttribute("me", freshUser);   // JSP phần thanh toán + POS dùng ${me.fullName}, ${me.role}
         chain.doFilter(request, response);
     }
 
@@ -80,6 +85,11 @@ public class AuthFilter implements Filter {
      * Kiểm tra quyền truy cập theo từng nhóm đường dẫn.
      */
     private boolean hasPermission(HttpServletRequest request, String path) {
+
+        // Quản lý giao dịch thanh toán: Admin và Quản lý chi nhánh
+        if (path.equals("/admin/payments")) {
+            return PermissionUtil.isAdmin(request) || PermissionUtil.isBranchManager(request);
+        }
 
         // Trang Admin: chỉ Admin được truy cập
         if (path.equals("/admin-home.jsp")
@@ -93,6 +103,41 @@ public class AuthFilter implements Filter {
         if (path.equals("/branch-home.jsp")) {
             return PermissionUtil.isAdmin(request)
                     || PermissionUtil.isBranchManager(request);
+        }
+
+        // Quản lý chi nhánh, phòng chiếu, phim, thể loại: Admin và Quản lý chi nhánh
+        if (path.startsWith("/manage/")) {
+            return PermissionUtil.isAdmin(request)
+                    || PermissionUtil.isBranchManager(request);
+        }
+
+        if (path.equals("/booking/detail") || path.equals("/ticket/qr")) {
+            return true;
+        }
+        if (path.equals("/booking") || path.startsWith("/booking/")
+                || path.equals("/customer/bookings") || path.equals("/customer/deactivate")) {
+            return PermissionUtil.isCustomer(request);
+        }
+
+        // Giờ làm nhân viên: Admin và Quản lý chi nhánh
+        if (path.startsWith("/manager/")) {
+            return PermissionUtil.isAdmin(request) || PermissionUtil.isBranchManager(request);
+        }
+
+        // Bán vé tại quầy (POS)
+        if (path.equals("/pos/print")) {
+            return PermissionUtil.isInternalUser(request);          // in lại vé: mọi nhân sự nội bộ
+        }
+        if (path.equals("/pos/shift")) {
+            return PermissionUtil.hasAnyRole(request, "Ticket Cashier", "Ticket Checker");
+        }
+        if (path.equals("/pos") || path.startsWith("/pos/")) {
+            return PermissionUtil.hasRole(request, "Ticket Cashier");
+        }
+
+        // Soát vé: mọi nhân sự nội bộ
+        if (path.equals("/checker")) {
+            return PermissionUtil.isInternalUser(request);
         }
 
         // Báo cáo: Admin và Quản lý chi nhánh

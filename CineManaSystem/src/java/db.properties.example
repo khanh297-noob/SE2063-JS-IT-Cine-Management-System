@@ -1,0 +1,6 @@
+# Copy file nay thanh db.properties (cung thu muc src/java) roi sua user/password SQL Server cua may ban.
+# Dung cho module Chi nhanh & Phim, Quan ly suat chieu va Dat ve online (util.JdbcContext).
+# KHONG commit db.properties len GitHub.
+db.url=jdbc:sqlserver://localhost:1433;databaseName=CineManagementSystem;encrypt=true;trustServerCertificate=true;sendTimeAsDatetime=false
+db.user=sa
+db.password=123456

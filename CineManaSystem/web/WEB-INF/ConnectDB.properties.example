@@ -1,0 +1,5 @@
+# Copy file nay thanh ConnectDB.properties (cung thu muc WEB-INF) roi sua user/password SQL Server cua may ban.
+# Dung cho module Auth, Bao cao, Thanh toan + POS (dao.DBContext, util.DBContext). KHONG commit ConnectDB.properties.
+url=jdbc:sqlserver://localhost:1433;databaseName=CineManagementSystem;encrypt=true;trustServerCertificate=true;sendTimeAsDatetime=false
+userID=sa
+password=123456

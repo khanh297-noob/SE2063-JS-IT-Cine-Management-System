@@ -17,3 +17,20 @@ out/
 *.iml
 *.ipr
 .smarttomcat/
+# Key VNPay Sandbox (moi nguoi tu tao tu vnpay.properties.example)
+vnpay.properties
+CineManaSystem/web/WEB-INF/ConnectDB.properties
+# Cấu hình DB riêng từng máy cho module của Hoàng
+CineManaSystem/src/java/db.local.properties
+
+# Cau hinh DB rieng tung may cho JdbcContext (Chi nhanh & Phim, Suat chieu, Dat ve online)
+CineManaSystem/src/java/db.properties
+
+# IDE (IntelliJ / VS Code) va file tam
+.idea/
+*.iml
+.vscode/
+out/
+*.tmp
+*.swp
+*~
