@@ -8,7 +8,9 @@ public class User {
     private String passwordHash;
     private String role;
     private String status;
-    private Integer branchID; // chi nhánh của nhân viên, NULL với Customer và Administrator
+    private Integer branchID;
+    private String branchName;
+
 
     public Integer getBranchID() {
         return branchID;
@@ -20,8 +22,13 @@ public class User {
 
     public User() {
     }
-
     public User(int userID, String fullName, String email, String phone, String passwordHash, String role, String status) {
+        this(userID, fullName, email, phone, passwordHash, role, status, null);
+        this.status = status;
+        this.branchName = branchName;
+    }
+
+    public User(int userID, String fullName, String email, String phone, String passwordHash, String role, String status, String branchName) {
         this.userID = userID;
         this.fullName = fullName;
         this.email = email;
@@ -34,6 +41,7 @@ public class User {
     public int getUserID() {
         return userID;
     }
+
 
     public void setUserID(int userID) {
         this.userID = userID;
@@ -93,5 +101,15 @@ public class User {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+
+
+    public String getBranchName() {
+        return branchName;
+    }
+
+    public void setBranchName(String branchName) {
+        this.branchName = branchName;
     }
 }

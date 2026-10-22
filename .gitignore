@@ -10,6 +10,13 @@ target/
 Thumbs.db
 *.bak
 *.log
+out/
+/out/
+.idea/
+*.iws
+*.iml
+*.ipr
+.smarttomcat/
 # Key VNPay Sandbox (moi nguoi tu tao tu vnpay.properties.example)
 vnpay.properties
 CineManaSystem/web/WEB-INF/ConnectDB.properties

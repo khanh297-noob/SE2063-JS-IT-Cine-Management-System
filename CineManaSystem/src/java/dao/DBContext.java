@@ -6,29 +6,68 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 
 public class DBContext {
     protected Connection connection;
+
     public DBContext() {
-        //@Students: You are not allowed to edit this method  
         try {
-            Properties properties = new Properties();
-            InputStream inputStream = getClass().getClassLoader().getResourceAsStream("../ConnectDB.properties");
-            try {
-                properties.load(inputStream);
-            } catch (IOException ex) {
-                Logger.getLogger(DBContext.class.getName()).log(Level.SEVERE, null, ex);
+            connection = getConnection();
+        } catch (SQLException exception) {
+            throw new IllegalStateException(
+                    "Không kết nối được database. Kiểm tra log SQL gốc.",
+                    exception
+            );
+        }
+    }
+
+    public static Connection getConnection() throws SQLException {
+        Properties properties = new Properties();
+        try (InputStream input = DBContext.class.getClassLoader()
+                .getResourceAsStream("ConnectDB.properties")) {
+            if (input == null) {
+                throw new SQLException("Thiếu ConnectDB.properties trong classpath.");
             }
-            String user = properties.getProperty("userID");
-            String pass = properties.getProperty("password");
-            String url = properties.getProperty("url");
+            properties.load(input);
+        } catch (IOException exception) {
+            throw new SQLException("Không đọc được ConnectDB.properties.", exception);
+        }
+
+        String url = properties.getProperty("url");
+        String username = properties.getProperty("userID");
+        String password = properties.getProperty("password");
+        if (url == null || url.isBlank() || username == null || password == null) {
+            throw new SQLException("Thiếu url, userID hoặc password trong cấu hình.");
+        }
+
+        try {
             Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-            connection = DriverManager.getConnection(url, user, pass);
-        } catch (ClassNotFoundException | SQLException ex) {
-            Logger.getLogger(DBContext.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (ClassNotFoundException exception) {
+            throw new SQLException("Thiếu thư viện JDBC SQL Server.", exception);
+        }
+        return DriverManager.getConnection(url, username, password);
+    }
+
+    @FunctionalInterface
+    public interface Work<T> {
+        T execute(Connection connection) throws SQLException;
+    }
+
+    public static <T> T transaction(Work<T> work) throws SQLException {
+        try (Connection connection = getConnection()) {
+            connection.setAutoCommit(false);
+            try {
+                T result = work.execute(connection);
+                connection.commit();
+                return result;
+            } catch (SQLException | RuntimeException exception) {
+                try {
+                    connection.rollback();
+                } catch (SQLException rollbackError) {
+                    exception.addSuppressed(rollbackError);
+                }
+                throw exception;
+            }
         }
     }
 }
