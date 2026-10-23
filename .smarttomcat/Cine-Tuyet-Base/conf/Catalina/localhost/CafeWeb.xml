@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<Context docBase="D:\Semester4\PRJ_Cafe\CafeWeb\build\web" path="/CafeWeb">
-  <Resource auth="Container" driverClassName="com.microsoft.sqlserver.jdbc.SQLServerDriver" maxIdle="10" maxTotal="20" maxWaitMillis="10000" name="jdbc/CBMS" password="123" type="javax.sql.DataSource" url="jdbc:sqlserver://localhost:1433;databaseName=CBMS;encrypt=true;trustServerCertificate=true" username="sa"/>
-</Context>

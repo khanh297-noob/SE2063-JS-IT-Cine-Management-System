@@ -26,6 +26,14 @@
             <a href="${pageContext.request.contextPath}/index-tuyet.jsp" class="btn-nav">
                 <i class="fa-solid fa-house"></i> Trang chủ
             </a>
+            <c:if test="${sessionScope.User.role eq 'Customer'}">
+                <a href="${pageContext.request.contextPath}/customer/bookings" class="btn-nav">
+                    <i class="fa-solid fa-ticket"></i> Vé của tôi
+                </a>
+                <a href="${pageContext.request.contextPath}/customer/deactivate" class="btn-nav">
+                    <i class="fa-solid fa-user-slash"></i> Vô hiệu hóa tài khoản
+                </a>
+            </c:if>
             <a href="${pageContext.request.contextPath}/logout" class="btn-nav btn-logout">
                 <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
             </a>

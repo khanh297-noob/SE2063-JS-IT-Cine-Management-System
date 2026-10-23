@@ -26,6 +26,15 @@ public class Branch {
         this.branchID = branchID;
     }
 
+    // Tên khác của getBranchID/setBranchID, dùng cho phần thanh toán + POS (${br.branchId} trong JSP)
+    public int getBranchId() {
+        return branchID;
+    }
+
+    public void setBranchId(int branchId) {
+        this.branchID = branchId;
+    }
+
     public String getName() {
         return name;
     }
