@@ -37,20 +37,20 @@ public class ExportSalesReportServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // Bước 1: kiểm tra quyền
+        //kiểm tra quyền
         if (!PermissionUtil.canViewSalesReport(request)) {
             response.sendRedirect(request.getContextPath() + "/access-denied");
             return;
         }
         User user = PermissionUtil.getCurrentUser(request);
 
-        // Bước 2: đọc bộ lọc
+        //đọc bộ lọc
         Integer branchId = ParamUtil.parseIntOrNull(request.getParameter("branchId"));
         Integer movieId = ParamUtil.parseIntOrNull(request.getParameter("movieId"));
         String fromDate = request.getParameter("fromDate");
         String toDate = request.getParameter("toDate");
 
-        // Bước 3: xác định chi nhánh được xem
+        //xác định chi nhánh được xem
         List<Integer> branchScope;
         try {
             branchScope = accessService.resolveBranchScope(user, PermissionUtil.isAdmin(request), branchId);
@@ -59,11 +59,11 @@ public class ExportSalesReportServlet extends HttpServlet {
             return;
         }
 
-        // Bước 4: lấy danh sách vé rồi chuyển thành CSV
+        //lấy danh sách vé rồi chuyển thành CSV
         List<TicketReportItem> items = reportDao.getTicketSalesReport(branchScope, movieId, fromDate, toDate);
         String csv = ExportUtil.generateTicketSalesCsv(items);
 
-        // Bước 5: trả file về trình duyệt
+        //trả file về trình duyệt
         String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         response.setContentType("text/csv; charset=UTF-8");
         response.setHeader("Content-Disposition",

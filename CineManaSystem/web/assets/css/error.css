@@ -1,5 +1,16 @@
 /* Giao diện các trang báo lỗi 404, 405, 500 */
 /* ===== Thay cho thuộc tính style="..." trước đây nằm trong JSP ===== */
-.error-home-btn { border-radius: 20px !important; }
-.error-code { font-size: 6rem !important; color: #dc3545 !important; margin-bottom: 0 !important; }
-.error-card { max-width: 500px !important; width: 100% !important; border-radius: 12px !important; background: #ffffff !important; }
+.error-home-btn {
+    border-radius: 20px !important;
+}
+.error-code {
+    font-size: 6rem !important;
+    color: #dc3545 !important;
+    margin-bottom: 0 !important;
+}
+.error-card {
+    max-width: 500px !important;
+    width: 100% !important;
+    border-radius: 12px !important;
+    background: #ffffff !important;
+}

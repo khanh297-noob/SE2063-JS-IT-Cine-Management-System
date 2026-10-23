@@ -40,7 +40,7 @@ public class BranchReportServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // Bước 1: kiểm tra quyền
+        //kiểm tra quyền
         if (!PermissionUtil.canViewSalesReport(request)) {
             response.sendRedirect(request.getContextPath() + "/access-denied");
             return;
@@ -48,12 +48,12 @@ public class BranchReportServlet extends HttpServlet {
         User user = PermissionUtil.getCurrentUser(request);
         boolean isAdmin = PermissionUtil.isAdmin(request);
 
-        // Bước 2: đọc bộ lọc (khoảng ngày, loại báo cáo, chi nhánh)
+        //đọc bộ lọc (khoảng ngày, loại báo cáo, chi nhánh)
         DateRange range = DateRange.fromRequest(request);
         String type = BranchReportService.normalizeType(request.getParameter("type"));
         Integer branchId = ParamUtil.parseIntOrNull(request.getParameter("branchId"));
 
-        // Bước 3: xác định chi nhánh được xem
+        //xác định chi nhánh được xem
         List<Integer> branchScope;
         try {
             branchScope = accessService.resolveBranchScope(user, isAdmin, branchId);
@@ -62,11 +62,11 @@ public class BranchReportServlet extends HttpServlet {
             return;
         }
 
-        // Bước 4: dựng báo cáo
+        //dựng báo cáo
         List<Branch> branches = reportDao.getBranches(accessService.allowedBranchIds(user, isAdmin));
         BranchReportView report = reportService.build(type, branchScope, range.getFrom(), range.getTo());
 
-        // Bước 5: gửi sang JSP (dữ liệu biểu đồ chuyển sang JSON cho Chart.js)
+        //gửi sang JSP (dữ liệu biểu đồ chuyển sang JSON cho Chart.js)
         Gson gson = new Gson();
         request.setAttribute("report", report);
         request.setAttribute("labelsJson", gson.toJson(report.getChartLabels()));

@@ -3,9 +3,9 @@
 <header class="navbar">
     <div class="nav-left">
         <!-- Logo va ten he thong -->
-        <a href="${pageContext.request.contextPath}/report/branch-dashboard" class="brand-link">
-            <span class="brand-name brand-name-accent">CineGo</span>
-        </a>
+
+        <span class="brand-name brand-name-accent">CineGo</span>
+
         <span class="nav-sep"></span>
 
         <!-- Form lua chon chi nhanh dang quan ly -->
@@ -37,7 +37,7 @@
             <b><c:out value="${sessionScope.User.fullName}"/></b>
             <span>Chức vụ: <c:out value="${roleLabel}"/></span>
         </div>
-        <a class="avatar" href="${pageContext.request.contextPath}/customer/profile" title="Hồ sơ cá nhân"><c:out value="${initials}"/></a>
+        <a class="avatar" href="${pageContext.request.contextPath}/admin/profile" title="Hồ sơ cá nhân"><c:out value="${initials}"/></a>
     </div>
 </header>
 

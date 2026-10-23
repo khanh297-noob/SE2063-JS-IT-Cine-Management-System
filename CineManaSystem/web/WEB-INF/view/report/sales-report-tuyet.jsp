@@ -37,7 +37,7 @@
                 </div>
             </div>
 
-        
+
             <!-- Form bo loc du lieu: rap, phim, khoang thoi gian -->
             <div class="card">
                 <form action="${pageContext.request.contextPath}/report/ticket-sales" method="get" class="filter-row">

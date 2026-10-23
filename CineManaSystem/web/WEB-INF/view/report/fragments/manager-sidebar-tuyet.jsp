@@ -21,7 +21,7 @@
 
     <!-- Nhom cuoi: Thong tin ca nhan va dang xuat -->
     <ul class="menu menu-bottom">
-        <li><a href="${pageContext.request.contextPath}/customer/profile"><i class="fa-solid fa-user"></i> Hồ sơ cá nhân</a></li>
+        <li><a href="${pageContext.request.contextPath}/admin/profile"><i class="fa-solid fa-user"></i> Hồ sơ cá nhân</a></li>
         <li><a href="${pageContext.request.contextPath}/logout"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a></li>
     </ul>
 </aside>
