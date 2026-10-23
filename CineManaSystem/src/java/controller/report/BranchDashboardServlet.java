@@ -38,7 +38,7 @@ public class BranchDashboardServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // Bước 1: kiểm tra quyền
+        //kiểm tra quyền
         if (!PermissionUtil.canViewSalesReport(request)) {
             response.sendRedirect(request.getContextPath() + "/access-denied");
             return;
@@ -46,7 +46,7 @@ public class BranchDashboardServlet extends HttpServlet {
         User user = PermissionUtil.getCurrentUser(request);
         boolean isAdmin = PermissionUtil.isAdmin(request);
 
-        // Bước 2: xác định chi nhánh được xem
+        //xác định chi nhánh được xem
         Integer branchId = ParamUtil.parseIntOrNull(request.getParameter("branchId"));
         List<Integer> branchScope;
         try {
@@ -56,11 +56,11 @@ public class BranchDashboardServlet extends HttpServlet {
             return;
         }
 
-        // Bước 3: lấy dữ liệu
+        //lấy dữ liệu
         List<Branch> branches = reportDao.getBranches(accessService.allowedBranchIds(user, isAdmin));
         BranchDashboard dashboard = dashboardService.build(branchScope, LocalDateTime.now(BranchDashboardService.ZONE));
 
-        // Bước 4: gửi sang JSP
+        //gửi sang JSP
         request.setAttribute("dashboard", dashboard);
         ManagerShell.apply(request, user, isAdmin, dashboard.getBranchPill(), branches, branchId,
                 "dashboard", "/report/branch-dashboard");

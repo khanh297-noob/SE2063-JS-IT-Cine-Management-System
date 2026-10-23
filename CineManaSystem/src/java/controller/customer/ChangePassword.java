@@ -24,6 +24,16 @@ public class ChangePassword extends HttpServlet {
     }
 
     @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        if (PermissionUtil.getCurrentUser(request) == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+        request.getRequestDispatcher("/WEB-INF/view/customer/change-password.jsp").forward(request, response);
+    }
+
+    @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         User currentUser = PermissionUtil.getCurrentUser(request);
@@ -44,6 +54,6 @@ public class ChangePassword extends HttpServlet {
         }
 
         request.setAttribute("user", currentUser);
-        request.getRequestDispatcher("/WEB-INF/view/customer/profile-tuyet.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/view/customer/change-password.jsp").forward(request, response);
     }
 }

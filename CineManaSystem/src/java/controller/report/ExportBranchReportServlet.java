@@ -40,14 +40,14 @@ public class ExportBranchReportServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // Bước 1: kiểm tra quyền
+        //kiểm tra quyền
         if (!PermissionUtil.canViewSalesReport(request)) {
             response.sendRedirect(request.getContextPath() + "/access-denied");
             return;
         }
         User user = PermissionUtil.getCurrentUser(request);
 
-        // Bước 2: đọc bộ lọc (xuất file thì khoảng ngày sai phải báo lỗi, không tự đổi sang mặc định)
+        //đọc bộ lọc (xuất file thì khoảng ngày sai phải báo lỗi, không tự đổi sang mặc định)
         DateRange range = DateRange.fromRequest(request);
         if (range.hasError()) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Khoảng thời gian không hợp lệ");
@@ -56,7 +56,7 @@ public class ExportBranchReportServlet extends HttpServlet {
         String type = BranchReportService.normalizeType(request.getParameter("type"));
         Integer branchId = ParamUtil.parseIntOrNull(request.getParameter("branchId"));
 
-        // Bước 3: xác định chi nhánh được xem
+        //xác định chi nhánh được xem
         List<Integer> branchScope;
         try {
             branchScope = accessService.resolveBranchScope(user, PermissionUtil.isAdmin(request), branchId);
@@ -65,11 +65,11 @@ public class ExportBranchReportServlet extends HttpServlet {
             return;
         }
 
-        // Bước 4: dựng báo cáo rồi chuyển thành CSV
+        //dựng báo cáo rồi chuyển thành CSV
         BranchReportView report = reportService.build(type, branchScope, range.getFrom(), range.getTo());
         String csv = ExportUtil.generateBranchReportCsv(report);
 
-        // Bước 5: trả file về trình duyệt
+        //trả file về trình duyệt
         String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         response.setContentType("text/csv; charset=UTF-8");
         response.setHeader("Content-Disposition",

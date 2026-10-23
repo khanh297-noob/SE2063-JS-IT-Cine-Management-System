@@ -85,7 +85,9 @@ public class AuthFilter implements Filter {
      * Kiểm tra quyền truy cập theo từng nhóm đường dẫn.
      */
     private boolean hasPermission(HttpServletRequest request, String path) {
-
+        if (path.equals("/admin/profile") || path.equals("/admin/change-password")) {
+            return PermissionUtil.isAdmin(request) || PermissionUtil.isBranchManager(request);
+        }
         // Quản lý giao dịch thanh toán: Admin và Quản lý chi nhánh
         if (path.equals("/admin/payments")) {
             return PermissionUtil.isAdmin(request) || PermissionUtil.isBranchManager(request);
