@@ -7,6 +7,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class PromotionDAO extends DBContext {
 
@@ -17,21 +19,41 @@ public class PromotionDAO extends DBContext {
             ps.setString(1, code);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    Promotion p = new Promotion();
-                    p.setPromoId(rs.getInt("PromoID"));
-                    p.setPromoCode(rs.getString("PromoCode"));
-                    p.setDiscountAmount(rs.getBigDecimal("DiscountAmount"));
-                    p.setMinSpend(rs.getBigDecimal("MinSpend"));
-                    p.setStartDate(rs.getDate("StartDate"));
-                    p.setEndDate(rs.getDate("EndDate"));
-                    p.setUsageLimit(rs.getInt("UsageLimit"));
-                    return p;
+                    return map(rs);
                 }
             }
         } catch (SQLException e) {
             System.out.println("Lỗi PromotionDAO.getByCode: " + e.getMessage());
         }
         return null;
+    }
+
+    // Các voucher còn trong hạn hôm nay (dùng cho danh sách chọn ở trang Checkout)
+    public List<Promotion> getActive() {
+        List<Promotion> list = new ArrayList<>();
+        String sql = "SELECT PromoID, PromoCode, DiscountAmount, MinSpend, StartDate, EndDate, UsageLimit "
+                + "FROM Promotion WHERE CAST(GETDATE() AS DATE) BETWEEN StartDate AND EndDate ORDER BY DiscountAmount DESC";
+        try (Connection con = getConnection(); PreparedStatement ps = con.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(map(rs));
+            }
+        } catch (SQLException e) {
+            System.out.println("Lỗi PromotionDAO.getActive: " + e.getMessage());
+        }
+        return list;
+    }
+
+    private Promotion map(ResultSet rs) throws SQLException {
+        Promotion p = new Promotion();
+        p.setPromoId(rs.getInt("PromoID"));
+        p.setPromoCode(rs.getString("PromoCode"));
+        p.setDiscountAmount(rs.getBigDecimal("DiscountAmount"));
+        p.setMinSpend(rs.getBigDecimal("MinSpend"));
+        p.setStartDate(rs.getDate("StartDate"));
+        p.setEndDate(rs.getDate("EndDate"));
+        p.setUsageLimit(rs.getInt("UsageLimit"));
+        return p;
     }
 
     /**
