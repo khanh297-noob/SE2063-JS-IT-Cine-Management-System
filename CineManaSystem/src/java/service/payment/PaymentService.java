@@ -115,6 +115,20 @@ public class PaymentService {
         return p;
     }
 
+    // Voucher khách dùng được cho đơn này (lọc bằng chính các điều kiện của checkVoucher)
+    public List<Promotion> getUsableVouchers(Booking b) {
+        List<Promotion> usable = new java.util.ArrayList<>();
+        for (Promotion p : promotionDAO.getActive()) {
+            try {
+                checkVoucher(p.getPromoCode(), b.getSubtotal(), b.getBookingId(), b.getBranchId());
+                usable.add(p);
+            } catch (IllegalArgumentException e) {
+                // không đủ điều kiện -> không hiện trong danh sách
+            }
+        }
+        return usable;
+    }
+
     // Số tiền được giảm (không giảm quá giá trị đơn)
     public BigDecimal getDiscount(Promotion p, BigDecimal subtotal) {
         return p.getDiscountAmount().min(subtotal);

@@ -26,7 +26,7 @@
         <div>
             <!-- Voucher (UC-12/13) -->
             <div class="card">
-                <div class="card-title">&#127903; Mã Giảm Giá / Voucher <span class="tag">Tối đa 20 ký tự</span></div>
+                <div class="card-title">&#127903; Mã Giảm Giá / Voucher</div>
                 <c:choose>
                     <c:when test="${not empty b.promoCode}">
                         <div class="row" style="align-items:center">
@@ -41,13 +41,20 @@
                             </form>
                         </div>
                     </c:when>
+                    <c:when test="${empty vouchers}">
+                        <div class="text-muted">Hiện không có voucher nào áp dụng được cho đơn này.</div>
+                    </c:when>
                     <c:otherwise>
                         <form method="post" action="${ctx}/payment/checkout">
                             <input type="hidden" name="bookingId" value="${b.bookingId}">
                             <input type="hidden" name="action" value="apply">
                             <div class="row">
-                                <input type="text" name="voucherCode" maxlength="20" placeholder="NHẬP MÃ VOUCHER (VD: CINEGO50)"
-                                       style="text-transform:uppercase">
+                                <select name="voucherCode" required>
+                                    <option value="">-- Chọn voucher --</option>
+                                    <c:forEach var="v" items="${vouchers}">
+                                        <option value="${v.promoCode}">${v.promoCode} - Giảm <fmt:formatNumber value="${v.discountAmount}" pattern="#,##0"/> ₫<c:if test="${v.minSpend > 0}"> (đơn từ <fmt:formatNumber value="${v.minSpend}" pattern="#,##0"/> ₫)</c:if></option>
+                                    </c:forEach>
+                                </select>
                                 <button class="btn btn-dark auto">Áp Dụng</button>
                             </div>
                         </form>
