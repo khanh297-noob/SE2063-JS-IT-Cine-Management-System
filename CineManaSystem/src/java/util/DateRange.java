@@ -20,11 +20,14 @@ public class DateRange {
     private LocalDate to;
     private String error;
 
+    /** Khoảng ngày mặc định là cả tháng hiện tại. */
     public static DateRange fromRequest(HttpServletRequest request) {
         LocalDate today = LocalDate.now();
-        LocalDate defaultFrom = today.withDayOfMonth(1);
-        LocalDate defaultTo = today.withDayOfMonth(today.lengthOfMonth());
+        return fromRequest(request, today.withDayOfMonth(1), today.withDayOfMonth(today.lengthOfMonth()));
+    }
 
+    /** Như trên nhưng tự chọn khoảng ngày mặc định (dùng khi không muốn mặc định là cả tháng). */
+    public static DateRange fromRequest(HttpServletRequest request, LocalDate defaultFrom, LocalDate defaultTo) {
         DateRange range = new DateRange();
         range.from = parseDate(request.getParameter("fromDate"));
         range.to = parseDate(request.getParameter("toDate"));

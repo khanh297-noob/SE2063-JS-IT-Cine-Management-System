@@ -107,6 +107,21 @@ public class AuthFilter implements Filter {
                     || PermissionUtil.isBranchManager(request);
         }
 
+        // Promotion & Pricing: mỗi chức năng chi tiết có nhóm người dùng riêng
+        if (path.equals("/promotion-price-manage") || path.equals("/manage/promotion-pricing")) {
+            return PermissionUtil.canOpenPromotionPricing(request);
+        }
+        if (path.equals("/promotion-price-manage/ticket-pricing")
+                || path.equals("/promotion-price-manage/fnb-pricing")) {
+            return PermissionUtil.canManagePricing(request);       // Admin, Quản lý chi nhánh
+        }
+        if (path.equals("/promotion-price-manage/validate-promotion")) {
+            return PermissionUtil.canValidatePromotion(request);   // Thu ngân POS, Quản lý chi nhánh
+        }
+        if (path.startsWith("/promotion-price-manage/")) {
+            return PermissionUtil.canOpenPromotionPricing(request);
+        }
+
         // Quản lý chi nhánh, phòng chiếu, phim, thể loại: Admin và Quản lý chi nhánh
         if (path.startsWith("/manage/")) {
             return PermissionUtil.isAdmin(request)

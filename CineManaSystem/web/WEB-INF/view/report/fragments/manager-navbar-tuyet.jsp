@@ -2,9 +2,9 @@
 <!-- Thanh dieu huong tren cung (Navbar): Logo thuong hieu, nut chon rap va thong tin nguoi dung -->
 <header class="navbar">
     <div class="nav-left">
-        <!-- Logo va ten he thong -->
-
-        <span class="brand-name brand-name-accent">CineGo</span>
+        <a href="${pageContext.request.contextPath}${empty brandPath ? '/report/branch-dashboard' : brandPath}" class="brand-link">
+            <span class="brand-name brand-name-accent">CineGo</span>
+        </a>
 
         <span class="nav-sep"></span>
 

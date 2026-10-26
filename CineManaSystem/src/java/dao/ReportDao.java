@@ -74,6 +74,17 @@ public class ReportDao extends DBContext {
         return v == null ? BigDecimal.ZERO : v.setScale(0, RoundingMode.HALF_UP);
     }
 
+    /** Đóng kết nối (dùng khi DAO chỉ tạo cho một request). */
+    public void close() {
+        try {
+            if (connection != null) {
+                connection.close();
+            }
+        } catch (java.sql.SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
     /** Tạo PreparedStatement từ câu SQL đã ghép và gán lần lượt các tham số. */
     private PreparedStatement prepare(StringBuilder sql, List<Object> params) throws java.sql.SQLException {
         PreparedStatement st = connection.prepareStatement(sql.toString());
