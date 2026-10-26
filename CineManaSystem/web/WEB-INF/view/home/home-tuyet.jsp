@@ -40,7 +40,7 @@
                 <li><a href="${ctx}${memberUrl}" class="nav-item">Thành viên</a></li>
                 <%-- Trang vé đã đặt (/my-ticket) do module Booking làm; khách chưa đăng nhập
                      sẽ được AuthFilter chuyển sang /login trước --%>
-                <li><a href="${ctx}/my-ticket" class="nav-item">Vé của tôi</a></li>
+                <li><a href="${ctx}/customer/bookings" class="nav-item">Vé của tôi</a></li>
             </ul>
         </nav>
 
@@ -70,7 +70,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="${ctx}/my-ticket" class="dropdown-item">
+                                    <a href="${ctx}/customer/bookings" class="dropdown-item">
                                         <div class="dropdown-item-left">
                                             <i class="fa-regular fa-id-card"></i>
                                             <span>Vé của tôi</span>
