@@ -14,7 +14,10 @@
     <body>
         <%-- Đánh dấu active menu & nhúng Sidebar --%>
         <c:set var="activeTab" value="fnb-items" scope="request"/>
-        <jsp:include page="/WEB-INF/view/common/sidebar-khanh.jsp" />
+        <jsp:include page="/WEB-INF/view/common/sidebar-khanh.jsp">
+            <jsp:param name="feature" value="fnb" />
+            <jsp:param name="active" value="items" />
+        </jsp:include>
         <div class="main-wrapper">
             <jsp:include page="/WEB-INF/view/common/header-khanh.jsp" />
             <main class="content-body">
@@ -128,7 +131,7 @@
                                                     <span class="badge bg-danger-subtle text-danger-emphasis border px-3 py-2 rounded-pill">Combo</span>
                                                 </c:otherwise>
                                             </c:choose>
-                                        </td>
+                                       </td>
                                         <td class="fw-medium text-dark">
                                             <fmt:formatNumber value="${item.price}" type="number"
                                             groupingUsed="true" minFractionDigits="0" maxFractionDigits="2"/> ₫
@@ -172,7 +175,7 @@
                                                                  </button>
                                                              </c:when>
                                                              <c:otherwise>
-                                                                 <input type="hidden" name="action" value="activate">
+                                                                <input type="hidden" name="action" value="activate">
                                                                  <button type="submit"
                                                                  class="btn btn-sm btn-outline-success rounded-pill px-3"
                                                                  onclick="return confirm('Kích hoạt lại sản phẩm này?');">
@@ -283,4 +286,3 @@
         });
             </script>
         </body>
-    </html>

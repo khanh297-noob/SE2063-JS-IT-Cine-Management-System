@@ -180,3 +180,147 @@ body {
     .main-wrapper { margin-left: 0; }
     .content-body { padding: 18px; }
 }
+
+/* Bổ sung cuối admin-style.css của Khánh. */
+.khanh-module-sidebar {
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.khanh-module-sidebar .sidebar-brand {
+    flex-shrink: 0;
+}
+
+.khanh-module-nav {
+    flex: 1;
+    padding: 18px 12px;
+}
+
+.khanh-module-title {
+    margin: 0 12px 16px;
+    color: #172033;
+    font-size: 1rem;
+    line-height: 1.5;
+    font-weight: 700;
+}
+
+.khanh-module-sidebar .nav-item-custom {
+    margin-bottom: 6px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    line-height: 1.45;
+    align-items: flex-start;
+}
+
+.khanh-module-sidebar .nav-item-custom i {
+    flex-shrink: 0;
+}
+
+.khanh-module-sidebar .nav-item-custom.active {
+    border-right: 0;
+    box-shadow: inset 3px 0 0 var(--brand-color);
+}
+
+.khanh-module-sidebar .nav-item-custom:focus-visible {
+    outline: 3px solid #2563eb;
+    outline-offset: 2px;
+}
+
+.khanh-module-footer {
+    flex-shrink: 0;
+    border-top: 1px solid #e5e7eb;
+    padding: 12px;
+}
+
+.main-wrapper,
+.content-body {
+    min-width: 0;
+}
+
+.top-navbar {
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 767px) {
+    .khanh-module-sidebar {
+        position: static;
+        width: 100%;
+        height: auto;
+    }
+
+    .khanh-module-nav {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+        gap: 6px;
+    }
+
+    .khanh-module-title {
+        grid-column: 1 / -1;
+        margin-bottom: 8px;
+    }
+
+    .main-wrapper {
+        margin-left: 0;
+    }
+}
+
+/* Thêm cuối file admin-style.css sau các rule layout hiện có. */
+:root {
+    --sidebar-width: 260px;
+}
+
+html,
+body {
+    margin: 0;
+}
+
+.sidebar,
+.main-wrapper,
+.content-body {
+    box-sizing: border-box;
+}
+
+.sidebar.khanh-module-sidebar {
+    width: var(--sidebar-width);
+}
+
+.main-wrapper {
+    width: calc(100% - var(--sidebar-width));
+    margin-left: var(--sidebar-width);
+    min-width: 0;
+}
+
+.content-body {
+    min-width: 0;
+}
+
+.top-navbar {
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.khanh-module-title {
+    font-size: 1rem;
+    line-height: 1.5;
+    padding: 0;
+}
+
+@media (max-width: 767px) {
+    .sidebar.khanh-module-sidebar {
+        width: 100%;
+        height: auto;
+        position: static;
+    }
+
+    .main-wrapper {
+        width: 100%;
+        margin-left: 0;
+    }
+}
+
+

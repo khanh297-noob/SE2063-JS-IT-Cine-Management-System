@@ -15,7 +15,6 @@
         <div class="main-wrapper">
             <jsp:include page="/WEB-INF/view/common/header-khanh.jsp"/>
             <main class="content-body">
-                <h1 class="mb-3">F&B Booking</h1>
                 <p class="text-muted mb-4">Chọn chức năng cần thực hiện.</p>
                 <div class="khanh-feature-grid">
                     <c:if test="${sessionScope.User.role eq 'Administrator'}">
