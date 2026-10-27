@@ -1,10 +1,9 @@
-package service;
+package service.f_b;
 
-import dao.F_BItemDAO;
+import dao.DBContext;
+import dao.f_b.F_BItemDAO;
 import model.F_BItem;
 import model.User;
-import dao.DBContext;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.sql.Connection;
@@ -76,11 +75,15 @@ public class F_BItemService {
             throw new IllegalArgumentException("ID không hợp lệ.");
         }
 
-        try (Connection connection = openConnection()) {
+        DBContext.transaction(connection -> {
             if (itemDAO.updateActive(connection, itemId, active) != 1) {
                 throw new IllegalArgumentException("Không tìm thấy sản phẩm.");
             }
-        }
+            if (!active) {
+                itemDAO.stopAllBranches(connection, itemId);
+            }
+            return null;
+        });
     }
 
     private BigDecimal validatePrice(BigDecimal price) {

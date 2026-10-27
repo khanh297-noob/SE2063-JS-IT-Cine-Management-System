@@ -22,7 +22,7 @@
                     <div class="alert alert-success alert-dismissible fade show rounded-4" role="alert">
                         <i class="bi bi-check-circle-fill me-2">
                         </i>
-<c:out value="${sessionScope.toastSuccess}" />
+                        <c:out value="${sessionScope.toastSuccess}" />
                         <button type="button" class="btn-close" data-bs-dismiss="alert">
                         </button>
                     </div>
@@ -32,7 +32,7 @@
                     <div class="alert alert-danger alert-dismissible fade show rounded-4" role="alert">
                         <i class="bi bi-exclamation-triangle-fill me-2">
                         </i>
-<c:out value="${sessionScope.toastError}" />
+                        <c:out value="${sessionScope.toastError}" />
                         <button type="button" class="btn-close" data-bs-dismiss="alert">
                         </button>
                     </div>
@@ -121,7 +121,7 @@
                                                                     <c:when test="${not empty u.branchName}">
                                                                         <i class="bi bi-geo-alt text-danger">
                                                                         </i>
-                <c:out value="${u.branchName}" />
+                                                                    <c:out value="${u.branchName}" />
                                                                     </c:when>
                                                                     <c:otherwise>
                                                                         <span class="text-muted small">${u.role eq 'Administrator' ? 'Toàn hệ thống' : (u.role eq 'Customer' ? 'Không áp dụng' : 'Chưa gán')}</span>
@@ -150,7 +150,7 @@
                                                                         <i class="bi bi-pencil-square">
                                                                         </i> Sửa Role
                                                                     </button>
-                                                    <form action="${pageContext.request.contextPath}/admin/users" method="POST" class="d-inline">
+                                                        <form action="${pageContext.request.contextPath}/admin/users" method="POST" class="d-inline">
                                                         <input type="hidden" name="csrfToken" value="${sessionScope.khanhCsrf}">
                                                         <input type="hidden" name="action" value="toggleStatus">
                                                         <input type="hidden" name="id" value="${u.userId}">

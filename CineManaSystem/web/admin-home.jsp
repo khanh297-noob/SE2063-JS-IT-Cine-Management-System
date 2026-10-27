@@ -227,7 +227,29 @@
     </div>
 </section>
 
+// chem them the
 <div class="feature-grid">
+
+    <a class="feature-card"
+       href="${pageContext.request.contextPath}/staff/fnb">
+        <div>
+            <div class="feature-header">
+                <div class="feature-icon" aria-hidden="true">&#127871;</div>
+                <div class="feature-title-wrap">
+                    <h2>F&amp;B Booking</h2>
+                    <span class="feature-badge">Products &amp; Orders</span>
+                </div>
+            </div>
+            <p class="feature-desc">
+                Quản lý danh mục bắp nước, cấu hình từng cơ sở,
+                đơn hàng, trạng thái và tồn kho.
+            </p>
+        </div>
+        <div class="feature-action">
+            <span>Access F&amp;B Booking</span>
+            <span class="feature-arrow">&rarr;</span>
+        </div>
+    </a>
 
     <!-- Feature 1: Branch Management -->
     <a class="feature-card" href="${ctx}/manage/branch">
@@ -319,7 +341,7 @@
     </a>
 
     <!-- Feature 3: Promotion & Pricing Management -->
-    <a class="feature-card" href="${ctx}/manage/promotion-pricing">
+    <a class="feature-card" href="${pageContext.request.contextPath}/staff/promotions">
         <div>
             <div class="feature-header">
                 <div class="feature-icon" aria-hidden="true">

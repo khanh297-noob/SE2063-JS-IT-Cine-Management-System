@@ -1,6 +1,11 @@
-package service;
+package service.promotion;
 
-import dao.*;
+import dao.DBContext;
+import dao.admin.BranchDAO;
+import dao.f_b.F_BOrderDAO;
+import dao.promotion.PricingDAO;
+import dao.promotion.PromotionDAO;
+import service.common.AccessService;
 import model.*;
 import util.FormUtil;
 import java.math.BigDecimal;
@@ -31,7 +36,7 @@ public class PromotionService {
         if (p.getEndDate().before(p.getStartDate())) throw new IllegalArgumentException("Ngày kết thúc không trước ngày bắt đầu.");
         p.setDiscountAmount(FormUtil.amount(p.getDiscountAmount(), false));
         p.setMinSpend(FormUtil.amount(p.getMinSpend(), true));
-        if (p.getUsageLimit() < 0 || requested == null) throw new IllegalArgumentException("Giới hạn/phạm vi không hợp lệ.");
+        if (p.getUsageLimit() < 1 || requested == null) throw new IllegalArgumentException("Giới hạn/phạm vi không hợp lệ.");
         Set<Integer> scope = new TreeSet<>(requested);
         if (global) { AccessService.admin(actor); scope.clear(); }
         else if (scope.isEmpty()) throw new IllegalArgumentException("Phải chọn chi nhánh áp dụng.");
@@ -45,7 +50,7 @@ public class PromotionService {
                 return DBContext.transaction(c -> {
                     if (!creating) {
                         requireExistingForEdit(actor, c, p.getPromoId());
-                        if (p.getUsageLimit() > 0 && p.getUsageLimit() < promos.usedCount(c, p.getPromoId()))
+                        if (p.getUsageLimit() < promos.usedCount(c, p.getPromoId()))
                             throw new IllegalArgumentException("Giới hạn nhỏ hơn số lượt đã dùng.");
                     }
                     for (int branch : scope)
@@ -78,10 +83,10 @@ public class PromotionService {
     }
     public void limit(User actor, int id, int limit) throws SQLException {
         configureRole(actor);
-        if (limit < 0) throw new IllegalArgumentException("Giới hạn phải >= 0.");
+        if (limit < 1) throw new IllegalArgumentException("Giới hạn phải >= 1.");
         DBContext.transaction(c -> {
             requireExistingForEdit(actor, c, id);
-            if (limit > 0 && limit < promos.usedCount(c, id)) throw new IllegalArgumentException("Thấp hơn số lượt đã dùng.");
+            if (limit < promos.usedCount(c, id)) throw new IllegalArgumentException("Thấp hơn số lượt đã dùng.");
             if (promos.setLimit(c, id, limit) != 1) throw new SQLException("Không lưu được giới hạn.");
             return null;
         });
@@ -98,7 +103,7 @@ public class PromotionService {
     public BigDecimal check(User actor, int booking, String rawCode, boolean apply) throws SQLException {
         if (rawCode == null) throw new IllegalArgumentException("Thiếu mã voucher.");
         String code = rawCode.trim().toUpperCase(Locale.ROOT);
-        if (!code.matches("[A-Z0-9-]{4,30}")) throw new IllegalArgumentException("Mã voucher không hợp lệ.");
+        if (!code.matches("[A-Z0-9-]{4,20}")) throw new IllegalArgumentException("Mã voucher không hợp lệ.");
         return DBContext.transaction(c -> {
             Booking b = bookings.findBooking(c, booking, true);
             requireBooking(actor, b);
@@ -149,7 +154,7 @@ public class PromotionService {
         if (!scope.isEmpty() && !scope.contains(b.getBranchId()))
             throw new IllegalArgumentException("Voucher không áp dụng tại chi nhánh.");
         if (subtotal.compareTo(p.getMinSpend()) < 0) throw new IllegalArgumentException("Chưa đạt MinSpend.");
-        if (p.getUsageLimit() > 0 && promos.usedCount(c, p.getPromoId()) >= p.getUsageLimit())
+        if (promos.usedCount(c, p.getPromoId(), b.getBookingId()) >= p.getUsageLimit())
             throw new IllegalArgumentException("MSG36: Hết lượt sử dụng.");
         if (b.getPromoId() != null && b.getPromoId() != p.getPromoId())
             throw new IllegalArgumentException("MSG49: Không được cộng dồn mã.");

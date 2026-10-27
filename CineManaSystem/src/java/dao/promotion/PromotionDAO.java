@@ -1,4 +1,4 @@
-package dao;
+package dao.promotion;
 
 import model.Promotion;
 import java.math.BigDecimal;
@@ -51,10 +51,23 @@ public class PromotionDAO {
         }
         return result;
     }
-    public int usedCount(Connection c, int id) throws SQLException {
-        try (PreparedStatement ps = c.prepareStatement("SELECT COUNT(*) FROM dbo.Booking b WHERE b.PromoID = ? AND b.Status = 'Confirmed' AND EXISTS(SELECT 1 FROM dbo.Payment p WHERE p.BookingID = b.BookingID AND p.GatewayStatus = 'Success')")) {
-            ps.setInt(1, id);
-            try (ResultSet rs = ps.executeQuery()) { rs.next(); return rs.getInt(1); }
+    // Khớp quy ước PaymentService của Nam: đơn chưa hủy đang chiếm lượt.
+    public int usedCount(Connection connection, int promoId) throws SQLException {
+        return usedCount(connection, promoId, 0);
+    }
+
+    public int usedCount(Connection connection, int promoId, int exceptBookingId)
+            throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement("""
+                SELECT COUNT(*) FROM dbo.Booking
+                WHERE PromoID = ? AND Status <> 'Cancelled' AND BookingID <> ?
+                """)) {
+            statement.setInt(1, promoId);
+            statement.setInt(2, exceptBookingId);
+            try (ResultSet result = statement.executeQuery()) {
+                result.next();
+                return result.getInt(1);
+            }
         }
     }
     public java.sql.Date today(Connection c) throws SQLException {

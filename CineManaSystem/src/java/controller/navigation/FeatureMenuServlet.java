@@ -1,10 +1,10 @@
-package controller;
+package controller.navigation;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import java.io.IOException;
 import model.User;
-import service.AccessService;
+import service.common.AccessService;
 import util.SessionUtil;
 
 @WebServlet(urlPatterns={"/admin/system","/staff/fnb","/staff/promotions"})

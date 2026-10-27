@@ -1,4 +1,6 @@
-package dao;
+package dao.admin;
+
+import dao.DBContext;
 import model.Branch;
 import java.sql.*;
 import java.util.*;
@@ -22,5 +24,28 @@ public class BranchDAO {
             ps.setInt(1,id);
             try(ResultSet rs=ps.executeQuery()) { return rs.next(); }
         }
+    }
+
+    public List<Branch> getActiveBranches(Integer onlyBranch) throws SQLException {
+        List<Branch> result = new ArrayList<>();
+        String sql = """
+                SELECT BranchID, Name, Address, City, Hotline
+                FROM dbo.Branch
+                WHERE Status = 'Active'
+                  AND BranchID = COALESCE(?, BranchID)
+                ORDER BY Name
+                """;
+        try (Connection c = DBContext.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            if (onlyBranch == null) ps.setNull(1, Types.INTEGER);
+            else ps.setInt(1, onlyBranch);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    result.add(new Branch(rs.getInt("BranchID"), rs.getString("Name"),
+                            rs.getString("Address"), rs.getString("City"), rs.getString("Hotline")));
+                }
+            }
+        }
+        return result;
     }
 }

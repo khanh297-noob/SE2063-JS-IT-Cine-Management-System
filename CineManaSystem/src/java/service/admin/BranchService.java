@@ -1,5 +1,6 @@
-package service;
-import dao.BranchDAO;
+package service.admin;
+
+import dao.admin.BranchDAO;
 import model.*;
 import java.sql.SQLException;
 import java.util.List;

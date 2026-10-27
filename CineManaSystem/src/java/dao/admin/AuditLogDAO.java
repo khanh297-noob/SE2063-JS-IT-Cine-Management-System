@@ -1,5 +1,6 @@
-package dao;
+package dao.admin;
 
+import dao.DBContext;
 import model.AuditLog;
 
 import java.sql.Connection;

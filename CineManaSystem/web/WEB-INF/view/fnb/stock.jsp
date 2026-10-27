@@ -1,3 +1,34 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<!DOCTYPE html>
+<html lang="vi">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Kho và thực đơn chi nhánh · Cine Management</title>
+        <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+        <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+        <link rel="stylesheet"
+        href="${pageContext.request.contextPath}/assets/css/admin-style.css">
+    </head>
+    <body>
+        <jsp:include page="/WEB-INF/view/common/sidebar-khanh.jsp"/>
+        <div class="main-wrapper">
+            <jsp:include page="/WEB-INF/view/common/header-khanh.jsp"/>
+            <main class="content-body">
+                <h1 class="mb-4">Kho và thực đơn chi nhánh</h1>
+                <jsp:include page="/WEB-INF/view/common/messages-khanh.jsp"/>
+                <form method="get" action="${pageContext.request.contextPath}/staff/fnb/stock" class="panel form-grid">
+                    <div>
+                        <label for="branchFilter" class="form-label">Chi nhánh</label>
+                        <select id="branchFilter" name="branchId" class="form-select">
+                            <option value="">Chọn chi nhánh</option>
+                            <c:forEach var="branch" items="${branchList}">
+                                <option value="${branch.branchID}"
+                                ${selectedBranchId eq branch.branchID ? 'selected' : ''}>
                                     CN-${branch.branchID} · <c:out value="${branch.name}"/>
                                 </option>
                             </c:forEach>

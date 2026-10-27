@@ -1,4 +1,4 @@
-package dao;
+package dao.f_b;
 
 import java.math.BigDecimal;
 import java.sql.*;

@@ -1,6 +1,8 @@
-package service;
-import dao.AuditLogDAO;
+package service.admin;
+import dao.admin.AuditLogDAO;
 import model.*;
+import service.common.AccessService;
+
 import java.sql.SQLException;
 import java.util.List;
 

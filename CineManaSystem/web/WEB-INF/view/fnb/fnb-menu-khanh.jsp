@@ -19,7 +19,7 @@
                 <p class="text-muted mb-4">Chọn chức năng cần thực hiện.</p>
                 <div class="khanh-feature-grid">
                     <c:if test="${sessionScope.User.role eq 'Administrator'}">
-                        <a class="khanh-feature-card" href="${pageContext.request.contextPath}/admin/fnb-items">
+                        <a class="khanh-feature-card" href="${pageContext.request.contextPath}/staff/fnb/items">
                             <h2>Manage F&amp;B Item</h2>
                             <p>Danh mục chung do Admin quản lý</p>
                             <span>Mở chức năng →</span>

@@ -1,4 +1,4 @@
-package dao;
+package dao.promotion;
 
 import java.math.BigDecimal;
 import java.sql.*;
@@ -8,6 +8,20 @@ import model.Showtime;
 
 public class PricingDAO {
     public BigDecimal subtotal(Connection c, int booking) throws SQLException {
+        try (PreparedStatement statement = c.prepareStatement("""
+                SELECT 1 FROM dbo.Booking_F_B
+                WHERE BookingID = ? AND UnitPrice IS NULL
+                  AND OrderStatus <> 'Cancelled'
+                """)) {
+            statement.setInt(1, booking);
+            try (ResultSet result = statement.executeQuery()) {
+                if (result.next()) {
+                    throw new IllegalArgumentException(
+                            "Đơn cũ/chưa tích hợp chưa lưu đơn giá; cần đối chiếu trước khi tính lại.");
+                }
+            }
+        }
+
         String sql = """
                 SELECT COALESCE((SELECT SUM(FinalPrice) FROM dbo.Ticket
                                  WHERE BookingID = ? AND Status <> 'Cancelled'), 0)
