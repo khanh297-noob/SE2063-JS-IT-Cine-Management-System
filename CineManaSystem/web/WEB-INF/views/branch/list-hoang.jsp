@@ -8,11 +8,13 @@
 <div class="page-head">
     <div>
         <h1 class="page-title">Chi nhánh</h1>
-        <p class="page-sub">${fn:length(branches)} chi nhánh</p>
+        <%-- Quản lý chi nhánh chỉ thấy chi nhánh của mình (BranchServlet đã lọc), không tạo / ngưng chi nhánh --%>
+        <p class="page-sub"><c:choose><c:when test="${isAdmin}">${fn:length(branches)} chi nhánh</c:when><c:otherwise>Chi nhánh bạn đang quản lý</c:otherwise></c:choose></p>
     </div>
-    <a class="btn btn-primary" href="${ctx}/manage/branch?action=create">Thêm chi nhánh</a>
+    <c:if test="${isAdmin}"><a class="btn btn-primary" href="${ctx}/manage/branch?action=create">Thêm chi nhánh</a></c:if>
 </div>
 
+<c:if test="${isAdmin}">
 <form class="filters" method="get" action="${ctx}/manage/branch">
     <input type="search" name="q" value="${fn:escapeXml(q)}" placeholder="Tìm theo tên, thành phố, địa chỉ" aria-label="Tìm chi nhánh">
     <select name="status" aria-label="Trạng thái">
@@ -22,12 +24,13 @@
     </select>
     <button class="btn" type="submit">Lọc</button>
 </form>
+</c:if>
 
 <div class="table-wrap">
     <c:choose>
         <c:when test="${empty branches}">
             <div class="empty">Không có chi nhánh nào khớp bộ lọc.
-                <a href="${ctx}/manage/branch?action=create">Thêm chi nhánh</a></div>
+                <c:if test="${isAdmin}"><a href="${ctx}/manage/branch?action=create">Thêm chi nhánh</a></c:if></div>
         </c:when>
         <c:otherwise>
             <table>
@@ -54,6 +57,7 @@
                                 <c:if test="${b.active}">
                                     <a class="btn btn-sm btn-quiet" href="${ctx}/branch/details?id=${b.branchId}">Trang khách</a>
                                 </c:if>
+                                <c:if test="${isAdmin}">
                                 <form method="post" action="${ctx}/manage/branch">
                                     <input type="hidden" name="action" value="status">
                                     <input type="hidden" name="id" value="${b.branchId}">
@@ -69,6 +73,7 @@
                                         </c:otherwise>
                                     </c:choose>
                                 </form>
+                                </c:if>
                             </div>
                         </td>
                     </tr>

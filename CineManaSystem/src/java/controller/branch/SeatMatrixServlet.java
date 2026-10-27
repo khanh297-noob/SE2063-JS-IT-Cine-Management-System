@@ -1,7 +1,7 @@
 package controller.branch;
 
-import controller.BaseServlet;
 import model.branch.SeatMatrixDTO;
+import service.branch.RoomService;
 import service.branch.SeatMatrixService;
 import util.BusinessException;
 
@@ -17,22 +17,27 @@ import java.sql.SQLException;
  * Configure Seat Matrix.
  * GET  /manage/rooms/seats?roomId=1
  * POST roomId, rows, cols, layout (định dạng xem SeatMatrixDTO)
+ * Admin, hoặc Quản lý của chi nhánh có phòng đó.
  */
 @WebServlet("/manage/rooms/seats")
-public class SeatMatrixServlet extends BaseServlet {
+public class SeatMatrixServlet extends BranchScopedServlet {
 
     private final SeatMatrixService seatMatrixService = new SeatMatrixService();
+    private final RoomService roomService = new RoomService();
 
     @Override
     protected void handleGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException, SQLException, BusinessException {
-        show(req, resp, seatMatrixService.getMatrix(requiredId(req, "roomId")));
+        SeatMatrixDTO matrix = seatMatrixService.getMatrix(requiredId(req, "roomId"));
+        requireBranch(req, matrix.getRoom().getBranchId());
+        show(req, resp, matrix);
     }
 
     @Override
     protected void handlePost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException, SQLException, BusinessException {
         int roomId = requiredId(req, "roomId");
+        requireBranch(req, roomService.get(roomId).getBranchId());
         Integer rows = intParam(req, "rows");
         Integer cols = intParam(req, "cols");
         String layout = req.getParameter("layout");

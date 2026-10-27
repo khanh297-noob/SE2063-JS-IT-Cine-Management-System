@@ -15,13 +15,25 @@
 </div>
 
 <form class="filters" method="get" action="${ctx}/manage/rooms">
-    <select name="branchId" aria-label="Chi nhánh" onchange="this.form.submit()">
-        <option value="">Mọi chi nhánh</option>
-        <c:forEach var="b" items="${branches}">
-            <option value="${b.branchId}" ${b.branchId == branchId ? 'selected' : ''}><c:out value="${b.name}"/></option>
-        </c:forEach>
-    </select>
-    <noscript><button class="btn" type="submit">Lọc</button></noscript>
+    <c:choose>
+        <%-- Quản lý chi nhánh: cố định chi nhánh của mình, không chọn chi nhánh khác --%>
+        <c:when test="${not empty managedBranchId}">
+            <select aria-label="Chi nhánh" disabled>
+                <c:forEach var="b" items="${branches}">
+                    <option selected><c:out value="${b.name}"/></option>
+                </c:forEach>
+            </select>
+        </c:when>
+        <c:otherwise>
+            <select name="branchId" aria-label="Chi nhánh" onchange="this.form.submit()">
+                <option value="">Mọi chi nhánh</option>
+                <c:forEach var="b" items="${branches}">
+                    <option value="${b.branchId}" ${b.branchId == branchId ? 'selected' : ''}><c:out value="${b.name}"/></option>
+                </c:forEach>
+            </select>
+            <noscript><button class="btn" type="submit">Lọc</button></noscript>
+        </c:otherwise>
+    </c:choose>
 </form>
 
 <div class="table-wrap">
