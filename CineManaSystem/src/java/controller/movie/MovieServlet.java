@@ -1,6 +1,5 @@
 package controller.movie;
 
-import controller.BaseServlet;
 import model.movie.Movie;
 import service.movie.GenreService;
 import service.movie.MovieService;
@@ -23,7 +22,7 @@ import java.util.Set;
  * POST action=save | delete
  */
 @WebServlet("/manage/movie")
-public class MovieServlet extends BaseServlet {
+public class MovieServlet extends MovieAdminServlet {
 
     private final MovieService movieService = new MovieService();
     private final GenreService genreService = new GenreService();

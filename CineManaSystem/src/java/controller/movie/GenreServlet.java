@@ -1,6 +1,5 @@
 package controller.movie;
 
-import controller.BaseServlet;
 import model.movie.Genre;
 import service.movie.GenreService;
 import service.movie.MovieService;
@@ -21,7 +20,7 @@ import java.sql.SQLException;
  * POST action=save | delete
  */
 @WebServlet("/manage/genres")
-public class GenreServlet extends BaseServlet {
+public class GenreServlet extends MovieAdminServlet {
 
     private final GenreService genreService = new GenreService();
     private final MovieService movieService = new MovieService();

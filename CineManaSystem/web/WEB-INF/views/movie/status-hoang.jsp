@@ -32,7 +32,7 @@
                         <c:if test="${info.genreCount == 0}">(<a href="${ctx}/manage/movie?action=edit&id=${movie.movieId}">thêm thể loại</a>)</c:if>
                     </li>
                     <li class="${info.branchCount > 0 ? 'ok' : 'fail'}">
-                        Có chi nhánh chiếu: ${info.branchCount}
+                        Có chi nhánh đang chiếu (đang hoạt động, hôm nay trong khung ngày chiếu): ${info.branchCount}
                         <c:if test="${info.branchCount == 0}">(<a href="${ctx}/manage/movie/branches?movieId=${movie.movieId}">chọn chi nhánh</a>)</c:if>
                     </li>
                     <li class="${info.posterCount > 0 ? 'ok' : 'fail'}">

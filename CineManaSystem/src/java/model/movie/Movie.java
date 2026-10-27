@@ -33,6 +33,14 @@ public class Movie {
     /** Ngày khởi chiếu dạng dd/MM/yyyy để hiển thị. */
     public String getReleaseDateText() { return releaseDate == null ? "" : releaseDate.format(VN_DATE); }
 
+    /** Thời lượng dạng "2g 15p" (dưới 1 giờ thì chỉ "45p"), rỗng nếu chưa có. */
+    public String getDurationText() {
+        if (duration == null) return "";
+        int hours = duration / 60;
+        int minutes = duration % 60;
+        return hours > 0 ? hours + "g " + minutes + "p" : minutes + "p";
+    }
+
     /** Năm phát hành (năm của ngày khởi chiếu), null nếu chưa có ngày. */
     public Integer getReleaseYear() { return releaseDate == null ? null : releaseDate.getYear(); }
 

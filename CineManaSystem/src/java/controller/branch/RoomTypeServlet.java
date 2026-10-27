@@ -1,6 +1,5 @@
 package controller.branch;
 
-import controller.BaseServlet;
 import model.branch.RoomType;
 import service.branch.RoomTypeService;
 import util.BusinessException;
@@ -17,9 +16,10 @@ import java.sql.SQLException;
  * Configure Room Type.
  * GET  /manage/room-types[?action=create|edit&id=]
  * POST action=save | status | delete
+ * Loại phòng dùng chung cho cả chuỗi: Quản lý chi nhánh chỉ xem danh sách, mọi thay đổi chỉ Admin.
  */
 @WebServlet("/manage/room-types")
-public class RoomTypeServlet extends BaseServlet {
+public class RoomTypeServlet extends BranchScopedServlet {
 
     private final RoomTypeService roomTypeService = new RoomTypeService();
 
@@ -27,8 +27,14 @@ public class RoomTypeServlet extends BaseServlet {
     protected void handleGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException, SQLException, BusinessException {
         switch (action(req, "list")) {
-            case "create" -> showForm(req, resp, new RoomType());
-            case "edit" -> showForm(req, resp, roomTypeService.get(requiredId(req, "id")));
+            case "create" -> {
+                requireAdmin(req);
+                showForm(req, resp, new RoomType());
+            }
+            case "edit" -> {
+                requireAdmin(req);
+                showForm(req, resp, roomTypeService.get(requiredId(req, "id")));
+            }
             default -> {
                 req.setAttribute("roomTypes", roomTypeService.list());
                 req.setAttribute("roomCounts", roomTypeService.countRoomsPerType());
@@ -40,6 +46,7 @@ public class RoomTypeServlet extends BaseServlet {
     @Override
     protected void handlePost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException, SQLException, BusinessException {
+        requireAdmin(req);
         switch (action(req, "save")) {
             case "status" -> {
                 roomTypeService.changeStatus(requiredId(req, "id"), str(req, "status"));

@@ -9,19 +9,21 @@
 <div class="page-head">
     <div>
         <h1 class="page-title">Loại phòng</h1>
-        <p class="page-sub">Phụ thu được cộng vào giá vé cơ bản của suất chiếu.</p>
+        <p class="page-sub">Phụ thu được cộng vào giá vé cơ bản của suất chiếu.
+            <c:if test="${not isAdmin}">Loại phòng dùng chung cho cả chuỗi rạp, chỉ Admin được thay đổi.</c:if></p>
     </div>
-    <a class="btn btn-primary" href="${ctx}/manage/room-types?action=create">Thêm loại phòng</a>
+    <c:if test="${isAdmin}"><a class="btn btn-primary" href="${ctx}/manage/room-types?action=create">Thêm loại phòng</a></c:if>
 </div>
 
 <div class="table-wrap">
     <c:choose>
         <c:when test="${empty roomTypes}">
-            <div class="empty">Chưa có loại phòng. <a href="${ctx}/manage/room-types?action=create">Thêm loại đầu tiên</a></div>
+            <div class="empty">Chưa có loại phòng.
+                <c:if test="${isAdmin}"><a href="${ctx}/manage/room-types?action=create">Thêm loại đầu tiên</a></c:if></div>
         </c:when>
         <c:otherwise>
             <table>
-                <thead><tr><th>Loại phòng</th><th>Phụ thu</th><th>Số phòng</th><th>Trạng thái</th><th></th></tr></thead>
+                <thead><tr><th>Loại phòng</th><th>Phụ thu</th><th>Số phòng</th><th>Trạng thái</th><c:if test="${isAdmin}"><th></th></c:if></tr></thead>
                 <tbody>
                 <c:forEach var="t" items="${roomTypes}">
                     <c:set var="used" value="${roomCounts[t.roomTypeId]}"/>
@@ -36,6 +38,7 @@
                                 <c:otherwise><span class="tag tag-inactive">Ngưng dùng</span></c:otherwise>
                             </c:choose>
                         </td>
+                        <c:if test="${isAdmin}">
                         <td>
                             <div class="actions">
                                 <a class="btn btn-sm" href="${ctx}/manage/room-types?action=edit&id=${t.roomTypeId}">Sửa</a>
@@ -55,6 +58,7 @@
                                 </c:if>
                             </div>
                         </td>
+                        </c:if>
                     </tr>
                 </c:forEach>
                 </tbody>
