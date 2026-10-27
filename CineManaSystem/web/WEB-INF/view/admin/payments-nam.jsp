@@ -27,7 +27,7 @@
             <div><label>Phương thức</label>
                 <select name="method">
                     <option value="">Tất cả</option>
-                    <c:forEach var="m" items="VNPay,Cash,Credit Card">
+                    <c:forEach var="m" items="VNPay,Cash">
                         <option value="${m}" ${method == m ? 'selected' : ''}>${m}</option>
                     </c:forEach>
                 </select></div>

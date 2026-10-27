@@ -28,9 +28,8 @@
         <div class="line"><span>(3) Tiền mặt hoàn trả khách (${bal.refundCount} đơn hủy)</span><b class="text-red">- <fmt:formatNumber value="${bal.cashRefund}" pattern="#,##0"/> ₫</b></div>
         <div class="line total"><b>TIỀN MẶT TRONG KÉT = (1) + (2) - (3)</b><span class="amount"><fmt:formatNumber value="${bal.expected}" pattern="#,##0"/> ₫</span></div>
         <hr style="border:none;border-top:1px solid var(--border);margin:16px 0">
-        <div class="line text-muted"><span>Thu qua Thẻ (không vào két)</span><span><fmt:formatNumber value="${bal.cardSales}" pattern="#,##0"/> ₫</span></div>
         <div class="line text-muted"><span>Thu qua VNPay QR (không vào két)</span><span><fmt:formatNumber value="${bal.vnpaySales}" pattern="#,##0"/> ₫</span></div>
-        <div class="line text-muted"><span>Hoàn qua Thẻ / QR</span><span>- <fmt:formatNumber value="${bal.cardRefund}" pattern="#,##0"/> ₫</span></div>
+        <div class="line text-muted"><span>Hoàn đơn VNPay QR</span><span>- <fmt:formatNumber value="${bal.vnpayRefund}" pattern="#,##0"/> ₫</span></div>
         <div style="margin-top:16px;display:flex;gap:10px">
             <a class="btn btn-outline" href="${ctx}/pos/transactions">Xem giao dịch</a>
             <a class="btn btn-dark" href="${ctx}/pos/shift">Kết thúc ca &amp; đối soát</a>
