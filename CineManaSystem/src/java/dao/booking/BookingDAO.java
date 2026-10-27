@@ -217,14 +217,14 @@ public class BookingDAO extends DBContext {
     /**
      * Tạo đơn tại quầy trong 1 transaction:
      * Booking + Ticket 'Valid' cho từng ghế + Booking_F_B + Payment.
-     *  - Tiền mặt / thẻ (đã thu tiền): Booking 'Confirmed', Payment 'Success'
+     *  - Tiền mặt (đã thu tiền):        Booking 'Confirmed', Payment 'Success'
      *  - VNPay QR (khách chưa trả):   Booking 'Pending',   Payment 'Pending' (giữ ghế chờ khách trả)
      * Khách tại quầy không có tài khoản nên UserID = thu ngân; StaffID = thu ngân, Channel = 'Counter'.
      * @return BookingID, hoặc -1 nếu ghế vừa bị người khác đặt / lỗi DB
      */
     public int createCounterBooking(int cashierId, int branchId, Integer promoId, BigDecimal total, int showtimeId,
             List<Seat> seats, List<FnbItem> items, String method, String txnCode) {
-        boolean paid = !"VNPay".equals(method);
+        boolean paid = "Cash".equals(method);
         try (Connection con = getConnection()) {
             con.setAutoCommit(false);
             con.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
@@ -297,7 +297,7 @@ public class BookingDAO extends DBContext {
                     }
                 }
 
-                // 5. Thanh toán (tiền mặt / thẻ => Success luôn; VNPay => Pending chờ khách trả)
+                // 5. Thanh toán (tiền mặt => Success luôn; VNPay => Pending chờ khách trả)
                 String paySql = "INSERT INTO Payment (BookingID, Amount, PaymentMethod, PaymentTime, TransactionCode, GatewayStatus) "
                         + "VALUES (?, ?, ?, GETDATE(), ?, ?)";
                 try (PreparedStatement ps = con.prepareStatement(paySql)) {
