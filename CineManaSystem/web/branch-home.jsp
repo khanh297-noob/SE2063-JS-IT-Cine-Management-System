@@ -228,6 +228,25 @@
         </div>
     </a>
 
+    <a class="feature-card" href="${ctx}/manager/showtimes">
+        <div>
+            <div class="feature-header">
+                <div class="feature-icon" aria-hidden="true">&#128197;</div>
+                <div class="feature-title-wrap">
+                    <h2>Suất chiếu</h2>
+                    <span class="feature-badge">Lịch chiếu &amp; giá vé</span>
+                </div>
+            </div>
+            <p class="feature-desc">
+                Tạo / sửa / hủy suất chiếu, gán phòng, gán phim, kiểm tra trùng lịch. Giá vé tự tính theo phòng và ngày (Thứ 7, Chủ nhật +20.000đ). Xem lịch chiếu tổng hợp theo tuần.
+            </p>
+        </div>
+        <div class="feature-action">
+            <span>Truy cập quản lý Suất chiếu</span>
+            <span class="feature-arrow">&rarr;</span>
+        </div>
+    </a>
+
     <!-- Feature 3: Báo cáo & Thống kê -->
     <a class="feature-card" href="${ctx}/report/branch-dashboard">
         <div>

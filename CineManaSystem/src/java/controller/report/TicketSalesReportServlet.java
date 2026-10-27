@@ -43,7 +43,7 @@ public class TicketSalesReportServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // Bước 1: kiểm tra quyền (Admin hoặc Quản lý chi nhánh)
+        //kiểm tra quyền (Admin hoặc Quản lý chi nhánh)
         if (!PermissionUtil.canViewSalesReport(request)) {
             response.sendRedirect(request.getContextPath() + "/access-denied");
             return;
@@ -51,13 +51,13 @@ public class TicketSalesReportServlet extends HttpServlet {
         User user = PermissionUtil.getCurrentUser(request);
         boolean isAdmin = PermissionUtil.isAdmin(request);
 
-        // Bước 2: đọc bộ lọc
+        //đọc bộ lọc
         Integer branchId = ParamUtil.parseIntOrNull(request.getParameter("branchId"));
         Integer movieId = ParamUtil.parseIntOrNull(request.getParameter("movieId"));
         String fromDate = request.getParameter("fromDate");
         String toDate = request.getParameter("toDate");
 
-        // Bước 3: xác định chi nhánh được xem
+        //xác định chi nhánh được xem
         List<Integer> branchScope;
         try {
             branchScope = accessService.resolveBranchScope(user, isAdmin, branchId);
@@ -66,17 +66,17 @@ public class TicketSalesReportServlet extends HttpServlet {
             return;
         }
 
-        // Bước 4: lấy danh sách chi nhánh, phim cho ô chọn (phim chỉ gồm các phim chiếu ở chi nhánh được xem)
+        //lấy danh sách chi nhánh, phim cho ô chọn (phim chỉ gồm các phim chiếu ở chi nhánh được xem)
         List<Branch> branches = reportDao.getBranches(accessService.allowedBranchIds(user, isAdmin));
         List<Movie> movies = reportDao.getMovies(branchScope);
 
-        // Bước 5: lấy dữ liệu báo cáo
+        //lấy dữ liệu báo cáo
         List<TicketReportItem> reportItems = reportDao.getTicketSalesReport(branchScope, movieId, fromDate, toDate);
         SalesSummary summary = reportDao.getSalesSummary(branchScope, movieId, fromDate, toDate);
         List<Object[]> dailyRevenue = reportDao.getDailyRevenueChart(branchScope, movieId, fromDate, toDate);
         List<Object[]> movieRevenue = reportDao.getRevenueByMovieChart(branchScope, fromDate, toDate);
 
-        // Bước 6: gửi sang JSP
+        //gửi sang JSP
         request.setAttribute("branches", branches);
         request.setAttribute("movies", movies);
         request.setAttribute("reportItems", reportItems);

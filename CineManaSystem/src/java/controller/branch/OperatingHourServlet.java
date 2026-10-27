@@ -1,6 +1,5 @@
 package controller.branch;
 
-import controller.BaseServlet;
 import model.branch.BranchOperatingHour;
 import service.branch.BranchService;
 import service.branch.OperatingHourService;
@@ -20,9 +19,10 @@ import java.util.List;
  * Manage Operating Hours.
  * GET  /manage/branch/hours?branchId=1
  * POST branchId, closed_{1..7}, open_{1..7}, close_{1..7}
+ * Admin, hoặc Quản lý của chi nhánh đó.
  */
 @WebServlet("/manage/branch/hours")
-public class OperatingHourServlet extends BaseServlet {
+public class OperatingHourServlet extends BranchScopedServlet {
 
     private final BranchService branchService = new BranchService();
     private final OperatingHourService hourService = new OperatingHourService();
@@ -31,6 +31,7 @@ public class OperatingHourServlet extends BaseServlet {
     protected void handleGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException, SQLException, BusinessException {
         int branchId = requiredId(req, "branchId");
+        requireBranch(req, branchId);
         show(req, resp, branchId, hourService.getWeek(branchId));
     }
 
@@ -38,6 +39,7 @@ public class OperatingHourServlet extends BaseServlet {
     protected void handlePost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException, SQLException, BusinessException {
         int branchId = requiredId(req, "branchId");
+        requireBranch(req, branchId);
         List<BranchOperatingHour> week = new ArrayList<>();
         for (int d = 1; d <= 7; d++) {
             BranchOperatingHour h = new BranchOperatingHour(branchId, d);

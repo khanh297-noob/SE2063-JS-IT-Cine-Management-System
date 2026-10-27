@@ -12,6 +12,7 @@ import model.booking.Seat;
 import model.booking.Showtime;
 import model.payment.Promotion;
 import model.pos.WorkShift;
+import service.movie.ShowtimePriceCalculator;
 import service.payment.PaymentService;
 import java.math.BigDecimal;
 import java.sql.Date;
@@ -38,19 +39,8 @@ public class PosService {
 
     public static final int MAX_SEATS = 8;
 
-    /**
-     * Giá vé = giá gốc của suất + phụ thu loại ghế (bảng SeatType) + phụ thu loại phòng (bảng RoomType).
-     * Phụ thu do quản lý cấu hình trong DB nên không ghi cứng trong code.
-     */
-    public BigDecimal getTicketPrice(BigDecimal basePrice, BigDecimal seatSurcharge, BigDecimal roomSurcharge) {
-        BigDecimal price = basePrice;
-        if (seatSurcharge != null) {
-            price = price.add(seatSurcharge);
-        }
-        if (roomSurcharge != null) {
-            price = price.add(roomSurcharge);
-        }
-        return price;
+    public BigDecimal getTicketPrice(BigDecimal basePrice, BigDecimal seatSurcharge) {
+        return ShowtimePriceCalculator.ticketPrice(basePrice, seatSurcharge);
     }
 
     // Suất chiếu trong ngày của rạp, gom theo tên phim: { "Tên phim" -> [suất 1, suất 2...] }
@@ -73,7 +63,7 @@ public class PosService {
     public List<Seat> getSeats(Showtime st) {
         List<Seat> seats = posShowtimeDAO.getSeats(st.getShowtimeId(), st.getRoomId());
         for (Seat s : seats) {
-            s.setPrice(getTicketPrice(st.getBasePrice(), s.getSurcharge(), st.getRoomSurcharge()));
+            s.setPrice(getTicketPrice(st.getBasePrice(), s.getSurcharge()));
         }
         return seats;
     }

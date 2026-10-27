@@ -18,6 +18,7 @@ import util.NotFoundException;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -77,6 +78,9 @@ public class CustomerMovieService {
             throws SQLException, BusinessException {
         return JdbcContext.query(con -> {
             List<MovieSummaryDTO> list = filter(load(con, Movie.STATUS_COMING_SOON, genreId), year, language);
+            // BR-MS-03: phim đã quá ngày khởi chiếu mà vẫn "Coming Soon" (chưa đủ điều kiện chiếu) không hiện cho khách
+            LocalDate today = LocalDate.now();
+            list.removeIf(ms -> ms.getMovie().getReleaseDate() == null || !ms.getMovie().getReleaseDate().isAfter(today));
             list.sort(Comparator.comparing((MovieSummaryDTO ms) -> ms.getMovie().getReleaseDate(),
                     Comparator.nullsLast(Comparator.naturalOrder())));
             return list;

@@ -76,7 +76,7 @@ body {
     border-radius: 10px;
     padding: 16px 20px;
     margin-bottom: 20px;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 /* Form bo loc tim kiem xep theo chieu ngang */
@@ -103,7 +103,8 @@ body {
     color: #64748b;
 }
 
-.filter-input, .filter-select {
+.filter-input,
+.filter-select {
     padding: 8px 12px;
     border: 1px solid #cbd5e1;
     border-radius: 6px;
@@ -113,7 +114,8 @@ body {
     width: 100%;
 }
 
-.filter-input:focus, .filter-select:focus {
+.filter-input:focus,
+.filter-select:focus {
     border-color: #e11d48;
 }
 
@@ -182,9 +184,11 @@ body {
 .kpi-card.green {
     border-left-color: #10b981;
 }
+
 .kpi-card.blue {
     border-left-color: #3b82f6;
 }
+
 .kpi-card.purple {
     border-left-color: #8b5cf6;
 }
@@ -285,13 +289,33 @@ body {
     transition: width 0.3s;
 }
 
-.fill-red { background: linear-gradient(90deg, #f43f5e, #e11d48); }
-.fill-color-0 { background: #e11d48; }
-.fill-color-1 { background: #2563eb; }
-.fill-color-2 { background: #059669; }
-.fill-color-3 { background: #d97706; }
-.fill-color-4 { background: #9333ea; }
-.fill-color-5 { background: #ec4899; }
+.fill-red {
+    background: linear-gradient(90deg, #f43f5e, #e11d48);
+}
+
+.fill-color-0 {
+    background: #e11d48;
+}
+
+.fill-color-1 {
+    background: #2563eb;
+}
+
+.fill-color-2 {
+    background: #059669;
+}
+
+.fill-color-3 {
+    background: #d97706;
+}
+
+.fill-color-4 {
+    background: #9333ea;
+}
+
+.fill-color-5 {
+    background: #ec4899;
+}
 
 .stat-count {
     width: 80px;
@@ -375,16 +399,66 @@ tr:hover td {
 }
 
 /* ===== Thay cho thuộc tính style="..." trước đây nằm trong JSP ===== */
-.empty-icon { font-size: 28px !important; margin-bottom: 8px !important; display: block !important; }
-.empty-cell { text-align: center !important; padding: 32px !important; color: #94a3b8 !important; }
-.align-center { text-align: center !important; }
-.align-right { text-align: right !important; }
-.cell-email { font-size: 10px !important; color: #94a3b8 !important; }
-.cell-time { color: #94a3b8 !important; font-size: 11px !important; }
-.cell-movie { font-weight: 700 !important; color: #0f172a !important; }
-.cell-ticket-code { font-weight: 700 !important; color: #e11d48 !important; }
-.chart-header-note { font-size: 11px !important; color: #64748b !important; font-weight: normal !important; }
-.icon-red { color: #e11d48 !important; }
-.chart-header-flex { display: flex !important; justify-content: space-between !important; align-items: center !important; }
-.kpi-small { font-size: 14px !important; }
-.kpi-green { color: #059669 !important; }
+.empty-icon {
+    font-size: 28px !important;
+    margin-bottom: 8px !important;
+    display: block !important;
+}
+
+.empty-cell {
+    text-align: center !important;
+    padding: 32px !important;
+    color: #94a3b8 !important;
+}
+
+.align-center {
+    text-align: center !important;
+}
+
+.align-right {
+    text-align: right !important;
+}
+
+.cell-email {
+    font-size: 10px !important;
+    color: #94a3b8 !important;
+}
+
+.cell-time {
+    color: #94a3b8 !important;
+    font-size: 11px !important;
+}
+
+.cell-movie {
+    font-weight: 700 !important;
+    color: #0f172a !important;
+}
+
+.cell-ticket-code {
+    font-weight: 700 !important;
+    color: #e11d48 !important;
+}
+
+.chart-header-note {
+    font-size: 11px !important;
+    color: #64748b !important;
+    font-weight: normal !important;
+}
+
+.icon-red {
+    color: #e11d48 !important;
+}
+
+.chart-header-flex {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+}
+
+.kpi-small {
+    font-size: 14px !important;
+}
+
+.kpi-green {
+    color: #059669 !important;
+}

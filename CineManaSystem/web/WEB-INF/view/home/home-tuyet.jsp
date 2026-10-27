@@ -3,7 +3,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%--
   Trang chủ khách hàng. HomeServlet (/home) đặt sẵn:
-    movies       danh sách phim của tab đang chọn (model.Movie)
+    movies       danh sách phim của tab đang chọn (model.movie.MovieSummaryDTO: movie, posterUrl, genreText)
     tab          showing | coming
     currentUser  người đang đăng nhập, null nếu là khách
 --%>
@@ -40,7 +40,7 @@
                 <li><a href="${ctx}${memberUrl}" class="nav-item">Thành viên</a></li>
                 <%-- Trang vé đã đặt (/my-ticket) do module Booking làm; khách chưa đăng nhập
                      sẽ được AuthFilter chuyển sang /login trước --%>
-                <li><a href="${ctx}/my-ticket" class="nav-item">Vé của tôi</a></li>
+                <li><a href="${ctx}/customer/bookings" class="nav-item">Vé của tôi</a></li>
             </ul>
         </nav>
 
@@ -70,7 +70,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="${ctx}/my-ticket" class="dropdown-item">
+                                    <a href="${ctx}/customer/bookings" class="dropdown-item">
                                         <div class="dropdown-item-left">
                                             <i class="fa-regular fa-id-card"></i>
                                             <span>Vé của tôi</span>
@@ -165,21 +165,22 @@
             </c:when>
             <c:otherwise>
                 <section class="movie-grid">
-                    <c:forEach var="m" items="${movies}">
-                        <c:set var="detailUrl" value="${ctx}/movies/detail?id=${m.movieID}"/>
+                    <c:forEach var="ms" items="${movies}">
+                        <c:set var="m" value="${ms.movie}"/>
+                        <c:set var="detailUrl" value="${ctx}/movies/detail?id=${m.movieId}"/>
                         <div class="movie-card">
                             <a href="${detailUrl}" class="poster-wrapper">
                                 <span class="age-badge age-${fn:toLowerCase(m.ageRating)}"><c:out value="${m.ageRating}"/></span>
                                 <span class="poster-placeholder"><c:out value="${m.title}"/></span>
-                                <c:if test="${not empty m.posterURL}">
-                                    <img src="${fn:escapeXml(m.posterURL)}" alt="${fn:escapeXml(m.title)}" class="movie-poster" loading="lazy" onerror="this.remove()">
+                                <c:if test="${not empty ms.posterUrl}">
+                                    <img src="${fn:escapeXml(ms.posterUrl)}" alt="${fn:escapeXml(m.title)}" class="movie-poster" loading="lazy" onerror="this.remove()">
                                 </c:if>
                             </a>
                             <div class="movie-info">
                                 <div>
                                     <a href="${detailUrl}" class="movie-title" title="${fn:escapeXml(m.title)}"><c:out value="${m.title}"/></a>
                                     <p class="movie-meta">
-                                        <c:out value="${empty m.genres ? 'Chưa phân loại' : m.genres}"/> • ${m.durationText}
+                                        <c:out value="${empty ms.genreText ? 'Chưa phân loại' : ms.genreText}"/> • ${m.durationText}
                                     </p>
                                     <c:if test="${tab == 'coming'}">
                                         <p class="movie-meta">Khởi chiếu ${m.releaseDateText}</p>
@@ -192,7 +193,7 @@
                                     <c:otherwise>
                                         <%-- Trang đặt vé (/booking) do module Booking làm; khách chưa đăng nhập
                                              sẽ được AuthFilter chuyển sang /login trước --%>
-                                        <a href="${ctx}/booking?movieId=${m.movieID}" class="btn-card-buy">Mua Vé</a>
+                                        <a href="${ctx}/booking?movieId=${m.movieId}" class="btn-card-buy">Mua Vé</a>
                                     </c:otherwise>
                                 </c:choose>
                             </div>

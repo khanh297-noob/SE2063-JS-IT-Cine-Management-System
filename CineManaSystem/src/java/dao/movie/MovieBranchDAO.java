@@ -58,6 +58,25 @@ public class MovieBranchDAO {
         }
     }
 
+    /**
+     * Số chi nhánh thực sự chiếu được phim vào ngày date: chi nhánh đang hoạt động và date nằm trong
+     * khung AvailableFrom..AvailableTo (để trống = không giới hạn). Dùng cho BR-MS-01.
+     */
+    public int countScreeningByMovie(Connection con, int movieId, LocalDate date) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM MovieBranch mb JOIN Branch b ON b.BranchID = mb.BranchID "
+                + "WHERE mb.MovieID = ? AND b.Status = 'Active' "
+                + "AND (mb.AvailableFrom IS NULL OR mb.AvailableFrom <= ?) "
+                + "AND (mb.AvailableTo IS NULL OR mb.AvailableTo >= ?)";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, movieId);
+            ps.setDate(2, Date.valueOf(date));
+            ps.setDate(3, Date.valueOf(date));
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        }
+    }
+
     public void insert(Connection con, MovieBranch mb) throws SQLException {
         String sql = "INSERT INTO MovieBranch (MovieID, BranchID, AvailableFrom, AvailableTo) VALUES (?, ?, ?, ?)";
         try (PreparedStatement ps = con.prepareStatement(sql)) {

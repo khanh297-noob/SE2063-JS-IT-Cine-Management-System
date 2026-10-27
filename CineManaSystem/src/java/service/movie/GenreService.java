@@ -1,6 +1,6 @@
 package service.movie;
 
-import dao.ShowtimeDAO;
+import dao.movie.ShowtimeDAO;
 import dao.movie.GenreDAO;
 import dao.movie.MovieDAO;
 import dao.movie.MovieGenreDAO;

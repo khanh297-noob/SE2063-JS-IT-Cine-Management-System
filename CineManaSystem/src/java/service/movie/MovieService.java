@@ -1,6 +1,6 @@
 package service.movie;
 
-import dao.ShowtimeDAO;
+import dao.movie.ShowtimeDAO;
 import dao.movie.GenreDAO;
 import dao.movie.MovieBranchDAO;
 import dao.movie.MovieDAO;
@@ -15,6 +15,7 @@ import util.NotFoundException;
 import util.TextUtil;
 
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -31,6 +32,7 @@ import java.util.Set;
  * BR-MV-03  Phim phải có ít nhất một thể loại.
  * BR-MV-04  Phim mới luôn ở trạng thái "Coming Soon"; đổi trạng thái qua màn Movie Status.
  * BR-MV-05  Không xoá phim đã có suất chiếu; hãy chuyển "End of Screening".
+ * BR-MV-06  Phim đang "Now Showing" không được đổi ngày khởi chiếu sang sau hôm nay (BR-MS-01).
  */
 public class MovieService {
 
@@ -113,15 +115,22 @@ public class MovieService {
             for (Genre g : genreDAO.findAll(con)) validGenres.add(g.getGenreId());
             if (genreIds == null || genreIds.isEmpty()) errors.add("Chọn ít nhất một thể loại.");
             else if (!validGenres.containsAll(genreIds)) errors.add("Có thể loại không tồn tại. Tải lại trang.");
+
+            Movie existing = null;
+            if (m.getMovieId() != 0) {
+                existing = movieDAO.findById(con, m.getMovieId());
+                if (existing == null) throw new NotFoundException("Không tìm thấy phim #" + m.getMovieId());
+                if (existing.isNowShowing() && m.getReleaseDate() != null && m.getReleaseDate().isAfter(LocalDate.now()))
+                    errors.add("Phim đang chiếu nên ngày khởi chiếu không được sau hôm nay. "
+                            + "Muốn dời ngày khởi chiếu, hãy chuyển phim sang End of Screening trước.");
+            }
             if (!errors.isEmpty()) throw new BusinessException(errors);
 
             int id;
-            if (m.getMovieId() == 0) {
+            if (existing == null) {
                 m.setStatus(Movie.STATUS_COMING_SOON);
                 id = movieDAO.insert(con, m);
             } else {
-                if (movieDAO.findById(con, m.getMovieId()) == null)
-                    throw new NotFoundException("Không tìm thấy phim #" + m.getMovieId());
                 movieDAO.update(con, m);
                 id = m.getMovieId();
             }

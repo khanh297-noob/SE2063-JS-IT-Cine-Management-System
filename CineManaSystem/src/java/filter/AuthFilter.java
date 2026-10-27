@@ -85,7 +85,9 @@ public class AuthFilter implements Filter {
      * Kiểm tra quyền truy cập theo từng nhóm đường dẫn.
      */
     private boolean hasPermission(HttpServletRequest request, String path) {
-
+        if (path.equals("/admin/profile") || path.equals("/admin/change-password")) {
+            return PermissionUtil.isAdmin(request) || PermissionUtil.isBranchManager(request);
+        }
         // Quản lý giao dịch thanh toán: Admin và Quản lý chi nhánh
         if (path.equals("/admin/payments")) {
             return PermissionUtil.isAdmin(request) || PermissionUtil.isBranchManager(request);
@@ -105,10 +107,33 @@ public class AuthFilter implements Filter {
                     || PermissionUtil.isBranchManager(request);
         }
 
+        // Promotion & Pricing: mỗi chức năng chi tiết có nhóm người dùng riêng
+        if (path.equals("/promotion-price-manage") || path.equals("/manage/promotion-pricing")) {
+            return PermissionUtil.canOpenPromotionPricing(request);
+        }
+        if (path.equals("/promotion-price-manage/ticket-pricing")
+                || path.equals("/promotion-price-manage/fnb-pricing")) {
+            return PermissionUtil.canManagePricing(request);       // Admin, Quản lý chi nhánh
+        }
+        if (path.equals("/promotion-price-manage/validate-promotion")) {
+            return PermissionUtil.canValidatePromotion(request);   // Thu ngân POS, Quản lý chi nhánh
+        }
+        if (path.startsWith("/promotion-price-manage/")) {
+            return PermissionUtil.canOpenPromotionPricing(request);
+        }
+
         // Quản lý chi nhánh, phòng chiếu, phim, thể loại: Admin và Quản lý chi nhánh
         if (path.startsWith("/manage/")) {
             return PermissionUtil.isAdmin(request)
                     || PermissionUtil.isBranchManager(request);
+        }
+
+        if (path.equals("/booking/detail") || path.equals("/ticket/qr")) {
+            return true;
+        }
+        if (path.equals("/booking") || path.startsWith("/booking/")
+                || path.equals("/customer/bookings") || path.equals("/customer/deactivate")) {
+            return PermissionUtil.isCustomer(request);
         }
 
         // Giờ làm nhân viên: Admin và Quản lý chi nhánh

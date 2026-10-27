@@ -1,6 +1,6 @@
 package service.movie;
 
-import dao.ShowtimeDAO;
+import dao.movie.ShowtimeDAO;
 import dao.branch.BranchDAO;
 import dao.movie.MovieBranchDAO;
 import dao.movie.MovieDAO;
@@ -30,6 +30,8 @@ import java.util.Objects;
  * BR-AB-03  Không gỡ chi nhánh khi phim còn suất chiếu sắp tới tại đó.
  * BR-AB-04  Từ ngày <= đến ngày; khoảng ngày không được loại bỏ suất chiếu đã xếp.
  * BR-AB-05  Khi thêm mới hoặc đổi ngày, ngày kết thúc không được ở quá khứ.
+ * BR-AB-06  Phim "Now Showing" phải còn ít nhất 1 chi nhánh đang hoạt động có khung ngày chiếu gồm hôm nay
+ *           (BR-MS-01): không gỡ hết, không đẩy hết khung ngày chiếu ra khỏi hôm nay.
  */
 public class MovieBranchService {
 
@@ -110,8 +112,9 @@ public class MovieBranchService {
             List<MovieBranch> toInsert = new ArrayList<>();
             List<MovieBranch> toUpdate = new ArrayList<>();
             List<Integer> toRemove = new ArrayList<>();
+            List<BranchAvailabilityDTO> current = load(con, movieId);
 
-            for (BranchAvailabilityDTO cur : load(con, movieId)) {
+            for (BranchAvailabilityDTO cur : current) {
                 Branch branch = cur.getBranch();
                 BranchSelection sel = byId.get(branch.getBranchId());
                 if (sel == null) continue; // không có trên form -> giữ nguyên
@@ -167,11 +170,34 @@ public class MovieBranchService {
             }
             if (!errors.isEmpty()) throw new BusinessException(errors);
 
+            // BR-AB-06: sau khi lưu, phim đang chiếu phải còn ít nhất 1 chi nhánh đang chiếu hôm nay (BR-MS-01)
+            if (movie.isNowShowing() && !screeningAfterSave(current, toInsert, toUpdate, toRemove, today))
+                throw new BusinessException("Phim \"" + movie.getTitle() + "\" đang chiếu nên phải còn ít nhất 1 chi nhánh "
+                        + "đang hoạt động có khung ngày chiếu gồm hôm nay. Muốn ngừng chiếu, hãy chuyển phim sang End of Screening.");
+
             for (Integer branchId : toRemove) movieBranchDAO.delete(con, movieId, branchId);
             for (MovieBranch mb : toInsert) movieBranchDAO.insert(con, mb);
             for (MovieBranch mb : toUpdate) movieBranchDAO.updateWindow(con, mb);
             return new SaveResult(toInsert.size(), toRemove.size(), toUpdate.size());
         });
+    }
+
+    /** Sau khi áp dụng thêm / sửa / gỡ, còn chi nhánh nào đang hoạt động và có khung ngày chiếu gồm today không. */
+    private static boolean screeningAfterSave(List<BranchAvailabilityDTO> current, List<MovieBranch> toInsert,
+                                              List<MovieBranch> toUpdate, List<Integer> toRemove, LocalDate today) {
+        Map<Integer, MovieBranch> changed = new HashMap<>();
+        for (MovieBranch mb : toInsert) changed.put(mb.getBranchId(), mb);
+        for (MovieBranch mb : toUpdate) changed.put(mb.getBranchId(), mb);
+        for (BranchAvailabilityDTO cur : current) {
+            int branchId = cur.getBranch().getBranchId();
+            MovieBranch mb = changed.get(branchId);
+            boolean assigned = mb != null || (cur.isPersisted() && !toRemove.contains(branchId));
+            if (!assigned || !cur.getBranch().isActive()) continue;
+            LocalDate from = mb != null ? mb.getAvailableFrom() : cur.getAvailableFrom();
+            LocalDate to = mb != null ? mb.getAvailableTo() : cur.getAvailableTo();
+            if ((from == null || !from.isAfter(today)) && (to == null || !to.isBefore(today))) return true;
+        }
+        return false;
     }
 
     /** Cho module Showtime gọi trước khi tạo suất chiếu. */

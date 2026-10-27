@@ -49,6 +49,7 @@ public class CheckoutServlet extends HttpServlet {
             return;
         }
         request.setAttribute("b", b);
+        request.setAttribute("vouchers", paymentService.getUsableVouchers(b));
         request.setAttribute("secondsLeft", paymentService.getSecondsLeft(b));
         request.getRequestDispatcher("/WEB-INF/view/payment/checkout-nam.jsp").forward(request, response);
     }

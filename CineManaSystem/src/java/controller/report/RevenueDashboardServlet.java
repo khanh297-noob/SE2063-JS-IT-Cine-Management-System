@@ -42,7 +42,7 @@ public class RevenueDashboardServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // Bước 1: kiểm tra quyền
+        //kiểm tra quyền
         if (!PermissionUtil.canViewSalesReport(request)) {
             response.sendRedirect(request.getContextPath() + "/access-denied");
             return;
@@ -50,7 +50,7 @@ public class RevenueDashboardServlet extends HttpServlet {
         User user = PermissionUtil.getCurrentUser(request);
         boolean isAdmin = PermissionUtil.isAdmin(request);
 
-        // Bước 2: đọc bộ lọc (khoảng ngày mặc định là tháng hiện tại)
+        //đọc bộ lọc (khoảng ngày mặc định là tháng hiện tại)
         DateRange range = DateRange.fromRequest(request);
         Integer branchId = ParamUtil.parseIntOrNull(request.getParameter("branchId"));
 
@@ -63,11 +63,11 @@ public class RevenueDashboardServlet extends HttpServlet {
             return;
         }
 
-        // Bước 4: lấy dữ liệu
+        //lấy dữ liệu
         List<Branch> branches = reportDao.getBranches(accessService.allowedBranchIds(user, isAdmin));
         RevenueDashboard dashboard = dashboardService.build(branchScope, range.getFrom(), range.getTo());
 
-        // Bước 5: gửi sang JSP (dữ liệu biểu đồ chuyển sang JSON cho Chart.js)
+        //gửi sang JSP (dữ liệu biểu đồ chuyển sang JSON cho Chart.js)
         Gson gson = new Gson();
         request.setAttribute("dashboard", dashboard);
         request.setAttribute("labelsJson", gson.toJson(dashboard.getWeekLabels()));

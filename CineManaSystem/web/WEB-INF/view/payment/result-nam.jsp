@@ -13,7 +13,7 @@
 </head>
 <body>
 <header class="topbar">
-    <div class="brand"><span class="logo">CG</span> CineGo <span class="crumb">Kết Quả Thanh Toán</span></div>
+    <a class="brand" href="${ctx}/home" style="text-decoration:none"><span class="logo">CG</span> CineGo <span class="crumb">Kết Quả Thanh Toán</span></a>
     <a href="${ctx}/payment/history">Lịch sử thanh toán &rarr;</a>
 </header>
 
@@ -24,7 +24,8 @@
                 <div class="icon">&#10003;</div>
                 <span class="pill">THANH TOÁN THÀNH CÔNG</span>
                 <div class="big">Payment completed successfully.</div>
-                <p class="text-muted">Vé điện tử đã được gửi tới email <b><c:out value="${b.customerEmail}"/></b>. Đưa mã QR cho nhân viên soát vé tại cửa phòng chiếu.</p>
+                <p class="text-muted">Đưa mã QR cho nhân viên soát vé tại cửa phòng chiếu.</p>
+                <a class="btn btn-primary" href="${ctx}/home" style="margin-top:10px">Về trang chủ</a>
             </div>
         </c:when>
         <c:when test="${state == 'PENDING'}">
@@ -49,7 +50,7 @@
                 <span class="pill">THẤT BẠI</span>
                 <div class="big">Payment failed. Please try again.</div>
                 <p class="text-muted">Ghế giữ tạm đã được nhả. Vui lòng đặt vé lại.</p>
-                <a class="btn btn-primary" href="${ctx}/">Đặt vé lại</a>
+                <a class="btn btn-primary" href="${ctx}/home">Đặt vé lại</a>
             </div>
         </c:when>
         <c:otherwise>
@@ -57,7 +58,7 @@
                 <div class="icon">&#8987;</div>
                 <span class="pill">HẾT HẠN</span>
                 <div class="big">Payment timed out. Your reserved seats have been released.</div>
-                <a class="btn btn-primary" href="${ctx}/" style="margin-top:10px">Đặt vé lại</a>
+                <a class="btn btn-primary" href="${ctx}/home" style="margin-top:10px">Đặt vé lại</a>
             </div>
         </c:otherwise>
     </c:choose>

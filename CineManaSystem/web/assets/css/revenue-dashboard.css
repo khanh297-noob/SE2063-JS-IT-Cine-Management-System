@@ -1,84 +1,428 @@
-* { box-sizing: border-box; margin: 0; padding: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-body { background-color: #f8fafc; color: #334155; min-height: 100vh; display: flex; flex-direction: column; font-size: 13px; }
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+  background-color: #f8fafc;
+  color: #334155;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+}
 
 /* Khung the Card noi dung */
-.card { background: #fff; border-radius: 14px; box-shadow: 0 1px 3px rgba(15,23,42,.08); padding: 20px 22px; margin-bottom: 20px; }
-.head-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
-.page-title { font-size: 18px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px; }
-.page-title i { color: #e11d48; }
-.page-subtitle { font-size: 11px; color: #64748b; margin-top: 4px; }
-.scope-badge { background: #d1fae5; color: #047857; font-weight: 700; font-size: 11px; padding: 4px 12px; border-radius: 999px; white-space: nowrap; }
-.divider { border: 0; border-top: 1px solid #e2e8f0; margin: 14px 0; }
+.card {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 1px 3px rgba(15,23,42,.08);
+  padding: 20px 22px;
+  margin-bottom: 20px;
+}
+
+.head-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.page-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.page-title i {
+  color: #e11d48;
+}
+
+.page-subtitle {
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+.scope-badge {
+  background: #d1fae5;
+  color: #047857;
+  font-weight: 700;
+  font-size: 11px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.divider {
+  border: 0;
+  border-top: 1px solid #e2e8f0;
+  margin: 14px 0;
+}
 
 /* Form bo loc thoi gian va nut xuat bao cao */
-.filter-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-.filter-left { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; }
-.field label { display: block; font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 4px; }
-.field label .req { color: #e11d48; }
-.field input, .field select { height: 36px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 10px; font-size: 12px; color: #0f172a; background: #fff; }
-.sep { color: #94a3b8; font-size: 12px; padding-bottom: 10px; }
-.btn-apply { height: 36px; background: #0f172a; color: #fff; border: 0; border-radius: 8px; padding: 0 16px; font-weight: 700; font-size: 12px; cursor: pointer; }
-.btn-apply:hover { background: #1e293b; }
-.filter-right { display: flex; gap: 10px; }
-.btn-csv, .btn-pdf { height: 36px; border-radius: 8px; padding: 0 14px; font-weight: 700; font-size: 12px; cursor: pointer;
-    display: inline-flex; align-items: center; gap: 6px; text-decoration: none; }
-.btn-csv { background: #fff; color: #334155; border: 1px solid #cbd5e1; }
-.btn-csv i { color: #059669; }
-.btn-csv:hover { background: #f1f5f9; }
-.btn-pdf { background: #e11d48; color: #fff; border: 0; }
-.btn-pdf:hover { background: #be123c; }
-.alert-warn { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; padding: 10px 14px; border-radius: 8px; margin-bottom: 16px; font-size: 12px; }
+.filter-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.filter-left {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.field label {
+  display: block;
+  font-size: 10px;
+  font-weight: 800;
+  color: #64748b;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.field label .req {
+  color: #e11d48;
+}
+
+.field input,
+.field select {
+  height: 36px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 0 10px;
+  font-size: 12px;
+  color: #0f172a;
+  background: #fff;
+}
+
+.sep {
+  color: #94a3b8;
+  font-size: 12px;
+  padding-bottom: 10px;
+}
+
+.btn-apply {
+  height: 36px;
+  background: #0f172a;
+  color: #fff;
+  border: 0;
+  border-radius: 8px;
+  padding: 0 16px;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.btn-apply:hover {
+  background: #1e293b;
+}
+
+.filter-right {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-csv,
+.btn-pdf {
+  height: 36px;
+  border-radius: 8px;
+  padding: 0 14px;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+}
+
+.btn-csv {
+  background: #fff;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+}
+
+.btn-csv i {
+  color: #059669;
+}
+
+.btn-csv:hover {
+  background: #f1f5f9;
+}
+
+.btn-pdf {
+  background: #e11d48;
+  color: #fff;
+  border: 0;
+}
+
+.btn-pdf:hover {
+  background: #be123c;
+}
+
+.alert-warn {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #92400e;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 12px;
+}
 
 /* Khung thong ke bieu do tang truong */
-.chart-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
-.chart-title { font-size: 15px; font-weight: 800; color: #0f172a; }
-.chart-sub { font-size: 11px; color: #94a3b8; margin-top: 2px; }
-.legend { display: flex; gap: 16px; font-size: 11px; font-weight: 700; color: #334155; }
-.legend span { display: inline-flex; align-items: center; gap: 6px; }
-.dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
-.chart-box { position: relative; height: 300px; margin-top: 12px; }
+.chart-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.chart-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.chart-sub {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+.legend {
+  display: flex;
+  gap: 16px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #334155;
+}
+
+.legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.chart-box {
+  position: relative;
+  height: 300px;
+  margin-top: 12px;
+}
 
 /* Bang phan ra chi tiet doanh thu */
-.table-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.table-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
 /* Dropdown chon loai bang phan ra */
-.breakdown-form { display: flex; align-items: flex-end; }
-.breakdown-form select { min-width: 200px; }
-.tab-panel { display: block; margin-bottom: 24px; }
-.table-wrap { overflow-x: auto; }
-table.breakdown { width: 100%; border-collapse: collapse; }
-table.breakdown th { background: #f8fafc; color: #64748b; font-size: 10px; font-weight: 800; text-transform: uppercase;
-    padding: 12px 14px; text-align: right; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
-table.breakdown th:first-child, table.breakdown td:first-child { text-align: left; }
-table.breakdown td { padding: 14px; text-align: right; border-bottom: 1px solid #f1f5f9; font-size: 12px; white-space: nowrap; }
-table.breakdown td.name { font-weight: 800; color: #0f172a; text-transform: uppercase; }
-table.breakdown td.total { color: #e11d48; font-weight: 800; }
-table.breakdown td.tickets { text-align: center; font-weight: 700; }
-table.breakdown th.tickets-h { text-align: center; }
-table.breakdown td.share { font-weight: 800; color: #059669; }
-table.breakdown tr.sum td { background: #f8fafc; font-weight: 800; border-top: 2px solid #e2e8f0; }
-.empty { text-align: center; color: #94a3b8; padding: 28px 0; }
-.note { font-size: 11px; color: #94a3b8; margin-top: 10px; }
+.breakdown-form {
+  display: flex;
+  align-items: flex-end;
+}
+
+.breakdown-form select {
+  min-width: 200px;
+}
+
+.tab-panel {
+  display: block;
+  margin-bottom: 24px;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+table.breakdown {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+table.breakdown th {
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 12px 14px;
+  text-align: right;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+table.breakdown th:first-child,
+table.breakdown td:first-child {
+  text-align: left;
+}
+
+table.breakdown td {
+  padding: 14px;
+  text-align: right;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+table.breakdown td.name {
+  font-weight: 800;
+  color: #0f172a;
+  text-transform: uppercase;
+}
+
+table.breakdown td.total {
+  color: #e11d48;
+  font-weight: 800;
+}
+
+table.breakdown td.tickets {
+  text-align: center;
+  font-weight: 700;
+}
+
+table.breakdown th.tickets-h {
+  text-align: center;
+}
+
+table.breakdown td.share {
+  font-weight: 800;
+  color: #059669;
+}
+
+table.breakdown tr.sum td {
+  background: #f8fafc;
+  font-weight: 800;
+  border-top: 2px solid #e2e8f0;
+}
+
+.empty {
+  text-align: center;
+  color: #94a3b8;
+  padding: 28px 0;
+}
+
+.note {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 10px;
+}
 
 @media print {
-    .navbar, .sidebar, .filter-right, .btn-apply, .breakdown-form { display: none !important; }
-    .layout-container { display: block; }
-    .main-content { padding: 0; overflow: visible; }
-    .card { box-shadow: none; border: 1px solid #e2e8f0; page-break-inside: avoid; }
-    .tab-panel { display: block !important; margin-bottom: 16px; }
-    .tab-title-print { display: block !important; }
-    body { background: #fff; }
+  .navbar,
+  .sidebar,
+  .filter-right,
+  .btn-apply,
+  .breakdown-form {
+    display: none !important;
+  }
+  .layout-container {
+    display: block;
+  }
+  .main-content {
+    padding: 0;
+    overflow: visible;
+  }
+  .card {
+    box-shadow: none;
+    border: 1px solid #e2e8f0;
+    page-break-inside: avoid;
+  }
+  .tab-panel {
+    display: block !important;
+    margin-bottom: 16px;
+  }
+  .tab-title-print {
+    display: block !important;
+  }
+  body {
+    background: #fff;
+  }
 }
-.tab-title-print { display: none; font-weight: 800; color: #0f172a; margin: 12px 0 6px; }
+
+.tab-title-print {
+  display: none;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 12px 0 6px;
+}
 
 /* ===== Thay cho thuộc tính style="..." trước đây nằm trong JSP ===== */
-.week-total { width: 160px !important; text-align: right !important; font-weight: 700 !important; color: #0f172a !important; }
-.week-fill-fnb { background: #f59e0b !important; height: 100% !important; }
-.week-fill-ticket { background: #e11d48 !important; height: 100% !important; }
-.week-bar { flex: 1 !important; height: 16px !important; background: #f1f5f9 !important; border-radius: 999px !important; overflow: hidden !important; display: flex !important; }
-.week-label { width: 140px !important; font-weight: 700 !important; color: #334155 !important; }
-.week-row { display: flex !important; align-items: center !important; gap: 12px !important; font-size: 12px !important; }
-.week-list { display: flex !important; flex-direction: column !important; gap: 10px !important; }
-.chart-box-compact { height: auto !important; padding: 10px 0 !important; }
-.dot-fnb { background:#f59e0b !important; }
-.dot-ticket { background:#e11d48 !important; }
+.week-total {
+  width: 160px !important;
+  text-align: right !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+}
+
+.week-fill-fnb {
+  background: #f59e0b !important;
+  height: 100% !important;
+}
+
+.week-fill-ticket {
+  background: #e11d48 !important;
+  height: 100% !important;
+}
+
+.week-bar {
+  flex: 1 !important;
+  height: 16px !important;
+  background: #f1f5f9 !important;
+  border-radius: 999px !important;
+  overflow: hidden !important;
+  display: flex !important;
+}
+
+.week-label {
+  width: 140px !important;
+  font-weight: 700 !important;
+  color: #334155 !important;
+}
+
+.week-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  font-size: 12px !important;
+}
+
+.week-list {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+}
+
+.chart-box-compact {
+  height: auto !important;
+  padding: 10px 0 !important;
+}
+
+.dot-fnb {
+  background: #f59e0b !important;
+}
+
+.dot-ticket {
+  background: #e11d48 !important;
+}

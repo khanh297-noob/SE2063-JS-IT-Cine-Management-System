@@ -40,14 +40,14 @@ public class ExportRevenueServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // Bước 1: kiểm tra quyền
+        //kiểm tra quyền
         if (!PermissionUtil.canViewSalesReport(request)) {
             response.sendRedirect(request.getContextPath() + "/access-denied");
             return;
         }
         User user = PermissionUtil.getCurrentUser(request);
 
-        // Bước 2: đọc bộ lọc (khoảng ngày sai thì báo lỗi)
+        //đọc bộ lọc (khoảng ngày sai thì báo lỗi)
         DateRange range = DateRange.fromRequest(request);
         if (range.hasError()) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Khoảng thời gian không hợp lệ");
@@ -55,7 +55,7 @@ public class ExportRevenueServlet extends HttpServlet {
         }
         Integer branchId = ParamUtil.parseIntOrNull(request.getParameter("branchId"));
 
-        // Bước 3: xác định chi nhánh được xem
+        //xác định chi nhánh được xem
         List<Integer> branchScope;
         try {
             branchScope = accessService.resolveBranchScope(user, PermissionUtil.isAdmin(request), branchId);
@@ -64,11 +64,11 @@ public class ExportRevenueServlet extends HttpServlet {
             return;
         }
 
-        // Bước 4: dựng dữ liệu rồi chuyển thành CSV
+        //dựng dữ liệu rồi chuyển thành CSV
         RevenueDashboard dashboard = dashboardService.build(branchScope, range.getFrom(), range.getTo());
         String csv = ExportUtil.generateRevenueDashboardCsv(dashboard);
 
-        // Bước 5: trả file về trình duyệt
+        //trả file về trình duyệt
         String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         response.setContentType("text/csv; charset=UTF-8");
         response.setHeader("Content-Disposition",

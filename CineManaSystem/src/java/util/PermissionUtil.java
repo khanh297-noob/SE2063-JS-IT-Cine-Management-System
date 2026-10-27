@@ -50,6 +50,11 @@ public class PermissionUtil {
         return hasAnyRole(request, "Staff", "Ticket Cashier", "Ticket Checker", "Cashier");
     }
 
+    /** Thu ngân bán vé tại quầy (POS Staff). */
+    public static boolean isCashier(HttpServletRequest request) {
+        return hasAnyRole(request, "Ticket Cashier", "Cashier");
+    }
+
     public static boolean isCustomer(HttpServletRequest request) {
         return hasRole(request, "Customer");
     }
@@ -62,5 +67,20 @@ public class PermissionUtil {
     /** Chỉ Admin và Quản lý chi nhánh được xem báo cáo. */
     public static boolean canViewSalesReport(HttpServletRequest request) {
         return isAdmin(request) || isBranchManager(request);
+    }
+
+    /** Quản lý giá vé và giá F&B: Admin và Quản lý chi nhánh. */
+    public static boolean canManagePricing(HttpServletRequest request) {
+        return isAdmin(request) || isBranchManager(request);
+    }
+
+    /** Kiểm tra mã khuyến mãi cho đơn hàng: Thu ngân (POS Staff) và Quản lý chi nhánh. */
+    public static boolean canValidatePromotion(HttpServletRequest request) {
+        return isCashier(request) || isBranchManager(request);
+    }
+
+    /** Vào trang tổng hợp Promotion & Pricing: người có ít nhất một chức năng trong đó. */
+    public static boolean canOpenPromotionPricing(HttpServletRequest request) {
+        return canManagePricing(request) || canValidatePromotion(request);
     }
 }

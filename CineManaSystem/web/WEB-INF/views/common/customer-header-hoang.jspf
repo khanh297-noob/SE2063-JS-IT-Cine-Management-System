@@ -9,7 +9,7 @@
     customerNav  mục đang chọn: home | genre | year | lang
   Servlet đặt sẵn: menu (genres, years, languages).
 --%>
-<c:set var="moduleCss" value="customer-hoang"/>
+<c:set var="moduleCss" value="customer-hoang${empty extraCss ? '' : ','}${extraCss}"/>
 <%@ include file="/WEB-INF/views/common/head-hoang.jspf" %>
 <body>
 <header class="topbar">
@@ -60,6 +60,7 @@
             <c:choose>
                 <c:when test="${not empty sessionScope.User}">
                     <c:if test="${isAdmin}"><a class="account-btn" href="${ctx}/manage">Quản lý</a></c:if>
+                    <c:if test="${sessionScope.User.role == 'Customer'}"><a class="account-btn ${customerNav == 'tickets' ? 'current' : ''}" href="${ctx}/customer/bookings">Vé của tôi</a></c:if>
                     <a class="account-name" href="${ctx}/customer/profile" title="${fn:escapeXml(sessionScope.User.email)}"><c:out value="${sessionScope.User.fullName}"/></a>
                 </c:when>
                 <c:otherwise>

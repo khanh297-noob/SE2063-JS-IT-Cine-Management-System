@@ -34,7 +34,7 @@ public class Profile extends HttpServlet {
         }
 
         request.setAttribute("user", currentUser);
-        request.getRequestDispatcher("/WEB-INF/view/customer/profile-tuyet.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/view/customer/profile-hiep.jsp").forward(request, response);
     }
 
     @Override
@@ -62,6 +62,6 @@ public class Profile extends HttpServlet {
             request.setAttribute("errorMessage", e.getMessage());
         }
 
-        request.getRequestDispatcher("/WEB-INF/view/customer/profile-tuyet.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/view/customer/profile-hiep.jsp").forward(request, response);
     }
 }

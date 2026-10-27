@@ -1,6 +1,7 @@
 package controller;
 
 import util.BusinessException;
+import util.ForbiddenException;
 import util.NotFoundException;
 
 import jakarta.servlet.ServletException;
@@ -21,6 +22,7 @@ import java.time.format.DateTimeParseException;
  *
  * Lớp con override handleGet / handlePost.
  * - NotFoundException       -> 404
+ * - ForbiddenException      -> trang /access-denied (giống AuthFilter)
  * - BusinessException chưa bắt -> flash lỗi, quay lại trang trước
  * - SQLException            -> 500
  */
@@ -38,6 +40,14 @@ public abstract class BaseServlet extends HttpServlet {
         resp.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
     }
 
+    /** Kiểm tra quyền riêng của servlet, chạy trước mọi GET / POST. Không đủ quyền -> ném ForbiddenException. */
+    protected void checkAccess(HttpServletRequest req) {
+    }
+
+    /** Chạy trước handleGet (vd đối soát dữ liệu trước khi hiển thị). Mặc định không làm gì. */
+    protected void beforeGet(HttpServletRequest req) throws SQLException, BusinessException {
+    }
+
     @Override
     protected final void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         dispatch(req, resp, true);
@@ -51,9 +61,17 @@ public abstract class BaseServlet extends HttpServlet {
     private void dispatch(HttpServletRequest req, HttpServletResponse resp, boolean get)
             throws ServletException, IOException {
         try {
-            if (get) handleGet(req, resp); else handlePost(req, resp);
+            checkAccess(req);
+            if (get) {
+                beforeGet(req);
+                handleGet(req, resp);
+            } else {
+                handlePost(req, resp);
+            }
         } catch (NotFoundException e) {
             resp.sendError(HttpServletResponse.SC_NOT_FOUND, e.getMessage());
+        } catch (ForbiddenException e) {
+            redirect(req, resp, "/access-denied");
         } catch (BusinessException e) {
             flashError(req, String.join(" ", e.getErrors()));
             String back = req.getHeader("Referer");

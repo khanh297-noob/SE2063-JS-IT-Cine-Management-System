@@ -28,6 +28,7 @@
             <c:choose>
                 <c:when test="${not empty sessionScope.User}">
                     <c:if test="${isAdmin}"><a class="account-btn" href="${ctx}/manage">Quản lý</a></c:if>
+                    <c:if test="${sessionScope.User.role == 'Customer'}"><a class="account-btn" href="${ctx}/customer/bookings">Vé của tôi</a></c:if>
                     <a class="account-name" href="${ctx}/customer/profile" title="${fn:escapeXml(sessionScope.User.email)}"><c:out value="${sessionScope.User.fullName}"/></a>
                 </c:when>
                 <c:otherwise>

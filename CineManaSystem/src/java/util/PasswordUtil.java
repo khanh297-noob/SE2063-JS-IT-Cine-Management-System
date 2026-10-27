@@ -19,4 +19,8 @@ public class PasswordUtil {
         }
         return BCrypt.checkpw(passwordPlain, passwordHash);
     }
+
+    public static void main(String[] args) {
+        System.out.println(hash("123456"));
+    }
 }

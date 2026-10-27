@@ -1,6 +1,5 @@
 package controller.movie;
 
-import controller.BaseServlet;
 import model.movie.MovieMedia;
 import service.movie.MovieMediaService;
 import service.movie.MovieService;
@@ -20,7 +19,7 @@ import java.sql.SQLException;
  * POST action=add (movieId, mediaType, url, caption, primary) | primary (mediaId) | delete (mediaId)
  */
 @WebServlet("/manage/movie/media")
-public class MovieMediaServlet extends BaseServlet {
+public class MovieMediaServlet extends MovieAdminServlet {
 
     private final MovieService movieService = new MovieService();
     private final MovieMediaService mediaService = new MovieMediaService();
