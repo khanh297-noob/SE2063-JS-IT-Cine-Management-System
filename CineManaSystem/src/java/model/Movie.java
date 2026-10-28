@@ -11,6 +11,7 @@ public class Movie {
     private String trailerURL;
     private String posterURL;
     private String status;
+    private String genres;
 
     public Movie() {
     }
@@ -88,5 +89,23 @@ public class Movie {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getGenres() {
+        return genres;
+    }
+
+    public void setGenres(String genres) {
+        this.genres = genres;
+    }
+
+    public String getReleaseDateText() {
+        return releaseDate == null ? "" : new java.text.SimpleDateFormat("dd/MM/yyyy").format(releaseDate);
+    }
+
+    public String getDurationText() {
+        int hours = duration / 60;
+        int minutes = duration % 60;
+        return hours > 0 ? hours + "g " + minutes + "p" : minutes + "p";
     }
 }

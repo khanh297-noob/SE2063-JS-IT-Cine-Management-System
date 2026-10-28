@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
+import service.movie.ShowtimePriceCalculator;
 import util.MoneyUtil;
 
 /**
@@ -32,13 +33,22 @@ public class PricingService implements AutoCloseable {
 
     // ==================== GIÁ VÉ: SUẤT CHIẾU ====================
 
-    /** Suất chiếu sắp tới trong phạm vi chi nhánh và bộ lọc. */
+    /**
+     * Suất chiếu sắp tới trong phạm vi chi nhánh và bộ lọc, kèm giá gốc và giá hiện tại.
+     * Giá gốc không lưu trong database mà tính lại bằng đúng công thức lúc tạo suất
+     * (giá chuẩn + phụ thu loại phòng + phụ thu cuối tuần), nên không ai sửa được.
+     * Giá hiện tại là cột Showtime.BasePrice, quản lý được đổi.
+     */
     public List<ShowtimePrice> listShowtimePrices(List<Integer> branchScope, Integer movieId,
             LocalDate from, LocalDate to) {
-        return dao.findShowtimePrices(branchScope, movieId, from.toString(), to.toString());
+        List<ShowtimePrice> rows = dao.findShowtimePrices(branchScope, movieId, from.toString(), to.toString());
+        for (ShowtimePrice row : rows) {
+            row.setOriginalPrice(ShowtimePriceCalculator.basePrice(row.getRoomSurcharge(), row.getShowDate().toLocalDate()));
+        }
+        return rows;
     }
 
-    /** Đổi giá gốc của một suất chiếu. */
+    /** Đổi giá hiện tại của một suất chiếu. Giá gốc không đổi vì được tính lại, không lưu. */
     public void updateShowtimePrice(List<Integer> branchScope, int showtimeId, String priceText)
             throws IllegalArgumentException {
         BigDecimal price = MoneyUtil.parse(priceText, "Giá vé", false);
@@ -47,7 +57,7 @@ public class PricingService implements AutoCloseable {
         }
     }
 
-    /** Đổi giá gốc cho tất cả suất chiếu sắp tới khớp bộ lọc. Trả về số suất được cập nhật. */
+    /** Đổi giá hiện tại cho tất cả suất chiếu sắp tới khớp bộ lọc. Trả về số suất được cập nhật. */
     public int updateShowtimePricesInBulk(List<Integer> branchScope, Integer movieId,
             LocalDate from, LocalDate to, String priceText) throws IllegalArgumentException {
         if (from == null || to == null) {
@@ -78,6 +88,35 @@ public class PricingService implements AutoCloseable {
         if (dao.updateRoomTypeSurcharge(roomTypeId, surcharge) == 0) {
             throw new IllegalArgumentException("Không tìm thấy loại phòng này!");
         }
+    }
+
+    /**
+     * Quản lý chi nhánh chỉnh phụ thu loại phòng cho riêng chi nhánh mình: cộng (hoặc trừ, nhập số âm) một khoản
+     * vào giá hiện tại các suất sắp chiếu của loại phòng đó tại chi nhánh. Không đổi bảng RoomType nên không ảnh
+     * hưởng chi nhánh khác. Admin đổi phụ thu chung cho cả chuỗi bằng updateRoomTypeSurcharge.
+     *
+     * @return số suất chiếu được điều chỉnh
+     */
+    public int adjustRoomTypePriceForBranch(List<Integer> branchScope, boolean isAdmin, int roomTypeId,
+            String deltaText) throws IllegalArgumentException {
+        if (isAdmin) {
+            throw new IllegalArgumentException("Admin hãy dùng ô phụ thu chung để đổi cho cả chuỗi!");
+        }
+        if (deltaText == null || !deltaText.trim().replace(" ", "").matches("[+-]?\\d{1,8}")) {
+            throw new IllegalArgumentException("Khoản điều chỉnh phải là số nguyên (đồng), ví dụ 10000 hoặc -5000!");
+        }
+        BigDecimal delta = new BigDecimal(deltaText.trim().replace(" ", "").replace("+", ""));
+        if (delta.signum() == 0) {
+            throw new IllegalArgumentException("Khoản điều chỉnh phải khác 0!");
+        }
+        if (delta.abs().compareTo(MoneyUtil.MAX_AMOUNT) > 0) {
+            throw new IllegalArgumentException("Khoản điều chỉnh không được vượt quá " + MoneyUtil.MAX_AMOUNT.toPlainString() + " ₫!");
+        }
+        int updated = dao.adjustShowtimePricesByRoomType(branchScope, roomTypeId, delta, MoneyUtil.MAX_AMOUNT);
+        if (updated == 0) {
+            throw new IllegalArgumentException("Không có suất chiếu sắp tới nào của loại phòng này tại chi nhánh bạn để điều chỉnh!");
+        }
+        return updated;
     }
 
     /** Đổi phụ thu loại ghế. Chỉ Admin được sửa. */

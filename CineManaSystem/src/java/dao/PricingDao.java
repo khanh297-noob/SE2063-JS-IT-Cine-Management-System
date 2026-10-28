@@ -12,7 +12,8 @@ import java.util.List;
 
 /**
  * Truy vấn và cập nhật các loại giá:
- *   - Giá vé: Showtime.BasePrice (giá gốc mỗi suất), RoomType.Surcharge, SeatType.Surcharge (phụ thu)
+ *   - Giá vé: Showtime.BasePrice (giá hiện tại của suất, quản lý được đổi; giá gốc không lưu mà tính lại từ
+ *            phụ thu loại phòng và ngày chiếu), RoomType.Surcharge, SeatType.Surcharge (phụ thu)
  *   - Giá F&B: F_B.Price (giá gốc toàn chuỗi), Branch_F_B.Price và Status (thực đơn từng chi nhánh)
  *
  * Mọi hàm nhận danh sách chi nhánh (branchIds): null = tất cả, danh sách rỗng = không có chi nhánh nào.
@@ -37,12 +38,13 @@ public class PricingDao extends DBContext {
 
         StringBuilder sql = new StringBuilder(
                 "SELECT TOP " + MAX_ROWS + " s.ShowtimeID, b.BranchID, b.Name AS BranchName, "
-                + "m.Title, r.RoomName, r.RoomType, s.ShowDate, s.StartTime, s.BasePrice, s.Status, "
+                + "m.Title, r.RoomName, r.RoomType, ISNULL(rt.Surcharge, 0) AS RoomSurcharge, s.ShowDate, s.StartTime, s.BasePrice, s.Status, "
                 + "(SELECT COUNT(*) FROM Ticket t WHERE t.ShowtimeID = s.ShowtimeID AND t.Status <> 'Cancelled') AS SoldTickets, "
                 + "CASE WHEN " + EDITABLE_SHOWTIME + " THEN 1 ELSE 0 END AS IsEditable "
                 + "FROM Showtime s "
                 + "INNER JOIN Movie m ON m.MovieID = s.MovieID "
                 + "INNER JOIN Room r ON r.RoomID = s.RoomID "
+                + "LEFT JOIN RoomType rt ON rt.Name = r.RoomType "
                 + "INNER JOIN Branch b ON b.BranchID = r.BranchID "
                 + "WHERE 1 = 1 ");
         List<Object> params = new ArrayList<>();
@@ -60,7 +62,8 @@ public class PricingDao extends DBContext {
                 row.roomType = rs.getString("RoomType");
                 row.showDate = rs.getDate("ShowDate");
                 row.startTime = rs.getTime("StartTime");
-                row.basePrice = rs.getBigDecimal("BasePrice");
+                row.currentPrice = rs.getBigDecimal("BasePrice");
+                row.roomSurcharge = rs.getBigDecimal("RoomSurcharge");
                 row.status = rs.getString("Status");
                 row.soldTickets = rs.getInt("SoldTickets");
                 row.editable = rs.getInt("IsEditable") == 1;
@@ -73,7 +76,7 @@ public class PricingDao extends DBContext {
     }
 
     /**
-     * Đổi giá gốc của MỘT suất chiếu. Chỉ đổi được khi suất thuộc chi nhánh được phép và chưa bắt đầu.
+     * Đổi giá hiện tại (cột BasePrice) của MỘT suất chiếu. Chỉ đổi được khi suất thuộc chi nhánh được phép và chưa bắt đầu.
      * Trả về số dòng được cập nhật (0 nghĩa là không đổi được).
      */
     public int updateShowtimePrice(int showtimeId, BigDecimal price, List<Integer> branchIds) {
@@ -88,7 +91,7 @@ public class PricingDao extends DBContext {
         return executeUpdate(sql, params);
     }
 
-    /** Đổi giá gốc của NHIỀU suất chiếu cùng lúc theo bộ lọc phim, ngày, chi nhánh. Trả về số suất được cập nhật. */
+    /** Đổi giá hiện tại (cột BasePrice) của NHIỀU suất chiếu cùng lúc theo bộ lọc phim, ngày, chi nhánh. Trả về số suất được cập nhật. */
     public int updateShowtimePrices(List<Integer> branchIds, Integer movieId, String fromDate, String toDate,
             BigDecimal price) {
         StringBuilder sql = new StringBuilder(
@@ -98,6 +101,23 @@ public class PricingDao extends DBContext {
         List<Object> params = new ArrayList<>();
         params.add(price);
         appendFilters(sql, params, "r.BranchID", branchIds, movieId, fromDate, toDate);
+        return executeUpdate(sql, params);
+    }
+
+    /**
+     * Cộng (hoặc trừ, nếu delta âm) một khoản vào giá hiện tại của các suất sắp chiếu thuộc một loại phòng
+     * trong phạm vi chi nhánh. Suất nào sau khi cộng ra ngoài khoảng 0 đến MAX_PRICE thì bỏ qua.
+     * Trả về số suất được cập nhật.
+     */
+    public int adjustShowtimePricesByRoomType(List<Integer> branchIds, int roomTypeId, BigDecimal delta,
+            BigDecimal maxPrice) {
+        StringBuilder sql = new StringBuilder(
+                "UPDATE s SET s.BasePrice = s.BasePrice + ? FROM Showtime s "
+                + "INNER JOIN Room r ON r.RoomID = s.RoomID "
+                + "INNER JOIN RoomType rt ON rt.Name = r.RoomType "
+                + "WHERE rt.RoomTypeID = ? AND s.BasePrice + ? BETWEEN 0 AND ? AND " + EDITABLE_SHOWTIME);
+        List<Object> params = params(delta, roomTypeId, delta, maxPrice);
+        appendBranchFilter(sql, params, "r.BranchID", branchIds);
         return executeUpdate(sql, params);
     }
 
@@ -284,7 +304,7 @@ public class PricingDao extends DBContext {
 
     // ==================== DỮ LIỆU TRẢ VỀ (class lồng) ====================
 
-    /** Một suất chiếu và giá gốc hiện tại. */
+    /** Một suất chiếu kèm giá gốc (tính lại, cố định) và giá hiện tại (đọc từ Showtime.BasePrice, sửa được). */
     public static class ShowtimePrice {
         private int showtimeId;
         private int branchId;
@@ -294,7 +314,9 @@ public class PricingDao extends DBContext {
         private String roomType;
         private Date showDate;
         private Time startTime;
-        private BigDecimal basePrice;
+        private BigDecimal currentPrice;
+        private BigDecimal roomSurcharge;
+        private BigDecimal originalPrice;
         private String status;
         private int soldTickets;
         private boolean editable;
@@ -307,7 +329,11 @@ public class PricingDao extends DBContext {
         public String getRoomType() { return roomType; }
         public Date getShowDate() { return showDate; }
         public Time getStartTime() { return startTime; }
-        public BigDecimal getBasePrice() { return basePrice; }
+        public BigDecimal getCurrentPrice() { return currentPrice; }
+        public BigDecimal getRoomSurcharge() { return roomSurcharge; }
+        /** Giá gốc: giá ban đầu khi tạo suất, tính từ phụ thu loại phòng và ngày chiếu. */
+        public BigDecimal getOriginalPrice() { return originalPrice; }
+        public void setOriginalPrice(BigDecimal originalPrice) { this.originalPrice = originalPrice; }
         public String getStatus() { return status; }
         public int getSoldTickets() { return soldTickets; }
         public boolean isEditable() { return editable; }

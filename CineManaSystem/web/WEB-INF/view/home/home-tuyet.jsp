@@ -213,7 +213,7 @@
         </div>
         <div class="footer-right">
             <strong class="footer-title">Thông tin liên hệ</strong>
-            <p>Email: hotro@cinego.vn | Hotline: 1900 1234</p>
+            <p>Email: cinego636@gmail.com | Hotline: 1900 1234</p>
         </div>
     </footer>
 

@@ -378,6 +378,28 @@
         </div>
     </a>
 
+
+    <!-- Feature: Reports & Dashboard -->
+    <a class="feature-card" href="${ctx}/report/branch-dashboard">
+        <div>
+            <div class="feature-header">
+                <div class="feature-icon" aria-hidden="true">&#128202;</div>
+                <div class="feature-title-wrap">
+                    <h2>Reports &amp; Analytics Dashboard</h2>
+                    <span class="feature-badge">Revenue &amp; Analytics</span>
+                </div>
+            </div>
+            <p class="feature-desc">
+                View comprehensive business metrics: revenue breakdown, ticket sales, room occupancy,
+                peak showtime analytics, and exportable financial reports across all branches.
+            </p>
+        </div>
+        <div class="feature-action">
+            <span>Access Reports &amp; Analytics</span>
+            <span class="feature-arrow">&rarr;</span>
+        </div>
+    </a>
+
     <!-- Feature: Payment Management (phần 6 - Nam) -->
     <a class="feature-card" href="${ctx}/admin/payments">
         <div>
