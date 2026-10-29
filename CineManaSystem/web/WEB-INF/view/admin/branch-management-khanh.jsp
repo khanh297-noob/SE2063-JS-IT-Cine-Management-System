@@ -22,6 +22,10 @@
                             <h4 class="fw-bold text-dark mb-1">
                                 <i class="bi bi-geo-alt-fill text-danger me-2">
                                 </i> Danh Sách Cụm Rạp Chiếu Phim</h4>
+                                <a class="btn btn-danger"
+                                   href="${pageContext.request.contextPath}/manage/branch?action=create">
+                                    Tạo chi nhánh
+                                </a>
                             </div>
                         </div>
                     </div>

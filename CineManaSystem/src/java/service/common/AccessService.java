@@ -1,4 +1,4 @@
-package service;
+package service.common;
 import model.User;
 
 public final class AccessService {

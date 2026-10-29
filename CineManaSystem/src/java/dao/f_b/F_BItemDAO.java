@@ -1,4 +1,6 @@
-package dao;
+package dao.f_b;
+
+
 
 import model.F_BItem;
 import java.sql.*;
@@ -106,6 +108,27 @@ public class F_BItemDAO {
             statement.setBoolean(1, active);
             statement.setInt(2, itemId);
 
+            return statement.executeUpdate();
+        }
+    }
+
+    public F_BItem findByIdForUpdate(Connection connection, int itemId) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement("""
+                SELECT ItemID, ItemName, Category, Price, IsActive
+                FROM dbo.F_B WITH (UPDLOCK, HOLDLOCK) WHERE ItemID = ?
+                """)) {
+            statement.setInt(1, itemId);
+            try (ResultSet result = statement.executeQuery()) {
+                return result.next() ? map(result) : null;
+            }
+        }
+    }
+
+    public int stopAllBranches(Connection connection, int itemId) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement("""
+                UPDATE dbo.Branch_F_B SET Status = 'Inactive' WHERE ItemID = ?
+                """)) {
+            statement.setInt(1, itemId);
             return statement.executeUpdate();
         }
     }

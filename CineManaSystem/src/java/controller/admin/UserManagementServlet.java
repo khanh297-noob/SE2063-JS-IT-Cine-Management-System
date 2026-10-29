@@ -1,5 +1,7 @@
-package controller;
-import service.*;
+package controller.admin;
+
+import service.admin.BranchService;
+import service.admin.UserService;
 import util.FormUtil;
 import util.SessionUtil;
 import model.User;
@@ -18,13 +20,19 @@ public class UserManagementServlet extends HttpServlet {
             throws ServletException,IOException {
         try {
             User actor=SessionUtil.getLoggedInUser(request);
-            request.setAttribute("userList",userService.getAllUsers(actor));
+            String keyword = request.getParameter("q");
+            request.setAttribute("userList", userService.searchUsers(actor, keyword));
+            request.setAttribute("q", keyword == null ? "" : keyword.trim());
             request.setAttribute("branchList",branchService.getAllBranches(actor));
             FormUtil.csrf(request);
-            request.getRequestDispatcher("/WEB-INF/view/admin/user-management-khanh.jsp")
+            String view = "create".equals(request.getParameter("action")) ? "/WEB-INF/view/admin/employee-create-khanh.jsp" : "/WEB-INF/view/admin/user-management-khanh.jsp";
+            request.getRequestDispatcher(view)
                     .forward(request,response);
         } catch(SecurityException e) {
             response.sendRedirect(request.getContextPath()+"/access-denied");
+        } catch (IllegalArgumentException e) {
+            request.getSession().setAttribute("toastError", e.getMessage());
+            response.sendRedirect(request.getContextPath() + "/admin/users");
         } catch(SQLException e) {
             getServletContext().log("Không đọc được user",e);response.sendError(500);
         }
@@ -35,8 +43,18 @@ public class UserManagementServlet extends HttpServlet {
         try {
             FormUtil.checkCsrf(request);
             User actor=SessionUtil.getLoggedInUser(request);
-            int id=FormUtil.integer(request,"id");
-            String action=request.getParameter("action");
+            String action = request.getParameter("action");
+            if ("createEmployee".equals(action)) {
+                int id = userService.createEmployee(
+                        actor, request.getParameter("fullName"),
+                        request.getParameter("email"), request.getParameter("phone"),
+                        request.getParameter("password"), request.getParameter("role"),
+                        FormUtil.integer(request, "branchId"), request.getRemoteAddr());
+                request.getSession().setAttribute("toastSuccess", "Đã tạo nhân viên #" + id + ".");
+                response.sendRedirect(request.getContextPath() + "/admin/users");
+                return;
+            }
+            int id = FormUtil.integer(request, "id");
             if("toggleStatus".equals(action)) {
                 userService.changeUserStatus(actor,id,request.getParameter("targetStatus"), request.getRemoteAddr());
             } else if("updateRole".equals(action)) {

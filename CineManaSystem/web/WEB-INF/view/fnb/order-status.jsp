@@ -38,9 +38,9 @@
                     <button class="btn btn-brand-pill" type="submit">Xem</button>
                 </form>
                 <c:if test="${not empty selectedBranchId}">
-                    <jsp:include page="/WEB-INF/view/common/fnb-orders-khanh.jsp"/>
+                    <jsp:include page="/WEB-INF/view/fnb/f_b-orders-khanh.jsp"/>
                 </c:if>
-                <jsp:include page="/WEB-INF/view/common/fnb-lines-khanh.jsp"/>
+                <jsp:include page="/WEB-INF/view/fnb/f_b-lines-khanh.jsp"/>
                 <c:if test="${not empty selectedBooking}">
                     <section class="panel">
                         <c:if test="${selectedBooking.status eq 'Pending' and empty selectedBooking.paymentStatus}">

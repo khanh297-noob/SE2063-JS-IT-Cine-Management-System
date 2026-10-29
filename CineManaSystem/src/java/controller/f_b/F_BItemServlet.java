@@ -1,8 +1,7 @@
-package controller;
+package controller.f_b;
 
+import service.f_b.F_BItemService;
 import model.User;
-import service.F_BItemService;
-
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
@@ -12,7 +11,7 @@ import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.UUID;
 
-@WebServlet("/admin/fnb-items")
+@WebServlet(urlPatterns = {"/staff/fnb/items", "/admin/fnb-items"})
 public class F_BItemServlet extends HttpServlet {
 
     private final F_BItemService service = new F_BItemService();
@@ -110,6 +109,6 @@ public class F_BItemServlet extends HttpServlet {
             session.setAttribute("toastError", "Không lưu được dữ liệu. Hãy thử lại.");
         }
 
-        response.sendRedirect(request.getContextPath() + "/admin/fnb-items");
+        response.sendRedirect(request.getContextPath() + "/staff/fnb/items");
     }
 }

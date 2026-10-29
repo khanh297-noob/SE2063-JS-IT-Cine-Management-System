@@ -1,4 +1,4 @@
-package dao;
+package dao.f_b;
 
 import model.Booking;
 import model.F_BOrder;

@@ -17,6 +17,7 @@ out/
 *.iml
 *.ipr
 .smarttomcat/
+
 # Key VNPay Sandbox (moi nguoi tu tao tu vnpay.properties.example)
 vnpay.properties
 CineManaSystem/web/WEB-INF/ConnectDB.properties
@@ -34,3 +35,4 @@ out/
 *.tmp
 *.swp
 *~
+CineManaSystem/src/java/ConnectDB.properties
