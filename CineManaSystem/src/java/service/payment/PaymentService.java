@@ -115,6 +115,20 @@ public class PaymentService {
         return p;
     }
 
+    // Voucher khách dùng được cho đơn này (lọc bằng chính các điều kiện của checkVoucher)
+    public List<Promotion> getUsableVouchers(Booking b) {
+        List<Promotion> usable = new java.util.ArrayList<>();
+        for (Promotion p : promotionDAO.getActive()) {
+            try {
+                checkVoucher(p.getPromoCode(), b.getSubtotal(), b.getBookingId(), b.getBranchId());
+                usable.add(p);
+            } catch (IllegalArgumentException e) {
+                // không đủ điều kiện -> không hiện trong danh sách
+            }
+        }
+        return usable;
+    }
+
     // Số tiền được giảm (không giảm quá giá trị đơn)
     public BigDecimal getDiscount(Promotion p, BigDecimal subtotal) {
         return p.getDiscountAmount().min(subtotal);
@@ -191,7 +205,6 @@ public class PaymentService {
         }
     }
 
-    // Xác nhận đã nhận tiền. Nếu tiền về khi đơn đã bị hủy (hết giờ giữ ghế) thì ghi log để hoàn tiền thủ công.
     /**
      * Hỏi VNPay xem đơn đã được thanh toán chưa (dùng cho VNPay QR tại quầy).
      * @return "PAID" (đã trả, đơn Confirmed) | "WAITING" (khách chưa trả xong) | "FAILED" (thất bại / hết giờ, đơn đã hủy)
@@ -228,6 +241,7 @@ public class PaymentService {
         return "WAITING";       // "91" chưa có giao dịch / "01" khách đang thanh toán
     }
 
+    // Xác nhận đã nhận tiền. Nếu tiền về khi đơn đã bị hủy (hết giờ giữ ghế) thì ghi log để hoàn tiền thủ công.
     private void confirm(int bookingId, String txnCode) {
         String result = bookingDAO.confirmPaid(bookingId, txnCode);
         if ("LATE".equals(result)) {

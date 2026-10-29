@@ -13,6 +13,17 @@
     <a class="btn btn-primary" href="${ctx}/manage/movie?action=create">Thêm phim</a>
 </div>
 
+<%-- BR-MS-03: phim "Coming Soon" đã quá ngày khởi chiếu nhưng chưa đủ điều kiện chiếu (MovieAdminServlet đặt sẵn).
+     Khách không thấy các phim này ở mục "Phim sắp chiếu". --%>
+<c:if test="${not empty overdueMovies}">
+    <details class="notice notice-error">
+        <summary>${fn:length(overdueMovies)} phim "Sắp chiếu" đã quá ngày khởi chiếu nhưng chưa đủ điều kiện chiếu.
+            Khách không còn thấy các phim này ở mục "Phim sắp chiếu". Bổ sung chi nhánh / thể loại / poster để phim
+            tự chuyển sang Đang chiếu, hoặc sửa ngày khởi chiếu, hoặc chuyển sang Ngưng chiếu.</summary>
+        <ul><c:forEach var="o" items="${overdueMovies}"><li><c:out value="${o}"/></li></c:forEach></ul>
+    </details>
+</c:if>
+
 <form class="filters" method="get" action="${ctx}/manage/movie">
     <input type="search" name="q" value="${fn:escapeXml(q)}" placeholder="Tìm theo tên phim" aria-label="Tìm phim">
     <select name="status" aria-label="Trạng thái">

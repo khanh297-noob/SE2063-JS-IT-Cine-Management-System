@@ -177,9 +177,8 @@ public class ShowtimeService {
                 if (!ov.isOk()) throw new BusinessException(ov.describe());
                 s = toShowtime(in, ov, room);
             } else {
+                // Không đổi lịch chiếu: giữ nguyên giá đang bán (có thể quản lý đã chỉnh ở trang Quản lý giá vé)
                 s = cur;
-                ShowtimeRoom room = showtimeDAO.findRoom(con, cur.getRoomId(), false);
-                s.setBasePrice(ShowtimePriceCalculator.basePrice(room.getRoomSurcharge(), cur.getShowDate()));
             }
             s.setShowtimeId(id);
             s.setStatus(status);

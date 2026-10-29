@@ -1,6 +1,5 @@
 package controller.movie;
 
-import controller.BaseServlet;
 import service.movie.MovieStatusService;
 import util.BusinessException;
 
@@ -18,7 +17,7 @@ import java.sql.SQLException;
  * POST movieId, status
  */
 @WebServlet("/manage/movie/status")
-public class MovieStatusServlet extends BaseServlet {
+public class MovieStatusServlet extends MovieAdminServlet {
 
     private final MovieStatusService statusService = new MovieStatusService();
 

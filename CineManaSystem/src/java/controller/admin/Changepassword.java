@@ -1,12 +1,6 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
- */
-
 package controller.admin;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -17,12 +11,10 @@ import service.AuthService;
 import util.PermissionUtil;
 
 /**
- *
- * @author adm
+ * Đổi mật khẩu dành riêng cho Admin và Manager.
  */
-@WebServlet(name="Changepassword", urlPatterns={"/changepassword"})
+@WebServlet(name = "Changepassword", urlPatterns = {"/admin/change-password", "/changepassword"})
 public class Changepassword extends HttpServlet {
-   public class AdminChangePassword extends HttpServlet {
 
     private AuthService authService;
 
@@ -48,7 +40,8 @@ public class Changepassword extends HttpServlet {
             return;
         }
 
-        request.getRequestDispatcher("/WEB-INF/view/admin/change-password.jsp").forward(request, response);
+        request.setAttribute("user", currentUser);
+        request.getRequestDispatcher("/WEB-INF/view/admin/profile-changepassword-admin.jsp").forward(request, response);
     }
 
     @Override
@@ -78,7 +71,7 @@ public class Changepassword extends HttpServlet {
         }
 
         request.setAttribute("user", currentUser);
-        request.getRequestDispatcher("/WEB-INF/view/admin/change-password.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/view/admin/profile-changepassword-admin.jsp").forward(request, response);
     }
 
     /**
@@ -94,6 +87,4 @@ public class Changepassword extends HttpServlet {
                role.equalsIgnoreCase("Branch Management") ||
                role.equalsIgnoreCase("BranchManager");
     }
-
-}
 }

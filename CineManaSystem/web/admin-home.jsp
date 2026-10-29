@@ -234,7 +234,7 @@
                     </span>
                 </a>
                 <a class="kp-card"
-                   href="${ctx}/report/revenue-dashboard"
+                   href="${ctx}/report/branch-dashboard"
                    data-module-card
                    data-keywords="report analytics báo cáo doanh thu dashboard thống kê revenue">
                     <div class="kp-card-top">
@@ -261,6 +261,7 @@
                     <h3>Không tìm thấy phân hệ</h3>
                     <p>Thử từ khóa khác hoặc xóa nội dung tìm kiếm.</p>
                     <button id="module-reset" class="kp-reset" type="button">Hiện tất cả</button>
+
                 </div>
             </section>
             <p id="portal-preview-note" class="kp-preview-note" hidden></p>

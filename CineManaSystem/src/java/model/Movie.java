@@ -11,7 +11,6 @@ public class Movie {
     private String trailerURL;
     private String posterURL;
     private String status;
-    // Tên các thể loại, nối bằng dấu phẩy (chỉ dùng để hiển thị)
     private String genres;
 
     public Movie() {
@@ -100,12 +99,10 @@ public class Movie {
         this.genres = genres;
     }
 
-    /** Ngày khởi chiếu dạng dd/MM/yyyy, rỗng nếu chưa có. */
     public String getReleaseDateText() {
         return releaseDate == null ? "" : new java.text.SimpleDateFormat("dd/MM/yyyy").format(releaseDate);
     }
 
-    /** Thời lượng dạng "2g 15p" (dưới 1 giờ thì chỉ "45p"). */
     public String getDurationText() {
         int hours = duration / 60;
         int minutes = duration % 60;

@@ -25,7 +25,7 @@ import java.util.Map;
 import util.PasswordUtil;
 
 /**
- * Bán vé tại quầy (phần 7.1): suất chiếu, sơ đồ ghế, tạo đơn + thu tiền mặt/thẻ, hủy & hoàn tiền.
+ * Bán vé tại quầy (phần 7.1): suất chiếu, sơ đồ ghế, tạo đơn + thu tiền mặt hoặc VNPay QR, hủy & hoàn tiền.
  * Đơn tại quầy lưu Booking.UserID = UserID của thu ngân (khách vãng lai không có tài khoản).
  */
 public class PosService {
@@ -113,7 +113,7 @@ public class PosService {
                 throw new IllegalArgumentException("The selected seat is not available. (" + s.getLabel() + ")");
             }
         }
-        if (!"Cash".equals(method) && !"Credit Card".equals(method) && !"VNPay".equals(method)) {
+        if (!"Cash".equals(method) && !"VNPay".equals(method)) {
             throw new IllegalArgumentException("The Payment method is required.");
         }
 
@@ -132,14 +132,7 @@ public class PosService {
         }
 
         // Lưu DB (1 transaction). VNPay: mã tạm, sẽ được thay bằng txnRef khi tạo link thanh toán VNPay
-        String txnCode;
-        if ("Cash".equals(method)) {
-            txnCode = "CASH-" + System.currentTimeMillis();
-        } else if ("Credit Card".equals(method)) {
-            txnCode = "CARD-" + System.currentTimeMillis();
-        } else {
-            txnCode = "VNPAY-PENDING";
-        }
+        String txnCode = "Cash".equals(method) ? "CASH-" + System.currentTimeMillis() : "VNPAY-PENDING";
         int bookingId = bookingDAO.createCounterBooking(cashier.getUserId(), shift.getBranchId(), promoId, total,
                 st.getShowtimeId(), seats, items, method, txnCode);
         if (bookingId < 0) {

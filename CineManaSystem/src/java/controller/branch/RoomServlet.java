@@ -1,6 +1,5 @@
 package controller.branch;
 
-import controller.BaseServlet;
 import model.branch.Room;
 import service.branch.BranchService;
 import service.branch.RoomService;
@@ -14,6 +13,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.List;
 
 /**
  * Room Management.
@@ -21,9 +21,11 @@ import java.sql.SQLException;
  * GET  /manage/rooms?action=create[&branchId=]   form thêm
  * GET  /manage/rooms?action=edit&id=             form sửa
  * POST action=save | status | delete
+ * Quản lý chi nhánh: chi nhánh luôn cố định là chi nhánh của mình (bỏ qua branchId gửi lên),
+ * chỉ thao tác được với phòng thuộc chi nhánh đó.
  */
 @WebServlet("/manage/rooms")
-public class RoomServlet extends BaseServlet {
+public class RoomServlet extends BranchScopedServlet {
 
     private final RoomService roomService = new RoomService();
     private final BranchService branchService = new BranchService();
@@ -32,18 +34,21 @@ public class RoomServlet extends BaseServlet {
     @Override
     protected void handleGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException, SQLException, BusinessException {
+        Integer managed = managedBranchId(req);
         switch (action(req, "list")) {
             case "create" -> {
                 Room r = new Room();
-                Integer branchId = intParam(req, "branchId");
+                Integer branchId = managed != null ? managed : intParam(req, "branchId");
                 if (branchId != null) r.setBranchId(branchId);
                 showForm(req, resp, r);
             }
-            case "edit" -> showForm(req, resp, roomService.get(requiredId(req, "id")));
+            case "edit" -> showForm(req, resp, roomInScope(req, requiredId(req, "id")));
             default -> {
-                Integer branchId = intParam(req, "branchId");
+                Integer branchId = managed != null ? managed : intParam(req, "branchId");
                 req.setAttribute("rooms", roomService.list(branchId));
-                req.setAttribute("branches", branchService.list(null, null));
+                req.setAttribute("branches", managed != null
+                        ? List.of(branchService.get(managed))
+                        : branchService.list(null, null));
                 req.setAttribute("branchId", branchId);
                 render(req, resp, "room/list-hoang");
             }
@@ -55,19 +60,27 @@ public class RoomServlet extends BaseServlet {
             throws ServletException, IOException, SQLException, BusinessException {
         switch (action(req, "save")) {
             case "status" -> {
-                roomService.changeStatus(requiredId(req, "id"), str(req, "status"));
+                int id = roomInScope(req, requiredId(req, "id")).getRoomId();
+                roomService.changeStatus(id, str(req, "status"));
                 flashSuccess(req, "Đã cập nhật trạng thái phòng.");
                 redirect(req, resp, "/manage/rooms" + branchQuery(req));
             }
             case "delete" -> {
-                roomService.delete(requiredId(req, "id"));
+                int id = roomInScope(req, requiredId(req, "id")).getRoomId();
+                roomService.delete(id);
                 flashSuccess(req, "Đã xoá phòng.");
                 redirect(req, resp, "/manage/rooms" + branchQuery(req));
             }
             default -> {
                 Room r = new Room();
                 Integer id = intParam(req, "id");
-                Integer branchId = intParam(req, "branchId");
+                Integer branchId;
+                if (id != null) {
+                    branchId = roomInScope(req, id).getBranchId(); // phòng đã tạo không đổi chi nhánh (BR-RM-03)
+                } else {
+                    Integer managed = managedBranchId(req);
+                    branchId = managed != null ? managed : intParam(req, "branchId");
+                }
                 r.setRoomId(id == null ? 0 : id);
                 r.setBranchId(branchId == null ? 0 : branchId);
                 r.setRoomName(str(req, "roomName"));
@@ -89,11 +102,19 @@ public class RoomServlet extends BaseServlet {
         }
     }
 
+    /** Lấy phòng theo id, đồng thời kiểm tra người dùng có quyền với chi nhánh của phòng. */
+    private Room roomInScope(HttpServletRequest req, int roomId) throws SQLException, BusinessException {
+        Room room = roomService.get(roomId);
+        requireBranch(req, room.getBranchId());
+        return room;
+    }
+
     private void showForm(HttpServletRequest req, HttpServletResponse resp, Room r)
             throws ServletException, IOException, SQLException, BusinessException {
+        Integer managed = managedBranchId(req);
         req.setAttribute("room", r);
-        req.setAttribute("branches", branchService.findActive());
-        req.setAttribute("allBranches", branchService.list(null, null));
+        req.setAttribute("branches", managed != null ? List.of(branchService.get(managed)) : branchService.findActive());
+        req.setAttribute("allBranches", managed != null ? List.of(branchService.get(managed)) : branchService.list(null, null));
         req.setAttribute("roomTypes", roomTypeService.list());
         render(req, resp, "room/form-hoang");
     }

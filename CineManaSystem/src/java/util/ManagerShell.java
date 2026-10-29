@@ -9,14 +9,23 @@ import model.User;
 public class ManagerShell {
 
     /**
-     * @param activeMenu         dashboard | branch-report | revenue | tickets
+     * @param activeMenu         dashboard | branch-report | revenue | tickets | promo-hub | ticket-pricing | fnb-pricing | promo-validate
      * @param action             đường dẫn của trang hiện tại, dùng cho ô chọn chi nhánh trên navbar
      */
     public static void apply(HttpServletRequest request, User user, boolean admin, String branchPill,
                              List<Branch> branches, Integer selectedBranchId, String activeMenu,
                              String action) {
-        request.setAttribute("navBadge", admin ? "ADMIN" : "MANAGER");
-        request.setAttribute("roleLabel", admin ? "Administrator" : "Branch Manager");
+        boolean manager = PermissionUtil.isBranchManager(request);
+        request.setAttribute("navBadge", admin ? "ADMIN" : (manager ? "MANAGER" : "POS"));
+        request.setAttribute("roleLabel", admin ? "Administrator" : (manager ? "Branch Manager" : "POS Staff"));
+
+        // Cờ quyền để sidebar chỉ hiện những mục người dùng được vào
+        boolean viewReports = PermissionUtil.canViewSalesReport(request);
+        request.setAttribute("canViewReports", viewReports);
+        request.setAttribute("canManagePricing", PermissionUtil.canManagePricing(request));
+        request.setAttribute("canValidatePromotion", PermissionUtil.canValidatePromotion(request));
+        // Logo trên navbar dẫn về trang đầu của người dùng (thu ngân không xem được báo cáo)
+        request.setAttribute("brandPath", viewReports ? "/report/branch-dashboard" : "/promotion-price-manage");
         request.setAttribute("initials", initials(user.getFullName()));
         request.setAttribute("branchPill", branchPill);
         request.setAttribute("branches", branches);

@@ -2,6 +2,7 @@ package service.movie;
 
 import dao.movie.MovieDAO;
 import dao.movie.MovieMediaDAO;
+import model.movie.Movie;
 import model.movie.MovieMedia;
 import util.BusinessException;
 import util.JdbcContext;
@@ -20,6 +21,7 @@ import java.util.regex.Pattern;
  *           Media đầu tiên của mỗi loại tự động thành media chính.
  * BR-MD-03  Xoá media chính thì media mới nhất cùng loại được chọn làm chính.
  * BR-MD-04  Poster / trailer chính luôn được chép sang Movie.PosterURL / TrailerURL (database chung của nhóm).
+ * BR-MD-05  Không xoá poster cuối cùng của phim đang "Now Showing" (BR-MS-01).
  */
 public class MovieMediaService {
 
@@ -73,6 +75,13 @@ public class MovieMediaService {
         return JdbcContext.transaction(con -> {
             MovieMedia m = mediaDAO.findById(con, mediaId);
             if (m == null) throw new NotFoundException("Không tìm thấy media #" + mediaId);
+            if (MovieMedia.TYPE_POSTER.equals(m.getMediaType())
+                    && mediaDAO.countByMovieAndType(con, m.getMovieId(), MovieMedia.TYPE_POSTER) == 1) {
+                Movie movie = movieDAO.findById(con, m.getMovieId());
+                if (movie != null && movie.isNowShowing())
+                    throw new BusinessException("Phim \"" + movie.getTitle() + "\" đang chiếu nên phải còn ít nhất 1 poster. "
+                            + "Thêm poster khác trước khi xoá poster này.");
+            }
             mediaDAO.delete(con, mediaId);
             if (m.isPrimary()) {
                 MovieMedia next = mediaDAO.findLatestOther(con, m.getMovieId(), m.getMediaType(), mediaId);

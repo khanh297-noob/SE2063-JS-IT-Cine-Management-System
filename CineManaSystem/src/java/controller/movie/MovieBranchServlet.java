@@ -1,6 +1,5 @@
 package controller.movie;
 
-import controller.BaseServlet;
 import service.movie.MovieBranchService.BranchSelection;
 import service.movie.MovieBranchService.SaveResult;
 import service.movie.MovieBranchService;
@@ -26,7 +25,7 @@ import java.util.Set;
  * POST movieId, shown[] (mọi chi nhánh trên form), branch[] (chi nhánh được tích), from_{id}, to_{id}
  */
 @WebServlet("/manage/movie/branches")
-public class MovieBranchServlet extends BaseServlet {
+public class MovieBranchServlet extends MovieAdminServlet {
 
     private final MovieService movieService = new MovieService();
     private final MovieBranchService movieBranchService = new MovieBranchService();

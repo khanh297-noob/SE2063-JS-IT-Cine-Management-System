@@ -78,32 +78,30 @@ public class ShiftService {
         Timestamp from = s.getStartTime();
         Timestamp to = new Timestamp(System.currentTimeMillis() + 60_000);
         BigDecimal cashSales = paymentDAO.sumCounterSales(u.getUserId(), "Cash", from, to);
-        BigDecimal cardSales = paymentDAO.sumCounterSales(u.getUserId(), "Credit Card", from, to);
         BigDecimal vnpaySales = paymentDAO.sumCounterSales(u.getUserId(), "VNPay", from, to);   // khách trả VNPay QR tại quầy
 
         BigDecimal cashRefund = BigDecimal.ZERO;
-        BigDecimal cardRefund = BigDecimal.ZERO;
+        BigDecimal vnpayRefund = BigDecimal.ZERO;
         List<AuditLog> refunds = auditLogDAO.getLogs(u.getUserId(), "COUNTER_REFUND", from, to);
         for (AuditLog log : refunds) {
             BigDecimal amount = new BigDecimal(log.getParam("amount"));
             if ("Cash".equals(log.getParam("method"))) {
                 cashRefund = cashRefund.add(amount);
             } else {
-                cardRefund = cardRefund.add(amount);
+                vnpayRefund = vnpayRefund.add(amount);    // đơn trả bằng VNPay QR -> hoàn không qua két
             }
         }
 
         Map<String, Object> bal = new HashMap<>();
         bal.put("openingFloat", s.getOpeningFloat());
         bal.put("cashSales", cashSales);
-        bal.put("cardSales", cardSales);
         bal.put("vnpaySales", vnpaySales);
         bal.put("cashRefund", cashRefund);
-        bal.put("cardRefund", cardRefund);
+        bal.put("vnpayRefund", vnpayRefund);
         bal.put("refundCount", refunds.size());
         bal.put("transactionCount", paymentDAO.countCounterSales(u.getUserId(), from, to));
         bal.put("expected", s.getOpeningFloat().add(cashSales).subtract(cashRefund));
-        bal.put("netRevenue", cashSales.add(cardSales).add(vnpaySales).subtract(cashRefund).subtract(cardRefund));
+        bal.put("netRevenue", cashSales.add(vnpaySales).subtract(cashRefund).subtract(vnpayRefund));
         return bal;
     }
 

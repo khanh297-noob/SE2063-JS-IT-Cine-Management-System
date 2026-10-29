@@ -23,6 +23,16 @@
     <div class="field">
         <label for="branchId" class="required">Chi nhánh</label>
         <c:choose>
+            <%-- Quản lý chi nhánh: phòng mới luôn thuộc chi nhánh của mình (server cũng ép như vậy) --%>
+            <c:when test="${isNew and not empty managedBranchId}">
+                <select id="branchId" disabled>
+                    <c:forEach var="b" items="${branches}">
+                        <option selected><c:out value="${b.name}"/></option>
+                    </c:forEach>
+                </select>
+                <input type="hidden" name="branchId" value="${managedBranchId}">
+                <div class="hint">Phòng được tạo tại chi nhánh bạn quản lý. Không đổi được sau khi tạo.</div>
+            </c:when>
             <c:when test="${isNew}">
                 <select id="branchId" name="branchId" required>
                     <option value="">Chọn chi nhánh</option>
