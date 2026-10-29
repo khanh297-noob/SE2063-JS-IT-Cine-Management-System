@@ -48,25 +48,29 @@
                         </div>
                         <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold">Admin Module</span>
                     </div>
-                    <div class="row g-3 align-items-center justify-content-between">
-                        <div class="col-md-5">
-                            <div class="input-group">
-                                <span class="input-group-text bg-white border-end-0 rounded-start-pill ps-3 text-muted">
-                                    <i class="bi bi-search">
-                                    </i>
-                                </span>
-                                <input type="text" class="form-control border-start-0 rounded-end-pill search-input-pill"
-                                placeholder="Tìm kiếm theo Tên, Email hoặc Số điện thoại...">
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <button class="btn btn-brand-pill" disabled title="Chức năng tạo nhân viên chưa triển khai">
-                                <i class="bi bi-person-plus-fill me-1">
-                                </i> Thêm Nhân Viên Mới
-                            </button>
-                        </div>
-                    </div>
-                </div>
+<div class="row g-3 align-items-center justify-content-between">
+    <div class="col-lg-8">
+        <form method="get" action="${pageContext.request.contextPath}/admin/users"
+              class="d-flex gap-2" role="search">
+            <label for="userKeyword" class="visually-hidden">Tìm tài khoản</label>
+            <input id="userKeyword" name="q" type="search" maxlength="100"
+                   class="form-control rounded-pill"
+                   value="<c:out value='${q}' />"
+                   placeholder="Tên, email, số điện thoại hoặc UserID">
+            <button type="submit" class="btn btn-outline-danger text-nowrap">Tìm kiếm</button>
+            <a class="btn btn-outline-secondary text-nowrap"
+               href="${pageContext.request.contextPath}/admin/users">Tất cả</a>
+        </form>
+    </div>
+    <div class="col-auto">
+        <a class="btn btn-brand-pill"
+           href="${pageContext.request.contextPath}/admin/users?action=create">
+            <i class="bi bi-person-plus-fill me-1" aria-hidden="true"></i>
+            Thêm nhân viên mới
+        </a>
+    </div>
+</div>
+
                                 <div class="card-custom p-4">
                                     <div class="d-flex justify-content-between align-items-center mb-3">
                                         <span class="fw-bold text-uppercase text-secondary small">Danh Sách Người Dùng Hệ Thống</span>
