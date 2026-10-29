@@ -22,7 +22,8 @@ import util.PermissionUtil;
 /**
  * Kiểm tra mã khuyến mãi có áp dụng được cho đơn hàng không.
  * Cho phép: Admin, Thu ngân POS, Quản lý chi nhánh.
- * GET : form nhập mã và giá trị đơn.
+ * GET : form nhập mã và giá trị đơn, kèm danh sách khuyến mãi của chi nhánh đang chọn
+ * (Admin chưa chọn chi nhánh thì hiện khuyến mãi của tất cả chi nhánh).
  * POST: kiểm tra rồi hiển thị kết quả ngay trên trang (không thay đổi dữ liệu nên không cần redirect).
  *
  * Chi nhánh lấy từ tài khoản ([User].BranchID).
@@ -94,6 +95,15 @@ public class PromotionValidateServlet extends HttpServlet {
             request.setAttribute("branchName", branchName);
             // noBranch chỉ true khi nhân viên thường chưa được gán chi nhánh (Admin luôn có thể chọn)
             request.setAttribute("noBranch", branchId == null && !isAdmin);
+
+            // Danh sách khuyến mãi: của chi nhánh đang chọn, hoặc của tất cả chi nhánh khi Admin chưa chọn chi nhánh
+            if (branchId != null || isAdmin) {
+                try (PromotionService listService = new PromotionService()) {
+                    request.setAttribute("promotions",
+                            listService.listPromotions(branchId, LocalDate.now(BranchDashboardService.ZONE)));
+                }
+            }
+            request.setAttribute("promoAllBranches", branchId == null);
 
             // Bước 3: kiểm tra mã khi người dùng bấm nút
             if (submitted != null && branchId != null) {

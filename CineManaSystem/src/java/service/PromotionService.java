@@ -5,6 +5,10 @@ import dao.PromotionDao.PromotionData;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import dao.PromotionDao.PromotionItem;
 import util.FormatUtil;
 import util.MoneyUtil;
 
@@ -102,6 +106,60 @@ public class PromotionService implements AutoCloseable {
         // Bước 7: hợp lệ, tính tiền giảm (không vượt quá giá trị đơn)
         BigDecimal discount = promo.getDiscountAmount().min(amount);
         return PromotionResult.valid(promo.getCode(), amount, discount, usesLeft);
+    }
+
+    /**
+     * Danh sách khuyến mãi để xem: của một chi nhánh (gồm mã toàn chuỗi), hoặc của tất cả chi nhánh khi branchId = null.
+     * Mã đang áp dụng xếp trước, rồi sắp diễn ra, hết lượt, hết hạn.
+     */
+    public List<PromotionRow> listPromotions(Integer branchId, LocalDate today) {
+        List<PromotionRow> rows = new ArrayList<>();
+        for (PromotionItem item : dao.findForBranch(branchId)) {
+            rows.add(new PromotionRow(item, today));
+        }
+        rows.sort(Comparator.comparingInt(PromotionRow::getStatusOrder)
+                .thenComparing(r -> r.getEndDate().getTime())
+                .thenComparing(PromotionRow::getCode, String.CASE_INSENSITIVE_ORDER));
+        return rows;
+    }
+
+    /** Một dòng trong danh sách khuyến mãi, kèm trạng thái tính theo ngày hôm nay. */
+    public static class PromotionRow {
+
+        private final PromotionItem item;
+        private final String status;
+        private final String statusLabel;
+        private final int statusOrder;
+
+        PromotionRow(PromotionItem item, LocalDate today) {
+            this.item = item;
+            LocalDate start = item.getStartDate().toLocalDate();
+            LocalDate end = item.getEndDate().toLocalDate();
+            if (today.isAfter(end)) {
+                status = "expired"; statusLabel = "Hết hạn"; statusOrder = 3;
+            } else if (today.isBefore(start)) {
+                status = "upcoming"; statusLabel = "Sắp diễn ra"; statusOrder = 1;
+            } else if (item.getUsageLimit() > 0 && item.getUsedCount() >= item.getUsageLimit()) {
+                status = "exhausted"; statusLabel = "Hết lượt"; statusOrder = 2;
+            } else {
+                status = "active"; statusLabel = "Đang áp dụng"; statusOrder = 0;
+            }
+        }
+
+        public String getCode() { return item.getCode(); }
+        public java.math.BigDecimal getDiscountAmount() { return item.getDiscountAmount(); }
+        public java.math.BigDecimal getMinSpend() { return item.getMinSpend(); }
+        public java.sql.Date getStartDate() { return item.getStartDate(); }
+        public java.sql.Date getEndDate() { return item.getEndDate(); }
+        public int getUsageLimit() { return item.getUsageLimit(); }
+        public int getUsedCount() { return item.getUsedCount(); }
+        public boolean isChainWide() { return item.isChainWide(); }
+        /** Phạm vi áp dụng: "Toàn chuỗi" hoặc tên các chi nhánh được gán. */
+        public String getScope() { return item.isChainWide() ? "Toàn chuỗi" : String.join(", ", item.getBranchNames()); }
+        /** active | upcoming | exhausted | expired */
+        public String getStatus() { return status; }
+        public String getStatusLabel() { return statusLabel; }
+        int getStatusOrder() { return statusOrder; }
     }
 
     /** Kết quả kiểm tra một mã khuyến mãi. */

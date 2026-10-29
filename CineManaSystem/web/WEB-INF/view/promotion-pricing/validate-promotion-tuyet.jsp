@@ -141,10 +141,81 @@
                                 </c:if>
                             </div>
                         </c:if>
+
+                        <%-- Danh sách khuyến mãi của chi nhánh đang chọn (Admin chưa chọn chi nhánh thì hiện của tất cả chi nhánh) --%>
+                        <div class="card">
+                            <h2 class="card-title">
+                                <i class="fa-solid fa-tags"></i>
+                                Khuyến mãi của
+                                <c:choose>
+                                    <c:when test="${promoAllBranches}">tất cả chi nhánh</c:when>
+                                    <c:otherwise><c:out value="${branchName}"/></c:otherwise>
+                                </c:choose>
+                                <span class="tag">${promotions.size()} mã</span>
+                            </h2>
+                            <c:if test="${not promoAllBranches}">
+                                <p class="note">Gồm các mã áp dụng toàn chuỗi và các mã được gán riêng cho chi nhánh này. Bấm vào một mã để điền vào ô kiểm tra.</p>
+                            </c:if>
+                            <c:choose>
+                                <c:when test="${not empty promotions}">
+                                    <div class="table-container">
+                                        <table>
+                                            <thead>
+                                                <tr>
+                                                    <th>Mã</th><th class="align-right">Giảm (đồng)</th><th class="align-right">Đơn tối thiểu (đồng)</th>
+                                                    <th>Thời gian áp dụng</th><th class="align-right">Lượt dùng</th><th>Phạm vi</th><th>Trạng thái</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <c:forEach var="p" items="${promotions}">
+                                                    <tr>
+                                                        <td><button type="button" class="code-chip" data-code="<c:out value='${p.code}'/>" title="Điền mã vào ô kiểm tra"><c:out value="${p.code}"/></button></td>
+                                                        <td class="align-right cell-strong"><fmt:formatNumber value="${p.discountAmount}" pattern="#,##0"/></td>
+                                                        <td class="align-right"><fmt:formatNumber value="${p.minSpend}" pattern="#,##0"/></td>
+                                                        <td><fmt:formatDate value="${p.startDate}" pattern="dd/MM/yyyy"/> – <fmt:formatDate value="${p.endDate}" pattern="dd/MM/yyyy"/></td>
+                                                        <td class="align-right">
+                                                            <c:choose>
+                                                                <c:when test="${p.usageLimit > 0}">${p.usedCount} / ${p.usageLimit}</c:when>
+                                                                <c:otherwise>${p.usedCount} / không giới hạn</c:otherwise>
+                                                            </c:choose>
+                                                        </td>
+                                                        <td>
+                                                            <c:choose>
+                                                                <c:when test="${p.chainWide}"><span class="tag">Toàn chuỗi</span></c:when>
+                                                                <c:otherwise><c:out value="${p.scope}"/></c:otherwise>
+                                                            </c:choose>
+                                                        </td>
+                                                        <td>
+                                                            <span class="badge promo-${p.status}"><c:out value="${p.statusLabel}"/></span>
+                                                        </td>
+                                                    </tr>
+                                                </c:forEach>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </c:when>
+                                <c:otherwise>
+                                    <div class="empty-cell"><i class="fa-solid fa-folder-open empty-icon"></i>Chưa có khuyến mãi nào.</div>
+                                </c:otherwise>
+                            </c:choose>
+                        </div>
                     </c:otherwise>
                 </c:choose>
 
             </main>
         </div>
+        <script>
+            // Bấm vào mã trong danh sách thì điền vào ô kiểm tra
+            document.querySelectorAll('.code-chip').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var input = document.getElementById('code');
+                    if (input) {
+                        input.value = btn.dataset.code;
+                        input.focus();
+                        input.scrollIntoView({behavior: 'smooth', block: 'center'});
+                    }
+                });
+            });
+        </script>
     </body>
 </html>
