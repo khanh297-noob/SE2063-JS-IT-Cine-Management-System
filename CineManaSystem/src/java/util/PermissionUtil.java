@@ -74,9 +74,9 @@ public class PermissionUtil {
         return isAdmin(request) || isBranchManager(request);
     }
 
-    /** Kiểm tra mã khuyến mãi cho đơn hàng: Thu ngân (POS Staff) và Quản lý chi nhánh. */
+    /** Kiểm tra mã khuyến mãi cho đơn hàng: Admin, Thu ngân (POS Staff) và Quản lý chi nhánh. */
     public static boolean canValidatePromotion(HttpServletRequest request) {
-        return isCashier(request) || isBranchManager(request);
+        return isAdmin(request) || isCashier(request) || isBranchManager(request);
     }
 
     /** Vào trang tổng hợp Promotion & Pricing: người có ít nhất một chức năng trong đó. */

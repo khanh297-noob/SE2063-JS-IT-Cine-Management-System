@@ -20,11 +20,13 @@ import util.ManagerShell;
 import util.PermissionUtil;
 
 /**
- * Kiểm tra mã khuyến mãi có áp dụng được cho đơn hàng không (Thu ngân POS, Quản lý chi nhánh).
+ * Kiểm tra mã khuyến mãi có áp dụng được cho đơn hàng không.
+ * Cho phép: Admin, Thu ngân POS, Quản lý chi nhánh.
  * GET : form nhập mã và giá trị đơn.
  * POST: kiểm tra rồi hiển thị kết quả ngay trên trang (không thay đổi dữ liệu nên không cần redirect).
  *
- * Chi nhánh lấy từ tài khoản ([User].BranchID), người dùng không tự chọn được.
+ * Chi nhánh lấy từ tài khoản ([User].BranchID).
+ * Riêng Admin không có branchID cố định → cho chọn qua param hoặc mặc định lấy chi nhánh đầu tiên.
  */
 @WebServlet(name = "validatePromotion", urlPatterns = {"/promotion-price-manage/validate-promotion"})
 public class PromotionValidateServlet extends HttpServlet {
@@ -52,17 +54,46 @@ public class PromotionValidateServlet extends HttpServlet {
             return;
         }
         User user = PermissionUtil.getCurrentUser(request);
+        boolean isAdmin = PermissionUtil.isAdmin(request);
+
+        // Admin không có branchID cố định → cho chọn chi nhánh qua param,
+        // hoặc mặc định lấy chi nhánh đầu tiên trong danh sách.
         Integer branchId = user.getBranchID();
+        if (isAdmin) {
+            String paramBranchId = request.getParameter("branchId");
+            if (paramBranchId != null && !paramBranchId.isEmpty()) {
+                try { branchId = Integer.parseInt(paramBranchId); } catch (NumberFormatException ignored) {}
+            }
+        }
 
         ReportDao reportDao = new ReportDao();
         try {
             // Bước 2: dữ liệu cho khung giao diện
-            List<Integer> scope = BranchScope.allowed(user, false);
+            List<Integer> scope = BranchScope.allowed(user, isAdmin);
             List<Branch> branches = reportDao.getBranches(scope);
             String pill = new BranchReportService(reportDao).scopePill(scope);
-            ManagerShell.apply(request, user, false, pill, branches, branchId, "promo-validate", PAGE);
-            request.setAttribute("branchName", branches.isEmpty() ? null : branches.get(0).getName());
-            request.setAttribute("noBranch", branchId == null);
+
+            // Nếu chỉ có 1 chi nhánh (Quản lý chi nhánh) → dùng chi nhánh đó
+            // Admin chưa chọn (branchId == null) → giữ null, hiển thị dropdown để chọn
+            if (branchId == null && branches.size() == 1) {
+                branchId = branches.get(0).getBranchID();
+            }
+
+            ManagerShell.apply(request, user, isAdmin, pill, branches, branchId, "promo-validate", PAGE);
+
+            // Tìm tên chi nhánh đang chọn để hiển thị trên form
+            String branchName = null;
+            if (branchId != null) {
+                final int bid = branchId;
+                branchName = branches.stream()
+                        .filter(b -> b.getBranchID() == bid)
+                        .map(Branch::getName)
+                        .findFirst()
+                        .orElse(null);
+            }
+            request.setAttribute("branchName", branchName);
+            // noBranch chỉ true khi nhân viên thường chưa được gán chi nhánh (Admin luôn có thể chọn)
+            request.setAttribute("noBranch", branchId == null && !isAdmin);
 
             // Bước 3: kiểm tra mã khi người dùng bấm nút
             if (submitted != null && branchId != null) {

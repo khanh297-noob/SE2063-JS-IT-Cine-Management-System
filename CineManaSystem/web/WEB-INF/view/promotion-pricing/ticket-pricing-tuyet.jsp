@@ -10,17 +10,58 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Quản lý giá vé - CineGo Management</title>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-        <%@ include file="/WEB-INF/view/report/fragments/manager-shell-style-tuyet.jsp" %>
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-style.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/promotion-pricing.css">
     </head>
     <body>
-        <%@ include file="/WEB-INF/view/report/fragments/manager-navbar-tuyet.jsp" %>
-        <div class="layout">
-            <%@ include file="/WEB-INF/view/report/fragments/manager-sidebar-tuyet.jsp" %>
-            <main class="content main-content">
+        <%-- Khung chung của phân hệ: menu bên trái chọn theo khanhFeature/khanhActive --%>
+        <c:set var="khanhFeature" value="promotion" scope="request"/>
+        <c:set var="khanhActive" value="ticket-prices" scope="request"/>
+        <jsp:include page="/WEB-INF/view/common/sidebar-khanh.jsp"/>
+        <div class="main-wrapper">
+            <jsp:include page="/WEB-INF/view/common/header-khanh.jsp"/>
+            <main class="pp-page">
 
-                <a class="back-link" href="${pageContext.request.contextPath}/promotion-price-manage"><i class="fa-solid fa-arrow-left"></i> Promotion &amp; Pricing</a>
+                <%-- Chọn rạp quản lý: trước đây nằm trên thanh điều hướng, nay ở đầu phần nội dung --%>
+                <c:if test="${not empty scopeWarning}">
+                    <div class="alert alert-warn"><i class="fa-solid fa-triangle-exclamation"></i> <c:out value="${scopeWarning}"/></div>
+                </c:if>
+                <div class="branch-bar">
+
+                    <div>
+                        <c:choose>
+                            <c:when test="${branches.size() > 1}">
+                                <form method="get" action="${pageContext.request.contextPath}${shellAction}" class="branch-bar-form">
+                                    <c:if test="${not empty param.fromDate}"><input type="hidden" name="fromDate" value="<c:out value='${param.fromDate}'/>"></c:if>
+                                    <c:if test="${not empty param.toDate}"><input type="hidden" name="toDate" value="<c:out value='${param.toDate}'/>"></c:if>
+                                    <c:if test="${not empty param.type}"><input type="hidden" name="type" value="<c:out value='${param.type}'/>"></c:if>
+                                    <c:if test="${not empty param.movieId}"><input type="hidden" name="movieId" value="<c:out value='${param.movieId}'/>"></c:if>
+                                        <div class="branch-pill">
+                                            <i class="fa-solid fa-location-dot"></i> Rạp:
+                                            <select name="branchId" onchange="this.form.submit()">
+                                                <option value="">Tất cả chi nhánh</option>
+                                            <c:forEach var="b" items="${branches}">
+                                                <option value="${b.branchID}" ${selectedBranchId == b.branchID ? 'selected' : ''}>
+                                                    <c:out value="${b.name}"/> (#${b.branchID < 10 ? '0' : ''}${b.branchID})
+                                                </option>
+                                            </c:forEach>
+                                        </select>
+                                    </div>
+                                </form>
+                            </c:when>
+                            <c:otherwise>
+                                <div class="branch-pill">
+                                    <i class="fa-solid fa-location-dot"></i> Rạp: <b><c:out value="${branchPill}"/></b>
+                                </div>
+                            </c:otherwise>
+                        </c:choose>
+                    </div>
+                </div>
+
+
                 <div class="page-header">
                     <div>
                         <h1 class="page-title"><i class="fa-solid fa-ticket"></i> Quản lý giá vé</h1>
@@ -32,14 +73,14 @@
                 <c:if test="${not empty flashError}"><div class="alert alert-error"><i class="fa-solid fa-circle-exclamation"></i> <c:out value="${flashError}"/></div></c:if>
                 <c:if test="${not empty filterError}"><div class="alert alert-warn"><i class="fa-solid fa-triangle-exclamation"></i> <c:out value="${filterError}"/></div></c:if>
 
-                <%-- Bộ lọc suất chiếu (chi nhánh chọn ở ô trên thanh điều hướng) --%>
+                <%-- Bộ lọc suất chiếu (chi nhánh chọn ở ô Rạp quản lý phía trên) --%>
                 <div class="card">
                     <form method="get" action="${pageUrl}" class="filter-row">
                         <c:if test="${not empty selectedBranchId}"><input type="hidden" name="branchId" value="${selectedBranchId}"></c:if>
-                        <div class="filter-group">
-                            <label class="filter-label" for="movieId">Phim</label>
-                            <select id="movieId" name="movieId" class="filter-select">
-                                <option value="">Tất cả phim</option>
+                            <div class="filter-group">
+                                <label class="filter-label" for="movieId">Phim</label>
+                                <select id="movieId" name="movieId" class="filter-select">
+                                    <option value="">Tất cả phim</option>
                                 <c:forEach var="m" items="${movies}">
                                     <option value="${m.movieID}" ${selectedMovieId == m.movieID ? 'selected' : ''}><c:out value="${m.title}"/></option>
                                 </c:forEach>
@@ -139,17 +180,17 @@
                         </table>
                     </div>
                     <c:if test="${truncated}"><p class="note">Chỉ hiển thị ${maxRows} suất đầu tiên. Hãy thu hẹp bộ lọc để xem các suất còn lại.</p></c:if>
-                    <p class="note">Chỉ đổi được giá của suất chưa bắt đầu chiếu. Giá vé cuối = giá hiện tại + phụ thu loại ghế (phụ thu loại phòng đã nằm trong giá gốc khi tạo suất). Giá gốc được tính lại từ phụ thu loại phòng và ngày chiếu nên không sửa được.</p>
-                </div>
+                        <p class="note">Chỉ đổi được giá của suất chưa bắt đầu chiếu. Giá vé cuối = giá hiện tại + phụ thu loại ghế (phụ thu loại phòng đã nằm trong giá gốc khi tạo suất). Giá gốc được tính lại từ phụ thu loại phòng và ngày chiếu nên không sửa được.</p>
+                    </div>
 
                 <%-- Phụ thu: áp dụng cho mọi chi nhánh nên chỉ Admin sửa --%>
                 <div class="two-col">
                     <div class="card">
                         <h2 class="card-title">Phụ thu loại phòng</h2>
                         <c:if test="${not isAdminUser}"><p class="note">Phụ thu chung do Admin đặt. Bạn có thể cộng hoặc trừ (nhập số âm) vào giá hiện tại các suất sắp chiếu của loại phòng đó tại chi nhánh mình; chi nhánh khác không bị ảnh hưởng.</p></c:if>
-                        <table>
-                            <thead><tr><th>Loại phòng</th><th>Phụ thu chung (đồng)</th><c:if test="${not isAdminUser}"><th>Điều chỉnh cho chi nhánh mình (đồng)</th></c:if></tr></thead>
-                            <tbody>
+                            <table>
+                                <thead><tr><th>Loại phòng</th><th>Phụ thu chung (đồng)</th><c:if test="${not isAdminUser}"><th>Điều chỉnh cho chi nhánh mình (đồng)</th></c:if></tr></thead>
+                                <tbody>
                                 <c:forEach var="t" items="${roomTypes}">
                                     <tr>
                                         <td class="cell-strong"><c:out value="${t.name}"/></td>
@@ -190,9 +231,9 @@
                     <div class="card">
                         <h2 class="card-title">Phụ thu loại ghế</h2>
                         <c:if test="${not isAdminUser}"><p class="note">Phụ thu áp dụng cho mọi chi nhánh nên chỉ Admin được sửa.</p></c:if>
-                        <table>
-                            <thead><tr><th>Loại ghế</th><th>Phụ thu (đồng)</th></tr></thead>
-                            <tbody>
+                            <table>
+                                <thead><tr><th>Loại ghế</th><th>Phụ thu (đồng)</th></tr></thead>
+                                <tbody>
                                 <c:forEach var="t" items="${seatTypes}">
                                     <tr>
                                         <td class="cell-strong"><c:out value="${t.name}"/></td>

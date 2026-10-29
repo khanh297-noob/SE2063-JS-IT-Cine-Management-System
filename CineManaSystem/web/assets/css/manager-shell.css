@@ -1,304 +1,345 @@
-body {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
+/* ==========================================================================
+   1. BỐ CỤC KHÓA CUỘN TOÀN TRANG (FULL HEIGHT LAYOUT)
+   ========================================================================== */
+html, body {
+    height: 100vh !important;
+    max-height: 100vh !important;
+    margin: 0;
+    padding: 0;
+    overflow: hidden !important; /* Khóa cuộn màn hình chính, ép dùng cuộn riêng */
+    background-color: #f8fafc;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #334155;
+    font-size: 13px;
 }
 
-/* Thanh dieu huong tren cung (Navbar) - Tone màu sáng chữ đen */
+/* Thẻ bao ngoài toàn bộ ứng dụng */
+.layout {
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* ==========================================================================
+   2. THANH SIDEBAR CỐ ĐỊNH HOÀN TOÀN BÊN TRÁI (FIXED SIDEBAR)
+   ========================================================================== */
+.sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    bottom: 0 !important;
+    width: 240px !important;       /* Chiều rộng cố định của Sidebar */
+    height: 100vh !important;      /* Bắt buộc đúng bằng chiều cao màn hình */
+    max-height: 100vh !important;  /* Khống chế tuyệt đối không bị kéo dài */
+    background: #ffffff;
+    border-right: 1px solid #e2e8f0;
+    padding: 20px 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow-y: auto !important;   /* Tự xuất hiện thanh cuộn riêng nếu menu dài */
+    z-index: 1000;
+    box-sizing: border-box;
+}
+
+/* ==========================================================================
+   3. KHUNG BÊN PHẢI ĐỦ DƯỚI HEADER & CONTENT (MAIN WRAPPER)
+   ========================================================================== */
+.main-wrapper {
+    margin-left: 240px !important; /* Lùi sang phải đúng bằng chiều rộng Sidebar */
+    width: calc(100vw - 240px) !important;
+    height: 100vh !important;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden !important;
+}
+
+/* ==========================================================================
+   4. NỘI DUNG CHÍNH - NƠI DUY NHẤT ĐƯỢC CUỘN (SCROLLABLE CONTENT)
+   ========================================================================== */
+.content,
+.content-body,
+.pp-page {
+    flex: 1 !important;
+    height: 100% !important;
+    overflow-y: auto !important;  /* Bật cuộn riêng độc lập khi nội dung dài */
+    padding: 28px 32px 40px 32px !important;
+    background-color: #f8fafc;
+    box-sizing: border-box;
+}
+
+/* ==========================================================================
+   5. NAVBAR / TOPBAR CỐ ĐỊNH VÀ THÀNH PHẦN KHÁC
+   ========================================================================== */
 .navbar {
-  background: #ffffff;
-  height: 52px;
-  padding: 0 22px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  border-bottom: 1px solid #e2e8f0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    background: #ffffff;
+    height: 52px;
+    min-height: 52px;
+    padding: 0 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    border-bottom: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    flex-shrink: 0;
 }
 
-.nav-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+.nav-left, .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
 .brand-badge {
-  background: #e11d48;
-  color: #fff;
-  font-weight: 900;
-  font-size: 12px;
-  padding: 5px 10px;
-  border-radius: 7px;
-  letter-spacing: .5px;
+    background: #e11d48;
+    color: #fff;
+    font-weight: 900;
+    font-size: 12px;
+    padding: 5px 10px;
+    border-radius: 7px;
+    letter-spacing: .5px;
 }
 
 .brand-link {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
 }
 
 .nav-menu {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin-left: 10px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: 10px;
 }
 
-/* Menu Navbar */
 .nav-menu a {
-  color: #334155;
-  font-size: 11px;
-  font-weight: 700;
-  text-decoration: none;
-  padding: 6px 11px;
-  border-radius: 7px;
-  transition: 0.15s ease;
-  white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+    color: #334155;
+    font-size: 11px;
+    font-weight: 700;
+    text-decoration: none;
+    padding: 6px 11px;
+    border-radius: 7px;
+    transition: 0.15s ease;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .nav-menu a:hover {
-  color: #0f172a;
-  background: #f1f5f9;
+    color: #0f172a;
+    background: #f1f5f9;
 }
 
 .nav-menu a.active {
-  color: #fff;
-  background: #e11d48;
+    color: #fff;
+    background: #e11d48;
 }
 
-@media (max-width: 1200px) {
-  .nav-menu {
-    display: none;
-  }
-}
-
-/* Đường phân cách & Chi nhánh */
 .nav-sep {
-  width: 1px;
-  height: 22px;
-  background: #cbd5e1;
+    width: 1px;
+    height: 22px;
+    background: #cbd5e1;
 }
 
 .branch-pill {
-  background: #f8fafc;
-  border: 1px solid #cbd5e1;
-  color: #475569;
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 11px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    color: #475569;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 11px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
 }
 
-.branch-pill i {
-  color: #e11d48;
-}
-
-.branch-pill b {
-  color: #0f172a;
-}
+.branch-pill i { color: #e11d48; }
+.branch-pill b { color: #0f172a; }
 
 .branch-pill select {
-  background: transparent;
-  border: 0;
-  color: #0f172a;
-  font-weight: 700;
-  font-size: 11px;
-  outline: none;
-  cursor: pointer;
+    background: transparent;
+    border: 0;
+    color: #0f172a;
+    font-weight: 700;
+    font-size: 11px;
+    outline: none;
+    cursor: pointer;
 }
 
 .branch-pill select option {
-  color: #0f172a;
-  background: #fff;
-}
-
-/* Bên phải Navbar */
-.nav-right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+    color: #0f172a;
+    background: #fff;
 }
 
 .user-text {
-  text-align: right;
-  line-height: 1.3;
+    text-align: right;
+    line-height: 1.3;
 }
 
 .user-text b {
-  color: #0f172a;
-  font-size: 11px;
-  display: block;
+    color: #0f172a;
+    font-size: 11px;
+    display: block;
 }
 
 .user-text span {
-  color: #64748b;
-  font-size: 9px;
+    color: #64748b;
+    font-size: 9px;
 }
 
 .avatar {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: #e11d48;
-  color: #fff;
-  font-weight: 800;
-  font-size: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: #e11d48;
+    color: #fff;
+    font-weight: 800;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
 }
 
-.layout {
-  display: flex;
-  flex: 1;
-  min-height: 0;
-}
-
-/* Thanh menu dieu huong ben trai (Sidebar) - Tone màu sáng */
-.sidebar {
-  width: 210px;
-  background: #ffffff;
-  border-right: 1px solid #e2e8f0;
-  padding: 20px 10px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  flex-shrink: 0;
-}
-
+/* MENU TRONG SIDEBAR */
 .menu-title {
-  font-size: 9px;
-  font-weight: 800;
-  color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: .6px;
-  padding: 0 10px;
-  margin: 0 0 8px;
+    font-size: 9px;
+    font-weight: 800;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    padding: 0 10px;
+    margin: 12px 0 8px;
 }
 
 .menu {
-  list-style: none;
-  margin-bottom: 20px;
+    list-style: none;
+    padding: 0;
+    margin: 0 0 16px;
 }
 
 .menu li {
-  margin-bottom: 3px;
+    margin-bottom: 3px;
 }
 
-.menu a,
-.menu .soon {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 12px;
-  border-radius: 7px;
-  font-size: 11px;
-  font-weight: 700;
-  color: #334155;
-  text-decoration: none;
-  transition: all 0.15s ease;
+.menu a, .menu .soon {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 7px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #334155;
+    text-decoration: none;
+    transition: all 0.15s ease;
 }
 
 .menu a:hover {
-  background: #f1f5f9;
-  color: #0f172a;
+    background: #f1f5f9;
+    color: #0f172a;
 }
 
 .menu a.active {
-  background: #e11d48;
-  color: #ffffff;
+    background: #e11d48;
+    color: #ffffff;
 }
 
 .menu i {
-  width: 14px;
-  text-align: center;
-  color: #e11d48;
+    width: 14px;
+    text-align: center;
+    color: #e11d48;
 }
 
 .menu a.active i {
-  color: #ffffff;
+    color: #ffffff;
 }
 
-.menu .soon {
-  color: #94a3b8;
-  cursor: not-allowed;
-}
-
-.menu .soon i {
-  color: #cbd5e1;
-}
-
-.menu .soon em {
-  margin-left: auto;
-  font-style: normal;
-  font-size: 8px;
-  background: #f1f5f9;
-  color: #64748b;
-  padding: 2px 6px;
-  border-radius: 999px;
+.menu-bottom {
+    margin-top: auto;
 }
 
 .menu-bottom a {
-  color: #64748b;
+    color: #64748b;
 }
 
 .menu-bottom a:hover {
-  color: #0f172a;
+    color: #0f172a;
 }
 
-/* Vung noi dung chinh ben phai Sidebar */
-.content {
-  flex: 1;
-  padding: 22px;
-  overflow-y: auto;
-  min-width: 0;
+/* NÚT VỀ TRANG QUẢN TRỊ */
+.sidebar .khanh-module-footer a.nav-item-custom,
+a.nav-item-custom {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 8px 12px !important;
+    margin-top: 8px !important;
+    background-color: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    color: #475569 !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    text-decoration: none !important;
+    transition: all 0.15s ease !important;
 }
 
-.scope-warning {
-  background: #fffbeb;
-  border-bottom: 1px solid #fde68a;
-  color: #92400e;
-  font-size: 11px;
-  padding: 8px 22px;
+.sidebar .khanh-module-footer a.nav-item-custom:hover,
+a.nav-item-custom:hover {
+    background-color: #fff1f2 !important;
+    border-color: #fecdd3 !important;
+    color: #e11d48 !important;
+    text-decoration: none !important;
 }
 
-.scope-warning i {
-  margin-right: 6px;
+.sidebar .khanh-module-footer a.nav-item-custom i,
+a.nav-item-custom i {
+    font-size: 14px !important;
+    color: #64748b !important;
 }
 
-.menu-title {
-  margin-top: 0;
+.sidebar .khanh-module-footer a.nav-item-custom:hover i,
+a.nav-item-custom:hover i {
+    color: #e11d48 !important;
+}
+
+/* ==========================================================================
+   6. THANH CUỘN ĐẸP (CUSTOM SCROLLBAR)
+   ========================================================================== */
+.content::-webkit-scrollbar,
+.pp-page::-webkit-scrollbar,
+.sidebar::-webkit-scrollbar {
+    width: 5px;
+}
+
+.content::-webkit-scrollbar-thumb,
+.pp-page::-webkit-scrollbar-thumb,
+.sidebar::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 4px;
+}
+
+.content::-webkit-scrollbar-thumb:hover,
+.pp-page::-webkit-scrollbar-thumb:hover,
+.sidebar::-webkit-scrollbar-thumb:hover {
+    background-color: #94a3b8;
+}
+
+@media (max-width: 1200px) {
+    .nav-menu { display: none; }
 }
 
 @media print {
-  .navbar,
-  .sidebar,
-  .scope-warning {
-    display: none !important;
-  }
-  .layout {
-    display: block;
-  }
-  .content {
-    padding: 0;
-    overflow: visible;
-  }
-}
-
-/* ===== Thay cho thuộc tính style="..." trước đây nằm trong JSP ===== */
-.brand-name-accent {
-  color: #e11d48 !important;
-  font-weight: 800 !important;
-  font-size: 17px !important;
+    .navbar, .sidebar, .scope-warning { display: none !important; }
+    .main-wrapper { margin-left: 0 !important; width: 100% !important; }
+    .layout { display: block; }
+    .content, .pp-page { padding: 0 !important; overflow: visible !important; }
 }

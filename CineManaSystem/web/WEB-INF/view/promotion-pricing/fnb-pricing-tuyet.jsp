@@ -10,17 +10,57 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Quản lý giá F&amp;B - CineGo Management</title>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-        <%@ include file="/WEB-INF/view/report/fragments/manager-shell-style-tuyet.jsp" %>
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-style.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/promotion-pricing.css">
     </head>
     <body>
-        <%@ include file="/WEB-INF/view/report/fragments/manager-navbar-tuyet.jsp" %>
-        <div class="layout">
-            <%@ include file="/WEB-INF/view/report/fragments/manager-sidebar-tuyet.jsp" %>
-            <main class="content main-content">
+        <%-- Khung chung của phân hệ: menu bên trái chọn theo khanhFeature/khanhActive --%>
+        <c:set var="khanhFeature" value="promotion" scope="request"/>
+        <c:set var="khanhActive" value="fnb-prices" scope="request"/>
+        <jsp:include page="/WEB-INF/view/common/sidebar-khanh.jsp"/>
+        <div class="main-wrapper">
+            <jsp:include page="/WEB-INF/view/common/header-khanh.jsp"/>
+            <main class="pp-page">
 
-                <a class="back-link" href="${pageContext.request.contextPath}/promotion-price-manage"><i class="fa-solid fa-arrow-left"></i> Promotion &amp; Pricing</a>
+                <%-- Chọn rạp quản lý: trước đây nằm trên thanh điều hướng, nay ở đầu phần nội dung --%>
+                <c:if test="${not empty scopeWarning}">
+                    <div class="alert alert-warn"><i class="fa-solid fa-triangle-exclamation"></i> <c:out value="${scopeWarning}"/></div>
+                </c:if>
+                <div class="branch-bar">
+
+    <div>
+        <c:choose>
+            <c:when test="${branches.size() > 1}">
+                <form method="get" action="${pageContext.request.contextPath}${shellAction}" class="branch-bar-form">
+                    <c:if test="${not empty param.fromDate}"><input type="hidden" name="fromDate" value="<c:out value='${param.fromDate}'/>"></c:if>
+                    <c:if test="${not empty param.toDate}"><input type="hidden" name="toDate" value="<c:out value='${param.toDate}'/>"></c:if>
+                    <c:if test="${not empty param.type}"><input type="hidden" name="type" value="<c:out value='${param.type}'/>"></c:if>
+                    <c:if test="${not empty param.movieId}"><input type="hidden" name="movieId" value="<c:out value='${param.movieId}'/>"></c:if>
+                    <div class="branch-pill">
+                        <i class="fa-solid fa-location-dot"></i> Rạp:
+                        <select name="branchId" onchange="this.form.submit()">
+                            <option value="">Tất cả chi nhánh</option>
+                            <c:forEach var="b" items="${branches}">
+                                <option value="${b.branchID}" ${selectedBranchId == b.branchID ? 'selected' : ''}>
+                                    <c:out value="${b.name}"/> (#${b.branchID < 10 ? '0' : ''}${b.branchID})
+                                </option>
+                            </c:forEach>
+                        </select>
+                    </div>
+                </form>
+            </c:when>
+            <c:otherwise>
+                <div class="branch-pill">
+                    <i class="fa-solid fa-location-dot"></i> Rạp: <b><c:out value="${branchPill}"/></b>
+                </div>
+            </c:otherwise>
+        </c:choose>
+    </div>
+</div>
+
                 <div class="page-header">
                     <div>
                         <h1 class="page-title"><i class="fa-solid fa-burger"></i> Quản lý giá F&amp;B</h1>

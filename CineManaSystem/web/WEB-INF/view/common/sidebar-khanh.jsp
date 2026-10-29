@@ -103,20 +103,20 @@
                     </a>
                      <a class="nav-item-custom ${navActive eq 'ticket-prices' ? 'active' : ''}"
                         aria-current="${navActive eq 'ticket-prices' ? 'page' : 'false'}"
-                        href="${pageContext.request.contextPath}/staff/promotions/ticket-prices">
+                        href="${pageContext.request.contextPath}/promotion-price-manage/ticket-pricing">
                          <i class="bi bi-ticket-perforated" aria-hidden="true"></i>
                          <span>Manage Ticket Pricing</span>
                      </a>
                      <a class="nav-item-custom ${navActive eq 'fnb-prices' ? 'active' : ''}"
                         aria-current="${navActive eq 'fnb-prices' ? 'page' : 'false'}"
-                        href="${pageContext.request.contextPath}/staff/promotions/fnb-prices">
+                        href="${pageContext.request.contextPath}/promotion-price-manage/fnb-pricing">
                          <i class="bi bi-tag" aria-hidden="true"></i>
                          <span>Manage F&amp;B Pricing</span>
                      </a>
                  </c:if>
                  <a class="nav-item-custom ${navActive eq 'validate' ? 'active' : ''}"
                     aria-current="${navActive eq 'validate' ? 'page' : 'false'}"
-                    href="${pageContext.request.contextPath}/staff/promotions/validate">
+                    href="${pageContext.request.contextPath}/promotion-price-manage/validate-promotion">
                      <i class="bi bi-check2-circle" aria-hidden="true"></i>
                      <span>Validate Promotion</span>
                  </a>
