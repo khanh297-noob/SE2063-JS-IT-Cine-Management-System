@@ -49,6 +49,7 @@ public class PosTransactionServlet extends HttpServlet {
                 return;
             }
             request.setAttribute("b", b);
+            request.setAttribute("saleLog", posService.getSaleLog(b.getBookingId()));   // tiền khách đưa / tiền thối
             request.getRequestDispatcher("/WEB-INF/view/pos/transaction-detail-nam.jsp").forward(request, response);
             return;
         }

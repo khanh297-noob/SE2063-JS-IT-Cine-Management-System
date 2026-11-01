@@ -71,14 +71,31 @@ public class ShiftService {
     }
 
     /**
-     * Két tiền của ca: tiền phải có = tiền đầu ca + tiền mặt thu - tiền mặt hoàn.
-     * Trả về Map để JSP đọc: ${bal.expected}, ${bal.cashSales}...
+     * Két tiền của ca, tính theo dòng tiền thật đi qua két:
+     *   tiền phải có = tiền đầu ca + tiền khách đưa - tiền thối lại - tiền mặt hoàn.
+     * Trả về Map để JSP đọc: ${bal.expected}, ${bal.cashReceived}...
      */
     public Map<String, Object> getCashBalance(User u, WorkShift s) {
         Timestamp from = s.getStartTime();
         Timestamp to = new Timestamp(System.currentTimeMillis() + 60_000);
         BigDecimal cashSales = paymentDAO.sumCounterSales(u.getUserId(), "Cash", from, to);
         BigDecimal vnpaySales = paymentDAO.sumCounterSales(u.getUserId(), "VNPay", from, to);   // khách trả VNPay QR tại quầy
+
+        // Tiền khách đưa (vào két) và tiền thối lại (ra khỏi két) của các đơn tiền mặt, đọc từ log COUNTER_SALE
+        BigDecimal cashReceived = BigDecimal.ZERO;
+        BigDecimal cashChange = BigDecimal.ZERO;
+        for (AuditLog log : auditLogDAO.getLogs(u.getUserId(), "COUNTER_SALE", from, to)) {
+            if (!"Cash".equals(log.getParam("method"))) {
+                continue;
+            }
+            if (log.getParam("received") != null) {
+                cashReceived = cashReceived.add(new BigDecimal(log.getParam("received")));
+                cashChange = cashChange.add(new BigDecimal(log.getParam("change")));
+            } else {
+                // Đơn bán trước khi có tính năng này: không biết khách đưa bao nhiêu -> coi như đưa vừa đủ
+                cashReceived = cashReceived.add(new BigDecimal(log.getParam("amount")));
+            }
+        }
 
         BigDecimal cashRefund = BigDecimal.ZERO;
         BigDecimal vnpayRefund = BigDecimal.ZERO;
@@ -95,12 +112,14 @@ public class ShiftService {
         Map<String, Object> bal = new HashMap<>();
         bal.put("openingFloat", s.getOpeningFloat());
         bal.put("cashSales", cashSales);
+        bal.put("cashReceived", cashReceived);
+        bal.put("cashChange", cashChange);
         bal.put("vnpaySales", vnpaySales);
         bal.put("cashRefund", cashRefund);
         bal.put("vnpayRefund", vnpayRefund);
         bal.put("refundCount", refunds.size());
         bal.put("transactionCount", paymentDAO.countCounterSales(u.getUserId(), from, to));
-        bal.put("expected", s.getOpeningFloat().add(cashSales).subtract(cashRefund));
+        bal.put("expected", s.getOpeningFloat().add(cashReceived).subtract(cashChange).subtract(cashRefund));
         bal.put("netRevenue", cashSales.add(vnpaySales).subtract(cashRefund).subtract(vnpayRefund));
         return bal;
     }
