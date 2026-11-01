@@ -63,6 +63,7 @@ public class PosPrintServlet extends HttpServlet {
             auditLogDAO.insert(user.getUserId(), "REPRINT|booking=" + bookingId, request.getRemoteAddr());
         }
         request.setAttribute("b", b);
+        request.setAttribute("saleLog", posService.getSaleLog(bookingId));   // tiền khách đưa / tiền thối (đơn tiền mặt)
         request.setAttribute("isReprint", isReprint);
         request.getRequestDispatcher("/WEB-INF/view/pos/print-nam.jsp").forward(request, response);
     }

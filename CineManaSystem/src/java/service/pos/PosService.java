@@ -11,6 +11,7 @@ import model.booking.FnbItem;
 import model.booking.Seat;
 import model.booking.Showtime;
 import model.payment.Promotion;
+import model.pos.AuditLog;
 import model.pos.WorkShift;
 import service.movie.ShowtimePriceCalculator;
 import service.payment.PaymentService;
@@ -138,9 +139,20 @@ public class PosService {
         if (bookingId < 0) {
             throw new IllegalArgumentException("The selected seat is not available.");
         }
+        // Tiền mặt: ghi cả tiền khách đưa (vào két) và tiền thối lại (ra khỏi két) để đối soát két theo dòng tiền thật
+        String cashInfo = "";
+        if ("Cash".equals(method)) {
+            cashInfo = "|received=" + cashReceived.toPlainString()
+                    + "|change=" + cashReceived.subtract(total).toPlainString();
+        }
         auditLogDAO.insert(cashier.getUserId(), "COUNTER_SALE|booking=" + bookingId
-                + "|amount=" + total.toPlainString() + "|method=" + method, ip);
+                + "|amount=" + total.toPlainString() + "|method=" + method + cashInfo, ip);
         return bookingId;
+    }
+
+    // Log bán hàng của 1 đơn (để hiện "Khách đưa / Tiền thối" trên vé in và trang chi tiết). Không có thì null.
+    public AuditLog getSaleLog(int bookingId) {
+        return auditLogDAO.getLatestByPrefix("COUNTER_SALE|booking=" + bookingId + "|");
     }
 
     public Booking getBooking(int bookingId) {

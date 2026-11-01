@@ -37,6 +37,22 @@ public class AuditLogDAO extends DBContext {
      * Lấy các log có Action bắt đầu bằng typePrefix (vd "SHIFT_" hoặc "COUNTER_REFUND")
      * trong khoảng [from, to). userId = 0 nghĩa là lấy của tất cả nhân viên.
      */
+    // Log mới nhất có Action bắt đầu bằng prefix (vd "COUNTER_SALE|booking=16|"). Không có thì null.
+    public AuditLog getLatestByPrefix(String prefix) {
+        String sql = SELECT_LOG.replaceFirst("SELECT ", "SELECT TOP 1 ") + "WHERE a.Action LIKE ? ORDER BY a.LogID DESC";
+        try (Connection con = getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, prefix + "%");
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapLog(rs);
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Lỗi getLatestByPrefix: " + e.getMessage());
+        }
+        return null;
+    }
+
     public List<AuditLog> getLogs(int userId, String typePrefix, Timestamp from, Timestamp to) {
         List<AuditLog> list = new ArrayList<>();
         String sql = SELECT_LOG + "WHERE a.Action LIKE ? AND a.Timestamp >= ? AND a.Timestamp < ? "
