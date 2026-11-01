@@ -81,7 +81,6 @@
                                 </c:forEach>
                             </select>
                         </label>
-                        <button type="button" class="btn-add" disabled title="Màn hình quản lý suất chiếu chưa được xây dựng">+ Thêm Suất Chiếu</button>
                     </div>
                 </div>
 
@@ -131,5 +130,33 @@
         </div>
     </div>
 
+    <script>
+        // Loc danh sach suat chieu theo phong: an/hien cac dong co data-room khop voi lua chon
+        (function () {
+            var select = document.getElementById('roomFilter');
+            var body = document.getElementById('showBody');
+            if (!select || !body) { return; }
+
+            var emptyRow = document.createElement('tr');
+            emptyRow.innerHTML = '<td colspan="7" class="empty">Không có suất chiếu nào ở phòng đã chọn.</td>';
+            emptyRow.style.display = 'none';
+            body.appendChild(emptyRow);
+
+            function applyFilter() {
+                var wanted = select.value;
+                var rows = body.querySelectorAll('tr[data-room]');
+                var shown = 0;
+                rows.forEach(function (row) {
+                    var match = wanted === '' || row.getAttribute('data-room') === wanted;
+                    row.classList.toggle('hidden', !match);
+                    if (match) { shown++; }
+                });
+                emptyRow.style.display = (rows.length > 0 && shown === 0) ? '' : 'none';
+            }
+
+            select.addEventListener('change', applyFilter);
+            applyFilter();
+        })();
+    </script>
 </body>
 </html>
