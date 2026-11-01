@@ -1,9 +1,11 @@
 package dao.booking;
 
+import dao.SeatSurchargeDao;
 import model.booking.Seat;
 import model.booking.Showtime;
 import util.DBContext;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -11,6 +13,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Suất chiếu + sơ đồ ghế cho POS bán vé tại quầy và soát vé.
@@ -74,13 +77,16 @@ public class PosShowtimeDAO extends DBContext {
      */
     public List<Seat> getSeats(int showtimeId, int roomId) {
         List<Seat> list = new ArrayList<>();
+        List<Integer> seatTypeIds = new ArrayList<>();
+        int branchId = 0;
         String sql = "SELECT s.SeatID, s.RowLabel, s.SeatNumber, s.SeatType, s.Status AS SeatStatus, "
-                + "       ISNULL(sty.Surcharge, 0) AS SeatSurcharge, "
+                + "       ISNULL(sty.Surcharge, 0) AS SeatSurcharge, sty.SeatTypeID, rm.BranchID, "
                 + "  (SELECT TOP 1 b.Status FROM Ticket t JOIN Booking b ON b.BookingID = t.BookingID "
                 + "   WHERE t.ShowtimeID = ? AND t.SeatID = s.SeatID AND t.Status <> 'Cancelled') AS BookingStatus, "
                 + "  (SELECT COUNT(*) FROM SeatHold h "
                 + "   WHERE h.ShowtimeID = ? AND h.SeatID = s.SeatID AND h.ExpiresAt > SYSDATETIME()) AS HoldCount "
-                + "FROM Seat s LEFT JOIN SeatType sty ON sty.Name = s.SeatType "
+                + "FROM Seat s JOIN Room rm ON rm.RoomID = s.RoomID "
+                + "LEFT JOIN SeatType sty ON sty.Name = s.SeatType "
                 + "WHERE s.RoomID = ? ORDER BY s.RowNum, s.ColNum";
         try (Connection con = getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setInt(1, showtimeId);
@@ -105,6 +111,18 @@ public class PosShowtimeDAO extends DBContext {
                         s.setState("AVAILABLE");
                     }
                     list.add(s);
+                    seatTypeIds.add(rs.getInt("SeatTypeID"));
+                    branchId = rs.getInt("BranchID");
+                }
+            }
+            // Chi nhánh có phụ thu loại ghế riêng thì dùng giá riêng thay cho phụ thu chung
+            if (!list.isEmpty()) {
+                Map<Integer, BigDecimal> overrides = SeatSurchargeDao.findOverrides(con, branchId);
+                for (int i = 0; i < list.size() && !overrides.isEmpty(); i++) {
+                    BigDecimal own = overrides.get(seatTypeIds.get(i));
+                    if (own != null) {
+                        list.get(i).setSurcharge(own);
+                    }
                 }
             }
         } catch (SQLException e) {

@@ -116,13 +116,22 @@ public class FnbPricingServlet extends HttpServlet {
         response.sendRedirect(request.getContextPath() + PAGE + query);
     }
 
-    /** Chi nhánh đang xem: chi nhánh được chọn nếu nằm trong danh sách, không thì chi nhánh đầu tiên. */
+    /** Chi nhánh đang xem: chi nhánh được chọn nếu nằm trong danh sách.
+     *  Admin chưa chọn (requested == null) → trả null (hiển thị tất cả).
+     *  Quản lý chi nhánh không có quyền chọn → luôn lấy chi nhánh duy nhất của họ. */
     private Branch pickBranch(List<Branch> branches, Integer requested) {
-        for (Branch b : branches) {
-            if (requested != null && b.getBranchID() == requested) {
-                return b;
+        if (requested != null) {
+            for (Branch b : branches) {
+                if (b.getBranchID() == requested) {
+                    return b;
+                }
             }
         }
-        return branches.isEmpty() ? null : branches.get(0);
+        // Nếu danh sách chỉ có 1 chi nhánh (Quản lý chi nhánh) → luôn chọn chi nhánh đó
+        if (branches.size() == 1) {
+            return branches.get(0);
+        }
+        // Admin chưa chọn (requested == null) → null = tất cả chi nhánh
+        return null;
     }
 }

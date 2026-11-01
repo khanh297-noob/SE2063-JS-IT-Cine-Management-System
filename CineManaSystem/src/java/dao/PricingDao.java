@@ -9,6 +9,7 @@ import java.sql.Time;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Truy vấn và cập nhật các loại giá:
@@ -129,6 +130,60 @@ public class PricingDao extends DBContext {
 
     public List<Surcharge> findSeatTypes() {
         return findSurcharges("SELECT SeatTypeID AS ID, Name, Surcharge FROM SeatType ORDER BY Name");
+    }
+
+    /** Loại ghế kèm phụ thu chung và phụ thu riêng của một chi nhánh (branchSurcharge null = dùng phụ thu chung). */
+    public List<Surcharge> findSeatTypesForBranch(int branchId) {
+        List<Surcharge> list = findSeatTypes();
+        try {
+            Map<Integer, BigDecimal> overrides = SeatSurchargeDao.findOverrides(connection, branchId);
+            for (Surcharge item : list) {
+                item.branchSurcharge = overrides.get(item.id);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    /** Tên loại ghế, null nếu không tồn tại. */
+    public String findSeatTypeName(int seatTypeId) {
+        try (PreparedStatement st = connection.prepareStatement("SELECT Name FROM SeatType WHERE SeatTypeID = ?")) {
+            st.setInt(1, seatTypeId);
+            try (ResultSet rs = st.executeQuery()) {
+                return rs.next() ? rs.getString(1) : null;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /** Đặt phụ thu loại ghế riêng cho chi nhánh. Trả false nếu ghi lỗi. */
+    public boolean saveBranchSeatTypeSurcharge(int userId, String ip, int branchId, int seatTypeId,
+            String seatTypeName, BigDecimal amount) {
+        try {
+            SeatSurchargeDao.saveOverride(connection, userId, ip, branchId, seatTypeId, seatTypeName, amount);
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /** Bỏ phụ thu riêng của chi nhánh. Trả false nếu chi nhánh chưa có phụ thu riêng hoặc ghi lỗi. */
+    public boolean resetBranchSeatTypeSurcharge(int userId, String ip, int branchId, int seatTypeId,
+            String seatTypeName) {
+        try {
+            if (!SeatSurchargeDao.findOverrides(connection, branchId).containsKey(seatTypeId)) {
+                return false;
+            }
+            SeatSurchargeDao.resetOverride(connection, userId, ip, branchId, seatTypeId, seatTypeName);
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     public int updateRoomTypeSurcharge(int roomTypeId, BigDecimal surcharge) {
@@ -344,10 +399,16 @@ public class PricingDao extends DBContext {
         private int id;
         private String name;
         private BigDecimal surcharge;
+        private BigDecimal branchSurcharge;
 
         public int getId() { return id; }
         public String getName() { return name; }
+        /** Phụ thu chung của cả chuỗi (Admin đặt). */
         public BigDecimal getSurcharge() { return surcharge; }
+        /** Phụ thu riêng của chi nhánh, null nếu chi nhánh dùng phụ thu chung (chỉ loại ghế mới có). */
+        public BigDecimal getBranchSurcharge() { return branchSurcharge; }
+        /** Phụ thu đang áp dụng tại chi nhánh: giá riêng nếu có, không thì giá chung. */
+        public BigDecimal getEffectiveSurcharge() { return branchSurcharge != null ? branchSurcharge : surcharge; }
     }
 
     /** Một món trong thực đơn của chi nhánh. */

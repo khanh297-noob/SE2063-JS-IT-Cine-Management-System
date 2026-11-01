@@ -18,12 +18,13 @@
 
             <body>
 
-                <!-- Thanh dieu huong tren cung (Navbar) -->
-                <%@ include file="/WEB-INF/view/report/fragments/manager-navbar-tuyet.jsp" %>
-
                     <div class="layout">
                         <!-- Thanh menu dieu huong ben trai (Sidebar) -->
                         <%@ include file="/WEB-INF/view/report/fragments/manager-sidebar-tuyet.jsp" %>
+
+                        <!-- Khung ben phai (navbar + noi dung), lui sang phai dung bang chieu rong sidebar co dinh -->
+                        <div class="main-wrapper">
+                            <%@ include file="/WEB-INF/view/report/fragments/manager-navbar-tuyet.jsp" %>
 
                             <!-- Vung noi dung chinh ben phai -->
                             <main class="content">
@@ -251,6 +252,7 @@
                                     </p>
                                 </section>
                             </main>
+                            </div>
                     </div>
 
             </body>

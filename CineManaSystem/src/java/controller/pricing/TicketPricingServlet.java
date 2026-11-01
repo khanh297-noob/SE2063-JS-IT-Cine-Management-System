@@ -29,6 +29,7 @@ import util.PermissionUtil;
  * GET : danh sách suất chiếu sắp tới kèm giá gốc (cố định) và giá hiện tại (sửa được), và bảng phụ thu loại phòng, loại ghế.
  * POST: action = updatePrice (một suất) | bulkPrice (nhiều suất theo bộ lọc)
  *              | roomTypeSurcharge | seatTypeSurcharge (hai loại này chỉ Admin, áp dụng cả chuỗi)
+ *              | seatTypeBranch | seatTypeBranchReset (Quản lý chi nhánh: đặt / bỏ phụ thu loại ghế riêng của chi nhánh mình)
  *              | roomTypeAdjust (Quản lý chi nhánh: cộng/trừ phụ thu loại phòng vào giá hiện tại các suất của chi nhánh mình).
  *
  * Quản lý chỉ thao tác trên chi nhánh của mình ([User].BranchID). Giá vé đã bán (Ticket.FinalPrice)
@@ -78,7 +79,9 @@ public class TicketPricingServlet extends HttpServlet {
             request.setAttribute("maxRows", PricingDao.MAX_ROWS);
             request.setAttribute("movies", movies);
             request.setAttribute("roomTypes", service.listRoomTypes());
-            request.setAttribute("seatTypes", service.listSeatTypes());
+            // Quản lý chi nhánh xem thêm phụ thu loại ghế riêng của chi nhánh mình
+            request.setAttribute("seatTypes", (isAdmin || user.getBranchID() == null)
+                    ? service.listSeatTypes() : service.listSeatTypesForBranch(user.getBranchID()));
             request.setAttribute("isAdminUser", isAdmin);
             request.setAttribute("selectedMovieId", movieId);
             request.setAttribute("fromDate", range.getFrom().toString());
@@ -135,6 +138,16 @@ public class TicketPricingServlet extends HttpServlet {
             } else if ("seatTypeSurcharge".equals(action)) {
                 service.updateSeatTypeSurcharge(isAdmin, requireId(request.getParameter("id")), price);
                 Flash.success(request, "Đã cập nhật phụ thu loại ghế.");
+
+            } else if ("seatTypeBranch".equals(action)) {
+                service.saveSeatTypeSurchargeForBranch(isAdmin, user.getBranchID(), user.getUserID(),
+                        request.getRemoteAddr(), requireId(request.getParameter("id")), price);
+                Flash.success(request, "Đã cập nhật phụ thu loại ghế cho chi nhánh của bạn.");
+
+            } else if ("seatTypeBranchReset".equals(action)) {
+                service.resetSeatTypeSurchargeForBranch(isAdmin, user.getBranchID(), user.getUserID(),
+                        request.getRemoteAddr(), requireId(request.getParameter("id")));
+                Flash.success(request, "Chi nhánh của bạn đã quay về dùng phụ thu loại ghế chung.");
 
             } else {
                 throw new IllegalArgumentException("Thao tác không hợp lệ!");

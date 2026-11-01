@@ -16,9 +16,12 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sales-report.css">
     </head>
     <body>
-        <%@ include file="/WEB-INF/view/report/fragments/manager-navbar-tuyet.jsp" %>
         <div class="layout">
             <%@ include file="/WEB-INF/view/report/fragments/manager-sidebar-tuyet.jsp" %>
+
+            <!-- Khung ben phai (navbar + noi dung), lui sang phai dung bang chieu rong sidebar co dinh -->
+            <div class="main-wrapper">
+                <%@ include file="/WEB-INF/view/report/fragments/manager-navbar-tuyet.jsp" %>
             <!-- Vung noi dung chinh ben phai -->
             <main class="content main-content">
 
@@ -263,6 +266,7 @@
             </div>
 
         </main>
+        </div>
     </div>
 
 </body>
