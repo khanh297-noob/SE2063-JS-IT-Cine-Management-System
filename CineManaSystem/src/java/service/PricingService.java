@@ -119,6 +119,51 @@ public class PricingService implements AutoCloseable {
         return updated;
     }
 
+    /** Loại ghế kèm phụ thu riêng của chi nhánh (dành cho quản lý chi nhánh). */
+    public List<Surcharge> listSeatTypesForBranch(int branchId) {
+        return dao.findSeatTypesForBranch(branchId);
+    }
+
+    /**
+     * Quản lý chi nhánh đặt phụ thu loại ghế riêng cho chi nhánh mình. Chi nhánh khác và phụ thu chung của Admin
+     * không đổi. Admin đổi phụ thu chung cho cả chuỗi bằng updateSeatTypeSurcharge.
+     */
+    public void saveSeatTypeSurchargeForBranch(boolean isAdmin, Integer branchId, int userId, String ip,
+            int seatTypeId, String text) throws IllegalArgumentException {
+        int branch = requireManagerBranch(isAdmin, branchId);
+        BigDecimal surcharge = MoneyUtil.parse(text, "Phụ thu", true);
+        String name = dao.findSeatTypeName(seatTypeId);
+        if (name == null) {
+            throw new IllegalArgumentException("Không tìm thấy loại ghế này!");
+        }
+        if (!dao.saveBranchSeatTypeSurcharge(userId, ip, branch, seatTypeId, name, surcharge)) {
+            throw new IllegalArgumentException("Không lưu được phụ thu, vui lòng thử lại!");
+        }
+    }
+
+    /** Quản lý chi nhánh bỏ phụ thu riêng, chi nhánh dùng lại phụ thu chung của Admin. */
+    public void resetSeatTypeSurchargeForBranch(boolean isAdmin, Integer branchId, int userId, String ip,
+            int seatTypeId) throws IllegalArgumentException {
+        int branch = requireManagerBranch(isAdmin, branchId);
+        String name = dao.findSeatTypeName(seatTypeId);
+        if (name == null) {
+            throw new IllegalArgumentException("Không tìm thấy loại ghế này!");
+        }
+        if (!dao.resetBranchSeatTypeSurcharge(userId, ip, branch, seatTypeId, name)) {
+            throw new IllegalArgumentException("Chi nhánh của bạn đang dùng phụ thu chung rồi!");
+        }
+    }
+
+    private static int requireManagerBranch(boolean isAdmin, Integer branchId) throws IllegalArgumentException {
+        if (isAdmin) {
+            throw new IllegalArgumentException("Admin hãy dùng ô phụ thu chung để đổi cho cả chuỗi!");
+        }
+        if (branchId == null) {
+            throw new IllegalArgumentException("Tài khoản chưa được gán chi nhánh!");
+        }
+        return branchId;
+    }
+
     /** Đổi phụ thu loại ghế. Chỉ Admin được sửa. */
     public void updateSeatTypeSurcharge(boolean isAdmin, int seatTypeId, String text) throws IllegalArgumentException {
         requireAdmin(isAdmin);

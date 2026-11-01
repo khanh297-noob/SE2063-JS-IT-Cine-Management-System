@@ -2,6 +2,9 @@ package dao.booking;
 
 import model.booking.SeatView;
 
+import dao.SeatSurchargeDao;
+
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -9,15 +12,19 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class OnlineSeatDAO {
 
     public List<SeatView> findByRoom(Connection con, int roomId) throws SQLException {
         List<SeatView> list = new ArrayList<>();
+        List<Integer> seatTypeIds = new ArrayList<>();
+        int branchId = 0;
         String sql = "SELECT se.SeatID, se.RowLabel, se.SeatNumber, se.RowNum, se.ColNum, se.SeatType, se.Status, "
-                + "ISNULL(sty.Surcharge, 0) AS Surcharge, sty.Color "
-                + "FROM Seat se LEFT JOIN SeatType sty ON sty.Name = se.SeatType "
+                + "ISNULL(sty.Surcharge, 0) AS Surcharge, sty.Color, sty.SeatTypeID, rm.BranchID "
+                + "FROM Seat se JOIN Room rm ON rm.RoomID = se.RoomID "
+                + "LEFT JOIN SeatType sty ON sty.Name = se.SeatType "
                 + "WHERE se.RoomID = ? ORDER BY se.RowNum, se.ColNum";
         try (PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setInt(1, roomId);
@@ -34,6 +41,18 @@ public class OnlineSeatDAO {
                     s.setColor(rs.getString("Color"));
                     s.setBroken("Broken".equals(rs.getString("Status")));
                     list.add(s);
+                    seatTypeIds.add(rs.getInt("SeatTypeID"));
+                    branchId = rs.getInt("BranchID");
+                }
+            }
+        }
+        // Chi nhánh có phụ thu loại ghế riêng thì dùng giá riêng thay cho phụ thu chung
+        if (!list.isEmpty()) {
+            Map<Integer, BigDecimal> overrides = SeatSurchargeDao.findOverrides(con, branchId);
+            for (int i = 0; i < list.size() && !overrides.isEmpty(); i++) {
+                BigDecimal own = overrides.get(seatTypeIds.get(i));
+                if (own != null) {
+                    list.get(i).setSurcharge(own);
                 }
             }
         }

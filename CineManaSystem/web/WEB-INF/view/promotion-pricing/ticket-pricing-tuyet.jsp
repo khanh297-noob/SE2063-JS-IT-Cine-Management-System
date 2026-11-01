@@ -230,9 +230,10 @@
                     </div>
                     <div class="card">
                         <h2 class="card-title">Phụ thu loại ghế</h2>
-                        <c:if test="${not isAdminUser}"><p class="note">Phụ thu áp dụng cho mọi chi nhánh nên chỉ Admin được sửa.</p></c:if>
+                        <c:if test="${isAdminUser}"><p class="note">Đây là phụ thu chung cho cả chuỗi. Chi nhánh nào đã đặt phụ thu riêng thì giữ giá riêng của mình.</p></c:if>
+                        <c:if test="${not isAdminUser}"><p class="note">Phụ thu chung do Admin đặt. Bạn có thể đặt phụ thu riêng cho chi nhánh mình; chi nhánh khác không bị ảnh hưởng.</p></c:if>
                             <table>
-                                <thead><tr><th>Loại ghế</th><th>Phụ thu (đồng)</th></tr></thead>
+                                <thead><tr><th>Loại ghế</th><th>Phụ thu chung (đồng)</th><c:if test="${not isAdminUser}"><th>Phụ thu tại chi nhánh bạn (đồng)</th></c:if></tr></thead>
                                 <tbody>
                                 <c:forEach var="t" items="${seatTypes}">
                                     <tr>
@@ -253,6 +254,28 @@
                                                 <c:otherwise><fmt:formatNumber value="${t.surcharge}" pattern="#,##0"/> ₫</c:otherwise>
                                             </c:choose>
                                         </td>
+                                        <c:if test="${not isAdminUser}">
+                                            <td>
+                                                <form method="post" action="${pageUrl}" class="inline-form">
+                                                    <input type="hidden" name="action" value="seatTypeBranch">
+                                                    <input type="hidden" name="id" value="${t.id}">
+                                                    <%@ include file="/WEB-INF/view/promotion-pricing/fragments/filter-hidden-tuyet.jsp" %>
+                                                    <input class="price-input" type="text" inputmode="numeric" name="price" autocomplete="off"
+                                                           value="<fmt:formatNumber value='${t.effectiveSurcharge}' maxFractionDigits='0' groupingUsed='false'/>"
+                                                           aria-label="Phụ thu loại ghế ${t.name} tại chi nhánh bạn">
+                                                    <button type="submit" class="btn-save">Lưu</button>
+                                                </form>
+                                                <c:if test="${t.branchSurcharge != null}">
+                                                    <form method="post" action="${pageUrl}" class="inline-form"
+                                                          onsubmit="return confirm('Bỏ phụ thu riêng và dùng lại phụ thu chung của loại ghế này?');">
+                                                        <input type="hidden" name="action" value="seatTypeBranchReset">
+                                                        <input type="hidden" name="id" value="${t.id}">
+                                                        <%@ include file="/WEB-INF/view/promotion-pricing/fragments/filter-hidden-tuyet.jsp" %>
+                                                        <button type="submit" class="btn-save">Dùng giá chung</button>
+                                                    </form>
+                                                </c:if>
+                                            </td>
+                                        </c:if>
                                     </tr>
                                 </c:forEach>
                             </tbody>
