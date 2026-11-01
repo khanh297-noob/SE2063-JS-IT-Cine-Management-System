@@ -79,6 +79,10 @@
         </c:if>
         <div class="l" style="font-size:15px;font-weight:800"><span>TỔNG CỘNG</span><span><fmt:formatNumber value="${b.totalAmount}" pattern="#,##0"/> ₫</span></div>
         <div class="l"><span>Thanh toán</span><span>${b.paymentMethod}</span></div>
+        <c:if test="${not empty saleLog and not empty saleLog.getParam('received')}">
+            <div class="l"><span>Khách đưa</span><span><fmt:formatNumber value="${saleLog.getParam('received')}" pattern="#,##0"/> ₫</span></div>
+            <div class="l"><span>Tiền thối</span><span><fmt:formatNumber value="${saleLog.getParam('change')}" pattern="#,##0"/> ₫</span></div>
+        </c:if>
         <div class="l"><span>Mã GD</span><span style="font-size:10px"><c:out value="${b.transactionCode}"/></span></div>
         <hr>
         <div class="c">Cảm ơn quý khách - Hẹn gặp lại!</div>

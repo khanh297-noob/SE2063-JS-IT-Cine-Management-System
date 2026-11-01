@@ -817,3 +817,7 @@
     cursor: pointer;
 }
 .pp-page .code-chip:hover { background: #e11d48; border-color: #e11d48; color: #ffffff; }
+
+/* Danh sách chi nhánh để chọn (trang giá F&B khi Admin chưa chọn chi nhánh) */
+.pp-page .branch-choices { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.pp-page .branch-choices .btn-reset { gap: 6px; }

@@ -78,7 +78,23 @@
 
                 <c:choose>
                     <c:when test="${empty branch}">
-                        <div class="alert alert-warn"><i class="fa-solid fa-triangle-exclamation"></i> Tài khoản của bạn chưa được gán chi nhánh nên chưa có thực đơn để quản lý. Hãy liên hệ Admin.</div>
+                        <c:choose>
+                            <%-- Admin đang chọn "Tất cả chi nhánh": thực đơn là của từng chi nhánh nên phải chọn một chi nhánh --%>
+                            <c:when test="${isAdminUser}">
+                                <div class="card">
+                                    <h2 class="card-title"><i class="fa-solid fa-store"></i> Chọn một chi nhánh để quản lý thực đơn</h2>
+                                    <p class="note">Giá và trạng thái bán F&amp;B được đặt riêng cho từng chi nhánh nên chưa hiển thị khi chọn "Tất cả chi nhánh". Chọn một chi nhánh bên dưới, hoặc ở ô Rạp quản lý phía trên.</p>
+                                    <div class="branch-choices">
+                                        <c:forEach var="b" items="${branches}">
+                                            <a class="btn-reset" href="${pageContext.request.contextPath}${shellAction}?branchId=${b.branchID}"><i class="fa-solid fa-location-dot"></i> <c:out value="${b.name}"/></a>
+                                        </c:forEach>
+                                    </div>
+                                </div>
+                            </c:when>
+                            <c:otherwise>
+                                <div class="alert alert-warn"><i class="fa-solid fa-triangle-exclamation"></i> Tài khoản của bạn chưa được gán chi nhánh nên chưa có thực đơn để quản lý. Hãy liên hệ Admin.</div>
+                            </c:otherwise>
+                        </c:choose>
                     </c:when>
                     <c:otherwise>
                         <div class="card">

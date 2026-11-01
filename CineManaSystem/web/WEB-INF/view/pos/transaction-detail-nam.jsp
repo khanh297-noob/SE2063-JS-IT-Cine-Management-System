@@ -38,6 +38,10 @@
             <div class="line text-muted"><span>Giảm giá <c:out value="${b.promoCode}"/></span><span>- <fmt:formatNumber value="${b.discount}" pattern="#,##0"/> ₫</span></div>
             <div class="line total"><div><b>TỔNG</b><small>${b.paymentMethod} · <c:out value="${b.transactionCode}"/></small></div>
                 <span class="amount"><fmt:formatNumber value="${b.totalAmount}" pattern="#,##0"/> ₫</span></div>
+            <c:if test="${not empty saleLog and not empty saleLog.getParam('received')}">
+                <div class="line text-muted"><span>Khách đưa</span><span><fmt:formatNumber value="${saleLog.getParam('received')}" pattern="#,##0"/> ₫</span></div>
+                <div class="line text-muted"><span>Tiền thối lại</span><span><fmt:formatNumber value="${saleLog.getParam('change')}" pattern="#,##0"/> ₫</span></div>
+            </c:if>
             <c:if test="${b.status == 'Confirmed' && !b.allCheckedIn}">
                 <a class="btn btn-dark" style="margin-top:12px" href="${ctx}/pos/print?bookingId=${b.bookingId}&reprint=1">&#128424; In lại vé (Reprint)</a>
             </c:if>

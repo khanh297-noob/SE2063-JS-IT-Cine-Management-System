@@ -24,9 +24,11 @@
         <div class="card-title">Chi Tiết Két Tiền Ca Hiện Tại
             <span class="tag">Từ <fmt:formatDate value="${shift.startTime}" pattern="HH:mm dd/MM/yyyy"/></span></div>
         <div class="line"><span>(1) Tiền mặt đầu ca</span><b><fmt:formatNumber value="${bal.openingFloat}" pattern="#,##0"/> ₫</b></div>
-        <div class="line"><span>(2) Tiền mặt thu bán vé / F&amp;B</span><b class="text-green">+ <fmt:formatNumber value="${bal.cashSales}" pattern="#,##0"/> ₫</b></div>
-        <div class="line"><span>(3) Tiền mặt hoàn trả khách (${bal.refundCount} đơn hủy)</span><b class="text-red">- <fmt:formatNumber value="${bal.cashRefund}" pattern="#,##0"/> ₫</b></div>
-        <div class="line total"><b>TIỀN MẶT TRONG KÉT = (1) + (2) - (3)</b><span class="amount"><fmt:formatNumber value="${bal.expected}" pattern="#,##0"/> ₫</span></div>
+        <div class="line"><span>(2) Tiền khách đưa (bán vé / F&amp;B bằng tiền mặt)</span><b class="text-green">+ <fmt:formatNumber value="${bal.cashReceived}" pattern="#,##0"/> ₫</b></div>
+        <div class="line"><span>(3) Tiền thối lại cho khách</span><b class="text-red">- <fmt:formatNumber value="${bal.cashChange}" pattern="#,##0"/> ₫</b></div>
+        <div class="line"><span>(4) Tiền mặt hoàn trả khách (${bal.refundCount} đơn hủy)</span><b class="text-red">- <fmt:formatNumber value="${bal.cashRefund}" pattern="#,##0"/> ₫</b></div>
+        <div class="line total"><b>TIỀN MẶT TRONG KÉT = (1) + (2) - (3) - (4)</b><span class="amount"><fmt:formatNumber value="${bal.expected}" pattern="#,##0"/> ₫</span></div>
+        <div class="line text-muted"><span>Kiểm tra: doanh thu tiền mặt = (2) - (3)</span><span><fmt:formatNumber value="${bal.cashSales}" pattern="#,##0"/> ₫</span></div>
         <hr style="border:none;border-top:1px solid var(--border);margin:16px 0">
         <div class="line text-muted"><span>Thu qua VNPay QR (không vào két)</span><span><fmt:formatNumber value="${bal.vnpaySales}" pattern="#,##0"/> ₫</span></div>
         <div class="line text-muted"><span>Hoàn đơn VNPay QR</span><span>- <fmt:formatNumber value="${bal.vnpayRefund}" pattern="#,##0"/> ₫</span></div>
