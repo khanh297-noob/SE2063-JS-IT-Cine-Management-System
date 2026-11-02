@@ -72,6 +72,11 @@ public class PaymentService {
         if (b.getUserId() != user.getUserId()) {
             throw new IllegalArgumentException("You do not have permission to perform this action.");
         }
+        if (b.getSubtotal() == null) {
+            throw new IllegalArgumentException(
+                    "Đơn cũ chưa lưu đơn giá F&B. " + "Cần đối chiếu trước khi thanh toán."
+            );
+        }
         if (!"Pending".equals(b.getStatus()) || getSecondsLeft(b) <= 0) {
             bookingDAO.cancelUnpaid(b.getBookingId());
             throw new IllegalArgumentException("Payment timed out. Your reserved seats have been released.");
@@ -136,16 +141,69 @@ public class PaymentService {
 
     public void applyVoucher(int bookingId, User user, String code) {
         Booking b = bookingDAO.getBooking(bookingId);
+
+        // Giữ kiểm tra chủ đơn, trạng thái và thời hạn của Payment.
         checkCanPay(b, user);
-        Promotion p = checkVoucher(code, b.getSubtotal(), bookingId, b.getBranchId());
-        BigDecimal total = b.getSubtotal().subtract(getDiscount(p, b.getSubtotal()));
-        bookingDAO.updateVoucher(bookingId, p.getPromoId(), total);
+
+        try {
+            // Gọi đúng Service Promotion của Khánh.
+            // Service kiểm tra điều kiện/lượt dùng và lưu:
+            // PromoID + DiscountApplied + TotalAmount trong cùng transaction.
+            service.promotion.PromotionService promotionService =
+                    new service.promotion.PromotionService();
+
+            promotionService.check(user, bookingId, code, true);
+
+        } catch (java.sql.SQLException e) {
+            System.getLogger(PaymentService.class.getName()).log(
+                    System.Logger.Level.ERROR,
+                    "Không áp dụng được voucher cho đơn " + bookingId,
+                    e
+            );
+
+            throw new IllegalArgumentException(
+                    "Không lưu được voucher. Hãy tải lại đơn và thử lại.",
+                    e
+            );
+
+        } catch (SecurityException e) {
+            throw new IllegalArgumentException(
+                    "Bạn không có quyền áp voucher cho đơn này.",
+                    e
+            );
+        }
     }
 
     public void removeVoucher(int bookingId, User user) {
         Booking b = bookingDAO.getBooking(bookingId);
+
         checkCanPay(b, user);
-        bookingDAO.updateVoucher(bookingId, null, b.getSubtotal());
+
+        try {
+            // Service Khánh gỡ mã và tính lại tổng từ giá đã lưu.
+            service.promotion.PromotionService promotionService =
+                    new service.promotion.PromotionService();
+
+            promotionService.remove(user, bookingId);
+
+        } catch (java.sql.SQLException e) {
+            System.getLogger(PaymentService.class.getName()).log(
+                    System.Logger.Level.ERROR,
+                    "Không gỡ được voucher của đơn " + bookingId,
+                    e
+            );
+
+            throw new IllegalArgumentException(
+                    "Không gỡ được voucher. Hãy tải lại đơn và thử lại.",
+                    e
+            );
+
+        } catch (SecurityException e) {
+            throw new IllegalArgumentException(
+                    "Bạn không có quyền gỡ voucher của đơn này.",
+                    e
+            );
+        }
     }
 
     // ===================== Tạo thanh toán =====================

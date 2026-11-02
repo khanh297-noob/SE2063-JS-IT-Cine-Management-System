@@ -68,7 +68,7 @@
                                 </form>
                             </c:if>
                         </c:if>
-                        <p class="text-muted mt-3">Thanh toán và hoàn tiền thuộc luồng Payment của Nam.</p>
+                        <p class="text-muted mt-3"></p>
                     </section>
                 </c:if>
             </main>

@@ -18,20 +18,50 @@ public class FnbDAO extends DBContext {
      */
     public List<FnbItem> getMenu(int branchId) {
         List<FnbItem> list = new ArrayList<>();
-        String sql = "SELECT f.ItemID, f.ItemName, f.Category, COALESCE(bf.Price, f.Price) AS Price "
-                + "FROM Branch_F_B bf JOIN F_B f ON f.ItemID = bf.ItemID "
-                + "WHERE bf.BranchID = ? AND bf.Status = 'Available' AND COALESCE(bf.Price, f.Price) > 0 "
-                + "ORDER BY CASE f.Category WHEN N'Combo' THEN 0 WHEN N'Popcorn' THEN 1 ELSE 2 END, f.ItemName";
-        try (Connection con = getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
+
+        // Menu dùng chung cho đặt vé online và POS.
+        // Chỉ hiển thị món đủ điều kiện bán tại chi nhánh.
+        String sql = """
+            SELECT
+                f.ItemID,
+                f.ItemName,
+                f.Category,
+                COALESCE(bf.Price, f.Price) AS Price
+            FROM dbo.Branch_F_B bf
+            JOIN dbo.F_B f ON f.ItemID = bf.ItemID
+            JOIN dbo.Branch b ON b.BranchID = bf.BranchID
+            WHERE bf.BranchID = ?
+              AND b.Status = 'Active'
+              AND f.IsActive = 1
+              AND bf.Status = 'Available'
+              AND bf.StockQuantity > 0
+              AND COALESCE(bf.Price, f.Price) > 0
+            ORDER BY
+                CASE f.Category
+                    WHEN N'Combo' THEN 0
+                    WHEN N'Popcorn' THEN 1
+                    ELSE 2
+                END,
+                f.ItemName
+            """;
+
+        try (Connection con = getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
             ps.setInt(1, branchId);
+
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     list.add(mapItem(rs));
                 }
             }
+
         } catch (SQLException e) {
-            System.out.println("Lỗi FnbDAO.getMenu: " + e.getMessage());
+            System.out.println(
+                    "Lỗi FnbDAO.getMenu: " + e.getMessage()
+            );
         }
+
         return list;
     }
 

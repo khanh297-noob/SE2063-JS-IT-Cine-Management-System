@@ -167,6 +167,123 @@ public class F_BOrderService {
         }
     }
 
+    // Dùng để quyết định có hiển thị form thanh toán hay không.
+// Khi POST, payCash vẫn kiểm tra lại toàn bộ điều kiện.
+    public boolean canPayCash(User actor, int bookingId) throws SQLException {
+        AccessService.fnb(actor);
+
+        try (Connection c = DBContext.getConnection()) {
+            Booking b = orders.findBooking(c, bookingId, false);
+            requireAccess(actor, b);
+
+            if (!"Pending".equals(b.getStatus())
+                    || orders.paymentExists(c, bookingId)
+                    || orders.hasTicket(c, bookingId)
+                    || !b.getBookingDate().toLocalDateTime().plusMinutes(10)
+                    .isAfter(java.time.LocalDateTime.now())) {
+                return false;
+            }
+
+            List<F_BOrder> lines = orders.lines(c, bookingId);
+
+            return !lines.isEmpty()
+                    && lines.stream().allMatch(line ->
+                    "Pending".equals(line.getOrderStatus())
+                            && line.getUnitPrice() != null);
+        }
+    }
+
+    // Chỉ xử lý đơn F&B độc lập, không chứa vé.
+    public BigDecimal payCash(
+            User actor,
+            int bookingId,
+            BigDecimal cashReceived,
+            String ip) throws SQLException {
+
+        AccessService.fnb(actor);
+
+        BigDecimal received = FormUtil.amount(cashReceived, true);
+
+        return DBContext.transaction(c -> {
+            // Khóa Booking để hai yêu cầu không cùng thu tiền một đơn.
+            Booking b = orders.findBooking(c, bookingId, true);
+
+            requireAccess(actor, b);
+
+            // Hàm có sẵn:
+            // Pending, chưa có Payment, không chứa vé, đã lưu UnitPrice.
+            requireEditable(c, b);
+
+            // Giữ thời hạn 10 phút theo luồng hiện tại.
+            if (!b.getBookingDate().toLocalDateTime().plusMinutes(10)
+                    .isAfter(java.time.LocalDateTime.now())) {
+                throw new IllegalArgumentException(
+                        "Đơn đã quá 10 phút. Hãy tạo đơn mới.");
+            }
+
+            List<F_BOrder> lines = orders.lines(c, bookingId);
+
+            if (lines.isEmpty()
+                    || lines.stream().anyMatch(line ->
+                    !"Pending".equals(line.getOrderStatus()))) {
+                throw new IllegalArgumentException(
+                        "Đơn không có món hoặc dòng món không còn Pending.");
+            }
+
+            if (received.compareTo(b.getTotalAmount()) < 0) {
+                throw new IllegalArgumentException(
+                        "Tiền khách đưa chưa đủ. Cần thu "
+                                + b.getTotalAmount().toPlainString() + " đ.");
+            }
+
+            // Liên quan Nam: thu ngân cần có ca tại đúng chi nhánh.
+            if ("Ticket Cashier".equals(actor.getRole())) {
+                model.pos.WorkShift shift =
+                        new service.pos.ShiftService().getActiveShift(actor);
+
+                if (shift == null || shift.getBranchId() != b.getBranchId()) {
+                    throw new IllegalArgumentException(
+                            "Hãy vào ca tại đúng chi nhánh trước khi thu tiền.");
+                }
+            }
+
+            // Kiểm tra lại tổng tiền và voucher trước khi thu.
+            new service.promotion.PromotionService()
+                    .revalidateInPayment(c, bookingId);
+
+            // Liên quan Nam: ghi nhận thanh toán vào Payment chung.
+            if (orders.insertCashPayment(
+                    c, bookingId, b.getTotalAmount()) != 1) {
+                throw new SQLException("Không ghi nhận được thanh toán.");
+            }
+
+            // Hàm đã có trong file:
+            // kiểm tra kho, trừ kho, đổi dòng món Pending -> Confirmed.
+            confirmLinesInPayment(c, bookingId);
+
+            if (orders.confirmCashBooking(
+                    c, bookingId, actor.getUserID()) != 1) {
+                throw new SQLException("Không xác nhận được Booking.");
+            }
+
+            BigDecimal change = received.subtract(b.getTotalAmount());
+
+            // Liên quan Nam: giữ định dạng log thu tiền mặt của POS.
+            new dao.admin.AuditLogDAO().insert(
+                    c,
+                    actor.getUserID(),
+                    "COUNTER_SALE|booking=" + bookingId
+                            + "|amount=" + b.getTotalAmount().toPlainString()
+                            + "|method=Cash"
+                            + "|received=" + received.toPlainString()
+                            + "|change=" + change.toPlainString(),
+                    ip
+            );
+
+            return change;
+        });
+    }
+
     private void requireAccess(User actor, Booking b) {
         AccessService.active(actor);
         if (b == null || b.getBranchId() == null) throw new IllegalArgumentException("Không tìm thấy đơn có chi nhánh.");

@@ -41,9 +41,42 @@
                     <jsp:include page="/WEB-INF/view/fnb/f_b-orders-khanh.jsp"/>
                 </c:if>
                 <jsp:include page="/WEB-INF/view/fnb/f_b-lines-khanh.jsp"/>
+                <c:choose>
+                    <c:when test="${empty selectedBooking}">
+                        <p class="alert alert-info">
+                            Chọn chi nhánh, bấm Xem rồi bấm Mở đơn để sửa số lượng.
+                        </p>
+                    </c:when>
+
+                    <c:when test="${selectedBooking.status ne 'Pending'}">
+                        <p class="alert alert-warning">
+                            Chỉ sửa được đơn Pending.
+                            Trạng thái hiện tại:
+                            <c:out value="${selectedBooking.status}"/>.
+                        </p>
+                    </c:when>
+
+                    <c:when test="${not empty selectedBooking.paymentStatus}">
+                        <p class="alert alert-warning">
+                            Đơn đã có giao dịch thanh toán, không được sửa số lượng.
+                        </p>
+                    </c:when>
+
+                    <c:when test="${not empty selectedBooking.promoId}">
+                        <p class="alert alert-warning">
+                            Hãy gỡ voucher khỏi đơn trước khi sửa số lượng.
+                        </p>
+                    </c:when>
+
+                    <c:when test="${empty orderLines}">
+                        <p class="alert alert-warning">
+                            Đơn không có dòng món F&amp;B để sửa.
+                        </p>
+                    </c:when>
+                </c:choose>
                 <c:if test="${not empty selectedBooking}">
                     <section class="panel">
-                        <p class="text-muted">Chỉ sửa Pending, chưa có Payment và đã gỡ voucher.</p>
+
                         <c:if test="${selectedBooking.status eq 'Pending' and empty selectedBooking.paymentStatus and empty selectedBooking.promoId}">
                             <c:forEach var="line" items="${orderLines}">
                                 <form class="form-grid mb-3" method="post">

@@ -38,8 +38,12 @@ public class PaymentResultServlet extends HttpServlet {
         }
 
         Booking b = paymentService.getBooking(bookingId);
-        boolean isAdmin = "Administrator".equals(user.getRole()) || "Branch Management".equals(user.getRole());
-        if (b == null || (b.getUserId() != user.getUserId() && !isAdmin)) {
+        boolean mayView = b != null && (
+                b.getUserId() == user.getUserId()
+                        || "Administrator".equals(user.getRole())
+                        || ("Branch Management".equals(user.getRole())
+                        && java.util.Objects.equals(user.getBranchID(), Integer.valueOf(b.getBranchId()))));
+        if (!mayView) {
             request.setAttribute("errorMsg", "No search results.");
             request.getRequestDispatcher("/WEB-INF/view/common/error-nam.jsp").forward(request, response);
             return;

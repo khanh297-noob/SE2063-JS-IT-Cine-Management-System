@@ -71,11 +71,17 @@ public class BookingDAO extends DBContext {
                 return null;
             }
             // Đồ ăn của đơn (giá theo thực đơn của chi nhánh nếu có, không thì giá gốc)
-            String fnbSql = "SELECT f.ItemID, f.ItemName, f.Category, COALESCE(brf.Price, f.Price) AS Price, bf.Quantity "
-                    + "FROM Booking_F_B bf JOIN F_B f ON f.ItemID = bf.ItemID "
-                    + "JOIN Booking b ON b.BookingID = bf.BookingID "
-                    + "LEFT JOIN Branch_F_B brf ON brf.ItemID = f.ItemID AND brf.BranchID = b.BranchID "
-                    + "WHERE bf.BookingID = ?";
+            String fnbSql = """
+        SELECT
+            f.ItemID,
+            f.ItemName,
+            f.Category,
+            bf.UnitPrice AS Price,
+            bf.Quantity
+        FROM dbo.Booking_F_B bf
+        JOIN dbo.F_B f ON f.ItemID = bf.ItemID
+        WHERE bf.BookingID = ?
+        """;
             try (PreparedStatement ps = con.prepareStatement(fnbSql)) {
                 ps.setInt(1, bookingId);
                 try (ResultSet rs = ps.executeQuery()) {
@@ -287,12 +293,20 @@ public class BookingDAO extends DBContext {
                 }
 
                 // 4. Đồ ăn
-                String fnbSql = "INSERT INTO Booking_F_B (BookingID, ItemID, Quantity) VALUES (?, ?, ?)";
+                // F&B: lưu đơn giá tại thời điểm tạo đơn.
+
+                String fnbSql = """
+                INSERT INTO Booking_F_B (BookingID, ItemID, Quantity, UnitPrice, OrderStatus)
+                   VALUES (?, ?, ?, ?, 'Pending')
+                       """;
+
                 for (FnbItem f : items) {
                     try (PreparedStatement ps = con.prepareStatement(fnbSql)) {
                         ps.setInt(1, bookingId);
                         ps.setInt(2, f.getItemId());
                         ps.setInt(3, f.getQuantity());
+                        ps.setBigDecimal(4, f.getPrice());
+
                         ps.executeUpdate();
                     }
                 }
@@ -469,12 +483,26 @@ public class BookingDAO extends DBContext {
                 ps.executeUpdate();
             }
         }
-        String fnbSql = "INSERT INTO Booking_F_B (BookingID, ItemID, Quantity) VALUES (?, ?, ?)";
+// F&B đi kèm vé online.
+// Liên quan Khánh + Hiệp + Nam: chốt đơn giá trước khi sang checkout.
+        String fnbSql = """
+        INSERT INTO Booking_F_B (
+            BookingID,
+            ItemID,
+            Quantity,
+            UnitPrice,
+            OrderStatus
+        )
+        VALUES (?, ?, ?, ?, 'Pending')
+        """;
+
         for (FnbItem f : items) {
             try (PreparedStatement ps = con.prepareStatement(fnbSql)) {
                 ps.setInt(1, bookingId);
                 ps.setInt(2, f.getItemId());
                 ps.setInt(3, f.getQuantity());
+                ps.setBigDecimal(4, f.getPrice());
+
                 ps.executeUpdate();
             }
         }

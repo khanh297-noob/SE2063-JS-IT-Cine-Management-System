@@ -17,6 +17,11 @@ public class FnbItem {
     }
 
     public BigDecimal getLineTotal() {
+
+        if (price == null) {
+            return null;
+        }
+
         return price.multiply(BigDecimal.valueOf(quantity));
     }
 

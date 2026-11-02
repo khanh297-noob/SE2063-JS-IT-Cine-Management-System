@@ -93,6 +93,71 @@
                     <jsp:include page="/WEB-INF/view/fnb/f_b-orders-khanh.jsp"/>
                 </c:if>
                 <jsp:include page="/WEB-INF/view/fnb/f_b-lines-khanh.jsp"/>
+                <c:if test="${canPayCash}">
+                    <section class="panel mt-3">
+                        <h2 class="h5 mb-3">Thanh toán tiền mặt</h2>
+
+                        <p>
+                            Đơn #${selectedBooking.bookingId} — Phải thu:
+
+                            <strong class="text-danger">
+                                <fmt:formatNumber
+                                    value="${selectedBooking.totalAmount}"
+                                    pattern="#,##0.##"/>
+                                đ
+                            </strong>
+                        </p>
+
+                        <form
+                            method="post"
+                            action="${pageContext.request.contextPath}/staff/fnb/orders"
+                            onsubmit="return confirm('Xác nhận bạn đã nhận tiền mặt của khách?');">
+
+                            <input
+                                type="hidden"
+                                name="csrfToken"
+                                value="${sessionScope.khanhCsrf}">
+
+                            <input
+                                type="hidden"
+                                name="action"
+                                value="payCash">
+
+                            <input
+                                type="hidden"
+                                name="bookingId"
+                                value="${selectedBooking.bookingId}">
+
+                            <input
+                                type="hidden"
+                                name="branchId"
+                                value="${selectedBranchId}">
+
+                            <label for="cashReceived" class="form-label">
+                                Tiền khách đưa
+                            </label>
+
+                            <input
+                                id="cashReceived"
+                                name="cashReceived"
+                                type="number"
+                                class="form-control mb-3"
+                                min="${selectedBooking.totalAmount}"
+                                max="9999999999.99"
+                                step="0.01"
+                                required>
+
+                            <button type="submit" class="btn btn-brand-pill">
+                                Xác nhận thu tiền
+                            </button>
+                        </form>
+
+                        <p class="text-muted small mt-3 mb-0">
+                            Chỉ xác nhận sau khi nhận tiền.
+                            Thu ngân cần vào ca tại đúng chi nhánh.
+                        </p>
+                    </section>
+                </c:if>
             </main>
         </div>
     </body>

@@ -67,21 +67,43 @@ public class Booking {
 
     public BigDecimal getFnbTotal() {
         BigDecimal sum = BigDecimal.ZERO;
+
         for (FnbItem f : fnbItems) {
-            sum = sum.add(f.getLineTotal());
+            BigDecimal lineTotal = f.getLineTotal();
+
+            // Thiếu đơn giá lịch sử thì chưa thể xác định tổng.
+            if (lineTotal == null) {
+                return null;
+            }
+
+            sum = sum.add(lineTotal);
         }
+
         return sum;
     }
 
-    // Tạm tính = tiền vé + tiền đồ ăn (chưa trừ voucher)
     public BigDecimal getSubtotal() {
-        return getTicketTotal().add(getFnbTotal());
+        BigDecimal foodTotal = getFnbTotal();
+
+        if (foodTotal == null) {
+            return null;
+        }
+
+        return getTicketTotal().add(foodTotal);
     }
 
-    // Giảm giá = Tạm tính - Tổng tiền phải trả
     public BigDecimal getDiscount() {
-        BigDecimal d = getSubtotal().subtract(totalAmount);
-        return d.signum() < 0 ? BigDecimal.ZERO : d;
+        BigDecimal subtotal = getSubtotal();
+
+        if (subtotal == null || totalAmount == null) {
+            return null;
+        }
+
+        BigDecimal discount = subtotal.subtract(totalAmount);
+
+        return discount.signum() < 0
+                ? BigDecimal.ZERO
+                : discount;
     }
 
     public String getSeatLabels() {
