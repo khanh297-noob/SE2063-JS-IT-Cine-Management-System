@@ -1,0 +1,31 @@
+<%@ page pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%--
+  Chuông thông báo trong web. Include vào header (trang chủ, trang Phim, trang Rạp, trang quản trị):
+    <%@ include file="/WEB-INF/views/common/notification-bell.jspf" %>
+  Chỉ hiện khi đã đăng nhập. Bấm chuông mở popup danh sách (không chuyển trang); dữ liệu lấy từ
+  NotificationServlet (/notifications/*) bằng notification-bell.js. Tự nạp CSS / JS của riêng nó.
+--%>
+<c:if test="${not empty sessionScope.User}">
+<link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/notification-bell.css?v=1">
+<div class="notif-root" data-notif-root data-ctx="${pageContext.request.contextPath}">
+    <button type="button" class="notif-bell" aria-label="Thông báo" aria-haspopup="dialog" aria-expanded="false" aria-controls="notifPanel">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false">
+            <path d="M12 3a6 6 0 0 0-6 6v3.2l-1.6 2.9A1 1 0 0 0 5.3 17h13.4a1 1 0 0 0 .9-1.5L18 12.2V9a6 6 0 0 0-6-6Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+            <path d="M9.5 19.5a2.5 2.5 0 0 0 5 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+        <span class="notif-badge" hidden>0</span>
+    </button>
+    <div class="notif-panel" id="notifPanel" role="dialog" aria-label="Thông báo" hidden>
+        <div class="notif-head">
+            <span class="notif-title">Thông báo</span>
+            <button type="button" class="notif-readall">Đánh dấu tất cả đã đọc</button>
+        </div>
+        <ul class="notif-list" aria-live="polite"></ul>
+        <div class="notif-foot">
+            <button type="button" class="notif-more" hidden>Xem thêm thông báo cũ</button>
+        </div>
+    </div>
+</div>
+<script src="${pageContext.request.contextPath}/assets/js/notification-bell.js?v=1" defer></script>
+</c:if>
