@@ -8,6 +8,8 @@ import model.branch.Branch;
 import model.movie.BranchAvailabilityDTO;
 import model.movie.Movie;
 import model.movie.MovieBranch;
+import model.notification.Notification;
+import service.notification.NotificationService;
 import util.BusinessException;
 import util.JdbcContext;
 import util.NotFoundException;
@@ -39,6 +41,7 @@ public class MovieBranchService {
     private final BranchDAO branchDAO = new BranchDAO();
     private final MovieBranchDAO movieBranchDAO = new MovieBranchDAO();
     private final ShowtimeDAO showtimeDAO = new ShowtimeDAO();
+    private final NotificationService notificationService = new NotificationService();
 
     /** Dữ liệu form gửi lên cho một chi nhánh. */
     public static final class BranchSelection {
@@ -100,12 +103,15 @@ public class MovieBranchService {
     }
 
     public SaveResult save(int movieId, List<BranchSelection> selections) throws SQLException, BusinessException {
-        return JdbcContext.transaction(con -> {
+        List<String[]> notices = new ArrayList<>(); // {branchId, tiêu đề, nội dung}, gửi sau khi commit
+        String[] title = new String[1];
+        SaveResult result = JdbcContext.transaction(con -> {
             Movie movie = movieDAO.findById(con, movieId);
             if (movie == null) throw new NotFoundException("Không tìm thấy phim #" + movieId);
             if (movie.isEnded())
                 throw new BusinessException("Phim \"" + movie.getTitle() + "\" đã ngưng chiếu nên không thể đổi chi nhánh.");
 
+            title[0] = movie.getTitle();
             Map<Integer, BranchSelection> byId = index(selections);
             LocalDate today = LocalDate.now();
             List<String> errors = new ArrayList<>();
@@ -178,8 +184,24 @@ public class MovieBranchService {
             for (Integer branchId : toRemove) movieBranchDAO.delete(con, movieId, branchId);
             for (MovieBranch mb : toInsert) movieBranchDAO.insert(con, mb);
             for (MovieBranch mb : toUpdate) movieBranchDAO.updateWindow(con, mb);
+            for (Integer branchId : toRemove) notices.add(new String[]{String.valueOf(branchId), "đã gỡ khỏi chi nhánh của bạn",
+                    "Không xếp thêm được suất chiếu của phim này tại chi nhánh."});
+            for (MovieBranch mb : toInsert) notices.add(new String[]{String.valueOf(mb.getBranchId()), "đã thêm vào chi nhánh của bạn",
+                    "Khung ngày chiếu: " + window(mb) + ". Có thể xếp suất chiếu cho phim."});
+            for (MovieBranch mb : toUpdate) notices.add(new String[]{String.valueOf(mb.getBranchId()), "đổi khung ngày chiếu tại chi nhánh của bạn",
+                    "Khung ngày chiếu mới: " + window(mb) + "."});
             return new SaveResult(toInsert.size(), toRemove.size(), toUpdate.size());
         });
+        for (String[] f : notices) {
+            notificationService.notifyBranchManagers(Integer.parseInt(f[0]), null, Notification.TYPE_MOVIE_BRANCH,
+                    "Phim \"" + title[0] + "\" " + f[1], f[2], "/movies/detail?id=" + movieId);
+        }
+        return result;
+    }
+
+    private static String window(MovieBranch mb) {
+        return (mb.getAvailableFrom() == null ? "không giới hạn" : "từ " + mb.getAvailableFrom())
+                + (mb.getAvailableTo() == null ? "" : " đến " + mb.getAvailableTo());
     }
 
     /** Sau khi áp dụng thêm / sửa / gỡ, còn chi nhánh nào đang hoạt động và có khung ngày chiếu gồm today không. */

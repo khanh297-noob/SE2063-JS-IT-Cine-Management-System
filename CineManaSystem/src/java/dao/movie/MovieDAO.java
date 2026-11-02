@@ -111,13 +111,6 @@ public class MovieDAO {
         }
     }
 
-    public void delete(Connection con, int movieId) throws SQLException {
-        try (PreparedStatement ps = con.prepareStatement("DELETE FROM Movie WHERE MovieID = ?")) {
-            ps.setInt(1, movieId);
-            ps.executeUpdate();
-        }
-    }
-
     private void bindEditable(PreparedStatement ps, Movie m) throws SQLException {
         ps.setString(1, m.getTitle());
         JdbcUtil.setString(ps, 2, m.getDescription());

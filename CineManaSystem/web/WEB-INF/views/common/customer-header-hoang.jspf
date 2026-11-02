@@ -54,6 +54,7 @@
             </div>
         </nav>
 
+        <%@ include file="/WEB-INF/views/common/notification-bell.jspf" %>
         <%-- Tài khoản (góc phải). Đăng nhập do module Auth xử lý (/login);
              sessionScope.User do Auth đặt khi đăng nhập thành công. Bấm tên để vào hồ sơ cá nhân. --%>
         <div class="account">

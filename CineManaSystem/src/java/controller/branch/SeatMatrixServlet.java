@@ -1,5 +1,6 @@
 package controller.branch;
 
+import model.branch.Room;
 import model.branch.SeatMatrixDTO;
 import service.branch.RoomService;
 import service.branch.SeatMatrixService;
@@ -37,7 +38,8 @@ public class SeatMatrixServlet extends BranchScopedServlet {
     protected void handlePost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException, SQLException, BusinessException {
         int roomId = requiredId(req, "roomId");
-        requireBranch(req, roomService.get(roomId).getBranchId());
+        Room room = roomService.get(roomId);
+        requireBranch(req, room.getBranchId());
         Integer rows = intParam(req, "rows");
         Integer cols = intParam(req, "cols");
         String layout = req.getParameter("layout");
@@ -45,6 +47,9 @@ public class SeatMatrixServlet extends BranchScopedServlet {
             SeatMatrixService.SaveResult r = seatMatrixService.save(roomId, rows, cols, layout);
             flashSuccess(req, "Đã lưu sơ đồ ghế: thêm " + r.getAdded() + ", bớt " + r.getRemoved()
                     + ", đổi " + r.getChanged() + " ghế.");
+            notifyBranchManagers(req, room.getBranchId(), "Sơ đồ ghế phòng " + room.getRoomName() + " đã thay đổi",
+                    "Thêm " + r.getAdded() + ", bớt " + r.getRemoved() + ", đổi " + r.getChanged() + " ghế.",
+                    "/manage/rooms/seats?roomId=" + roomId);
             redirect(req, resp, "/manage/rooms/seats?roomId=" + roomId);
         } catch (BusinessException e) {
             // Hiển thị lại đúng sơ đồ người dùng vừa vẽ.
