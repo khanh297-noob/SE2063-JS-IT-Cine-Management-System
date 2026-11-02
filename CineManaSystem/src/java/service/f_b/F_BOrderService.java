@@ -105,25 +105,6 @@ public class F_BOrderService {
         });
     }
 
-    public void progress(User actor, int booking, String next) throws SQLException {
-        AccessService.fnb(actor);
-        DBContext.transaction(c -> {
-            Booking b = orders.findBooking(c, booking, true);
-            requireAccess(actor, b);
-            if (!"Confirmed".equals(b.getStatus()) || !"Success".equals(b.getPaymentStatus()))
-                throw new IllegalArgumentException("Chỉ chế biến sau khi thanh toán thành công.");
-            List<F_BOrder> lines = orders.lines(c, booking);
-            if (lines.isEmpty()) throw new IllegalArgumentException("Đơn không có món.");
-            String current = lines.get(0).getOrderStatus();
-            String expected = Map.of("Confirmed", "Preparing", "Preparing", "Ready", "Ready", "Delivered").get(current);
-            if (next == null || !next.equals(expected)
-                    || lines.stream().anyMatch(x -> !current.equals(x.getOrderStatus())))
-                throw new IllegalArgumentException("Bước chuyển trạng thái không hợp lệ.");
-            if (orders.updateStatus(c, booking, current, next) != lines.size())
-                throw new SQLException("Không cập nhật đủ dòng.");
-            return null;
-        });
-    }
 
     // Nam gọi bằng đúng Connection trong transaction thanh toán.
     public void confirmLinesInPayment(Connection c, int booking) throws SQLException {
@@ -149,22 +130,177 @@ public class F_BOrderService {
             throw new SQLException("Không xác nhận đủ dòng.");
     }
 
-    public void returnLinesInRefund(Connection c, int booking) throws SQLException {
+    public void returnLinesInRefund(Connection c, int bookingId)
+            throws SQLException {
         requireTransaction(c);
-        Booking b = orders.findBooking(c, booking, true);
-        if (b == null || b.getBranchId() == null || !"Refunded".equals(b.getPaymentStatus()))
-            throw new IllegalArgumentException("Chưa có hoàn tiền hợp lệ.");
-        for (F_BOrder line : orders.lines(c, booking)) {
-            String status = line.getOrderStatus();
-            if ("Cancelled".equals(status)) continue;
-            if ("Delivered".equals(status)) throw new IllegalArgumentException("Món đã giao không được tự nhập kho.");
-            if (Set.of("Confirmed", "Preparing", "Ready").contains(status)) {
-                if (stocks.adjustStock(c, b.getBranchId(), line.getItemId(), line.getQuantity()) != 1)
-                    throw new SQLException("Không hoàn được tồn.");
-            } else if (!"Pending".equals(status)) throw new IllegalArgumentException("Trạng thái món không hợp lệ.");
-            if (orders.updateOneStatus(c, booking, line.getItemId(), status, "Cancelled") != 1)
-                throw new SQLException("Không hủy được dòng.");
+
+        Booking b = orders.findBooking(c, bookingId, true);
+
+        if (b == null || b.getBranchId() == null
+                || !"Cancelled".equals(b.getStatus())
+                || !"Refunded".equals(b.getPaymentStatus())) {
+            throw new IllegalArgumentException(
+                    "Chưa có hủy/hoàn tiền hợp lệ.");
         }
+
+        List<F_BOrder> lines = orders.lines(c, bookingId);
+
+        // Kiểm tra tất cả trước khi thay đổi kho.
+        for (F_BOrder line : lines) {
+            String status = line.getOrderStatus();
+
+            if (!"Pending".equals(status)
+                    && !"Confirmed".equals(status)
+                    && !"Cancelled".equals(status)) {
+                throw new IllegalArgumentException(
+                        "Món đã chế biến hoặc giao; không được tự nhập lại kho.");
+            }
+        }
+
+        for (F_BOrder line : lines) {
+            String status = line.getOrderStatus();
+
+            // Gửi lại yêu cầu không cộng tồn lần nữa.
+            if ("Cancelled".equals(status)) {
+                continue;
+            }
+
+            // Chỉ Confirmed đã trừ kho nên mới được cộng lại.
+            if ("Confirmed".equals(status)
+                    && stocks.adjustStock(
+                    c,
+                    b.getBranchId(),
+                    line.getItemId(),
+                    line.getQuantity()) != 1) {
+                throw new SQLException("Không hoàn được tồn kho.");
+            }
+
+            if (orders.updateOneStatus(
+                    c,
+                    bookingId,
+                    line.getItemId(),
+                    status,
+                    "Cancelled") != 1) {
+                throw new SQLException("Dòng món đã thay đổi.");
+            }
+        }
+    }
+
+    // Dùng để quyết định có hiển thị form thanh toán hay không.
+// Khi POST, payCash vẫn kiểm tra lại toàn bộ điều kiện.
+    public boolean canPayCash(User actor, int bookingId) throws SQLException {
+        AccessService.fnb(actor);
+
+        try (Connection c = DBContext.getConnection()) {
+            Booking b = orders.findBooking(c, bookingId, false);
+            requireAccess(actor, b);
+
+            if (!"Pending".equals(b.getStatus())
+                    || orders.paymentExists(c, bookingId)
+                    || orders.hasTicket(c, bookingId)
+                    || !b.getBookingDate().toLocalDateTime().plusMinutes(10)
+                    .isAfter(java.time.LocalDateTime.now())) {
+                return false;
+            }
+
+            List<F_BOrder> lines = orders.lines(c, bookingId);
+
+            return !lines.isEmpty()
+                    && lines.stream().allMatch(line ->
+                    "Pending".equals(line.getOrderStatus())
+                            && line.getUnitPrice() != null);
+        }
+    }
+
+    // Chỉ xử lý đơn F&B độc lập, không chứa vé.
+    public BigDecimal payCash(
+            User actor,
+            int bookingId,
+            BigDecimal cashReceived,
+            String ip) throws SQLException {
+
+        AccessService.fnb(actor);
+
+        BigDecimal received = FormUtil.amount(cashReceived, true);
+
+        return DBContext.transaction(c -> {
+            // Khóa Booking để hai yêu cầu không cùng thu tiền một đơn.
+            Booking b = orders.findBooking(c, bookingId, true);
+
+            requireAccess(actor, b);
+
+            // Hàm có sẵn:
+            // Pending, chưa có Payment, không chứa vé, đã lưu UnitPrice.
+            requireEditable(c, b);
+
+            // Giữ thời hạn 10 phút theo luồng hiện tại.
+            if (!b.getBookingDate().toLocalDateTime().plusMinutes(10)
+                    .isAfter(java.time.LocalDateTime.now())) {
+                throw new IllegalArgumentException(
+                        "Đơn đã quá 10 phút. Hãy tạo đơn mới.");
+            }
+
+            List<F_BOrder> lines = orders.lines(c, bookingId);
+
+            if (lines.isEmpty()
+                    || lines.stream().anyMatch(line ->
+                    !"Pending".equals(line.getOrderStatus()))) {
+                throw new IllegalArgumentException(
+                        "Đơn không có món hoặc dòng món không còn Pending.");
+            }
+
+            if (received.compareTo(b.getTotalAmount()) < 0) {
+                throw new IllegalArgumentException(
+                        "Tiền khách đưa chưa đủ. Cần thu "
+                                + b.getTotalAmount().toPlainString() + " đ.");
+            }
+
+            // Liên quan Nam: thu ngân cần có ca tại đúng chi nhánh.
+            if ("Ticket Cashier".equals(actor.getRole())) {
+                model.pos.WorkShift shift =
+                        new service.pos.ShiftService().getActiveShift(actor);
+
+                if (shift == null || shift.getBranchId() != b.getBranchId()) {
+                    throw new IllegalArgumentException(
+                            "Hãy vào ca tại đúng chi nhánh trước khi thu tiền.");
+                }
+            }
+
+            // Kiểm tra lại tổng tiền và voucher trước khi thu.
+            new service.promotion.PromotionService()
+                    .revalidateInPayment(c, bookingId);
+
+            // Liên quan Nam: ghi nhận thanh toán vào Payment chung.
+            if (orders.insertCashPayment(
+                    c, bookingId, b.getTotalAmount()) != 1) {
+                throw new SQLException("Không ghi nhận được thanh toán.");
+            }
+
+            // Hàm đã có trong file:
+            // kiểm tra kho, trừ kho, đổi dòng món Pending -> Confirmed.
+            confirmLinesInPayment(c, bookingId);
+
+            if (orders.confirmCashBooking(
+                    c, bookingId, actor.getUserID()) != 1) {
+                throw new SQLException("Không xác nhận được Booking.");
+            }
+
+            BigDecimal change = received.subtract(b.getTotalAmount());
+
+            // Liên quan Nam: giữ định dạng log thu tiền mặt của POS.
+            new dao.admin.AuditLogDAO().insert(
+                    c,
+                    actor.getUserID(),
+                    "COUNTER_SALE|booking=" + bookingId
+                            + "|amount=" + b.getTotalAmount().toPlainString()
+                            + "|method=Cash"
+                            + "|received=" + received.toPlainString()
+                            + "|change=" + change.toPlainString(),
+                    ip
+            );
+
+            return change;
+        });
     }
 
     private void requireAccess(User actor, Booking b) {

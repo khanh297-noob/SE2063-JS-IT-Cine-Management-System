@@ -133,21 +133,84 @@ public class PosService {
         }
 
         // Lưu DB (1 transaction). VNPay: mã tạm, sẽ được thay bằng txnRef khi tạo link thanh toán VNPay
-        String txnCode = "Cash".equals(method) ? "CASH-" + System.currentTimeMillis() : "VNPAY-PENDING";
-        int bookingId = bookingDAO.createCounterBooking(cashier.getUserId(), shift.getBranchId(), promoId, total,
-                st.getShowtimeId(), seats, items, method, txnCode);
-        if (bookingId < 0) {
-            throw new IllegalArgumentException("The selected seat is not available.");
+        final Integer selectedPromoId = promoId;
+        final BigDecimal appliedDiscount = discount;
+
+        final BigDecimal received = "Cash".equals(method)
+                ? util.FormUtil.amount(cashReceived, true)
+                : BigDecimal.ZERO;
+
+        final String txnCode = "Cash".equals(method)
+                ? "CASH-" + System.currentTimeMillis()
+                : "VNPAY-PENDING";
+
+        try {
+            return dao.DBContext.transaction(con -> {
+                con.setTransactionIsolation(
+                        java.sql.Connection.TRANSACTION_SERIALIZABLE
+                );
+
+                int bookingId = bookingDAO.createCounterBooking(
+                        con,
+                        cashier.getUserId(),
+                        shift.getBranchId(),
+                        selectedPromoId,
+                        total,
+                        st.getShowtimeId(),
+                        seats,
+                        items,
+                        method,
+                        txnCode
+                );
+
+                if (bookingId < 0) {
+                    throw new IllegalArgumentException(
+                            "Ghế vừa được người khác đặt. Hãy chọn lại."
+                    );
+                }
+
+                /*
+                 * Hàm có sẵn của Khánh:
+                 * - Lưu DiscountApplied.
+                 * - Kiểm tra lại voucher và tồn kho.
+                 * - Cash: trừ kho, xác nhận món và Booking.
+                 * - VNPay Pending: chưa trừ kho.
+                 * - Đơn 0 đồng: xác nhận ngay.
+                 */
+                new service.f_b.F_BCheckoutService()
+                        .finishCounter(con, bookingId, appliedDiscount);
+
+                String cashInfo = "Cash".equals(method)
+                        ? "|received=" + received.toPlainString()
+                        + "|change=" + received.subtract(total).toPlainString()
+                        : "";
+
+                // Ghi log trong cùng transaction với đơn và kho.
+                new dao.admin.AuditLogDAO().insert(
+                        con,
+                        cashier.getUserId(),
+                        "COUNTER_SALE|booking=" + bookingId
+                                + "|amount=" + total.toPlainString()
+                                + "|method=" + method + cashInfo,
+                        ip
+                );
+
+                return bookingId;
+            });
+
+        } catch (java.sql.SQLException exception) {
+            java.util.logging.Logger.getLogger(PosService.class.getName())
+                    .log(
+                            java.util.logging.Level.SEVERE,
+                            "Không lưu được giao dịch POS",
+                            exception
+                    );
+
+            throw new IllegalArgumentException(
+                    "Không lưu được đơn. Hãy kiểm tra lại trước khi thu tiền.",
+                    exception
+            );
         }
-        // Tiền mặt: ghi cả tiền khách đưa (vào két) và tiền thối lại (ra khỏi két) để đối soát két theo dòng tiền thật
-        String cashInfo = "";
-        if ("Cash".equals(method)) {
-            cashInfo = "|received=" + cashReceived.toPlainString()
-                    + "|change=" + cashReceived.subtract(total).toPlainString();
-        }
-        auditLogDAO.insert(cashier.getUserId(), "COUNTER_SALE|booking=" + bookingId
-                + "|amount=" + total.toPlainString() + "|method=" + method + cashInfo, ip);
-        return bookingId;
     }
 
     // Log bán hàng của 1 đơn (để hiện "Khách đưa / Tiền thối" trên vé in và trang chi tiết). Không có thì null.
@@ -170,7 +233,7 @@ public class PosService {
         try {
             return paymentService.createVnpayUrl(b, returnUrl, clientIp);
         } catch (RuntimeException e) {
-            bookingDAO.cancelUnpaid(bookingId);
+            paymentService.cancelUnpaidBooking(bookingId);
             throw new IllegalArgumentException("Không tạo được thanh toán VNPay: " + e.getMessage());
         }
     }
@@ -203,41 +266,47 @@ public class PosService {
      * Hủy đơn tại quầy & hoàn tiền - cần quản lý chi nhánh nhập email + mật khẩu để duyệt.
      * Điều kiện: đơn do chính thu ngân tạo, đang Confirmed, chưa vé nào check-in, còn >= 60 phút tới giờ chiếu.
      */
-    public void cancelCounterBooking(User cashier, int bookingId, String managerEmail, String managerPassword,
-            String reason, String ip) {
-        Booking b = bookingDAO.getBooking(bookingId);
-        if (b == null) {
-            throw new IllegalArgumentException("No search results.");
+    public boolean cancelCounterBooking(
+            User cashier,
+            int bookingId,
+            String managerEmail,
+            String managerPassword,
+            String reason,
+            String ip) {
+
+        if (reason == null || reason.isBlank()) {
+            throw new IllegalArgumentException("Cần nhập lý do hủy.");
         }
-        if (b.getUserId() != cashier.getUserId()) {
-            throw new IllegalArgumentException("You do not have permission to perform this action.");
-        }
-        if (!"Confirmed".equals(b.getStatus()) || b.isAnyCheckedIn()
-                || LocalDateTime.now().plusMinutes(60).isAfter(b.getStartDateTime())) {
-            throw new IllegalArgumentException("This booking can no longer be cancelled or refunded.");
-        }
-        if (reason.isEmpty()) {
-            throw new IllegalArgumentException("The Reason is required.");
-        }
-        // Mật khẩu trong DB đã mã hóa BCrypt nên kiểm tra bằng PasswordUtil của nhóm
+
         User manager = staffDAO.getByEmail(managerEmail);
-        if (manager == null || !PasswordUtil.verify(managerPassword, manager.getPasswordHash())) {
-            throw new IllegalArgumentException("Incorrect username or password. Please check again.");
+
+        if (manager == null
+                || managerPassword == null
+                || !PasswordUtil.verify(
+                managerPassword,
+                manager.getPasswordHash())) {
+            throw new IllegalArgumentException(
+                    "Email hoặc mật khẩu quản lý không đúng.");
         }
-        if (!"Branch Management".equals(manager.getRole()) && !"Administrator".equals(manager.getRole())) {
-            throw new IllegalArgumentException("You do not have permission to perform this action.");
+
+        try {
+            return new service.f_b.F_BCheckoutService().refundCounter(
+                    cashier,
+                    manager,
+                    bookingId,
+                    reason,
+                    ip);
+        } catch (SecurityException e) {
+            throw new IllegalArgumentException(e.getMessage(), e);
+        } catch (java.sql.SQLException e) {
+            System.getLogger(PosService.class.getName()).log(
+                    System.Logger.Level.ERROR,
+                    "Không ghi nhận được hoàn tiền POS",
+                    e);
+
+            throw new IllegalArgumentException(
+                    "Chưa ghi nhận được hoàn tiền. Hãy tải lại giao dịch.",
+                    e);
         }
-        if (!bookingDAO.cancelCounterBooking(bookingId)) {
-            throw new IllegalArgumentException("Refund failed. Please contact support.");
-        }
-        String safeReason = reason.replace("|", "/");
-        if (safeReason.length() > 60) {
-            safeReason = safeReason.substring(0, 60);
-        }
-        auditLogDAO.insert(cashier.getUserId(), "COUNTER_REFUND|booking=" + bookingId
-                + "|amount=" + b.getTotalAmount().toPlainString()
-                + "|method=" + b.getPaymentMethod()
-                + "|approvedBy=" + manager.getUserId()
-                + "|reason=" + safeReason, ip);
     }
 }

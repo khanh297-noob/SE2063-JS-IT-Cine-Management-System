@@ -6,10 +6,7 @@
         <h2 class="h5">Đơn #${selectedBooking.bookingId}</h2>
         <p>Khách: <c:out value="${selectedBooking.customerName}"/>
     </p>
-    <p class="text-muted small">
-    Đơn chưa có UnitPrice cần được đối chiếu với module bán hàng;
-    không lấy giá danh mục hiện tại để thay đơn giá cũ.
-</p>
+
 <table class="table">
         <thead>
             <tr>

@@ -52,11 +52,16 @@ public class PaymentCreateServlet extends HttpServlet {
 
         // Đơn 0đ (voucher giảm hết) -> xác nhận luôn
         if (b.getTotalAmount().signum() == 0) {
-            paymentService.payFreeBooking(b);
-            response.sendRedirect(request.getContextPath() + "/payment/result?bookingId=" + bookingId);
+            try {
+                paymentService.payFreeBooking(b);
+                response.sendRedirect(request.getContextPath() + "/payment/result?bookingId=" + bookingId);
+            } catch (IllegalArgumentException e) {
+                session.setAttribute("flashType", "error");
+                session.setAttribute("flashMsg", e.getMessage());
+                response.sendRedirect(request.getContextPath() + "/payment/checkout?bookingId=" + bookingId);
+            }
             return;
         }
-
         // Link gốc của web, vd http://localhost:8080/CineManagement
         String baseUrl = request.getScheme() + "://" + request.getServerName() + ":"
                 + request.getServerPort() + request.getContextPath();

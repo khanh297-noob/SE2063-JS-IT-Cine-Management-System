@@ -108,7 +108,13 @@ public class PosCounterServlet extends HttpServlet {
                         method, cashReceived, voucher, request.getRemoteAddr());
 
                 // VNPay: tạo link thanh toán VNPay, lưu vào session rồi sang màn hình hiện QR
-                if ("VNPay".equals(method)) {
+                Booking createdBooking = posService.getBooking(bookingId);
+
+                if (createdBooking == null) {
+                    throw new IllegalArgumentException("Không đọc được đơn vừa tạo.");
+                }
+
+                if ("VNPay".equals(method) && createdBooking.getTotalAmount().signum() > 0) {
                     String baseUrl = request.getScheme() + "://" + request.getServerName() + ":"
                             + request.getServerPort() + request.getContextPath();
                     String ip = request.getRemoteAddr();

@@ -32,7 +32,7 @@ public class FeatureMenuServlet extends HttpServlet {
                 case "/staff/promotions" -> {
                     AccessService.promotion(actor);
                     target = "Ticket Cashier".equals(actor.getRole())
-                            ? "/staff/promotions/validate"
+                            ? "/promotion-price-manage/validate-promotion"
                             : "/staff/promotions/manage";
                 }
                 default -> {

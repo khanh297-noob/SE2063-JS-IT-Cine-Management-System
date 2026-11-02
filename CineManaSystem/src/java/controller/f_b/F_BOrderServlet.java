@@ -33,6 +33,7 @@ public class F_BOrderServlet extends HttpServlet {
                     throw new IllegalArgumentException("Đơn không thuộc chi nhánh đang chọn.");
                 branch = booking.getBranchId();
                 request.setAttribute("selectedBooking", booking);
+                request.setAttribute("canPayCash", service.canPayCash(actor, id));
                 request.setAttribute("orderLines", service.lines(actor, id));
             }
             if (branch != null) {
@@ -86,13 +87,30 @@ public class F_BOrderServlet extends HttpServlet {
                 booking = FormUtil.integer(request, "bookingId");
                 if ("quantity".equals(action)) {
                     service.quantity(actor, booking, FormUtil.integer(request, "itemId"), FormUtil.integer(request, "quantity"));
-                } else if ("progress".equals(action)) {
-                    service.progress(actor, booking, request.getParameter("nextStatus"));
+                } else if ("payCash".equals(action)) {
+                    java.math.BigDecimal change = service.payCash(
+                            actor,
+                            booking,
+                            FormUtil.money(request, "cashReceived"),
+                            request.getRemoteAddr()
+                    );
+
+                    request.getSession().setAttribute(
+                            "toastSuccess",
+                            "Đã thu tiền. Tiền thừa: "
+                                    + change.toPlainString() + " đ."
+                    );
+
                 } else if ("cancel".equals(action)) {
                     service.cancel(actor, booking);
                 } else throw new IllegalArgumentException("Thao tác không hợp lệ.");
             }
-            request.getSession().setAttribute("toastSuccess", "Đã xử lý đơn #" + booking);
+            if (!"payCash".equals(action)) {
+                request.getSession().setAttribute(
+                        "toastSuccess",
+                        "Đã xử lý đơn #" + booking
+                );
+            }
         } catch (SecurityException e) {
             response.sendRedirect(request.getContextPath() + "/access-denied");
             return;

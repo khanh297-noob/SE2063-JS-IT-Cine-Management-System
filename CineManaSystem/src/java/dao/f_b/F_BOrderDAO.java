@@ -137,6 +137,49 @@ public class F_BOrderDAO {
     }
     public int cancelBooking(Connection c, int booking) throws SQLException {
         return update(c, "UPDATE dbo.Booking SET Status = 'Cancelled', CancelledAt = SYSDATETIME() WHERE BookingID = ? AND Status = 'Pending'", booking);
+
+
+    }
+
+    // Liên quan Nam: ghi vào bảng Payment dùng chung.
+    public int insertCashPayment(
+            Connection c,
+            int bookingId,
+            BigDecimal amount) throws SQLException {
+
+        return update(c, """
+            INSERT INTO dbo.Payment (
+                BookingID,
+                Amount,
+                PaymentMethod,
+                PaymentTime,
+                TransactionCode,
+                GatewayStatus
+            )
+            VALUES (?, ?, 'Cash', SYSDATETIME(), ?, 'Success')
+            """,
+                bookingId,
+                amount,
+                "FNB-CASH-" + bookingId
+        );
+    }
+
+    public int confirmCashBooking(
+            Connection c,
+            int bookingId,
+            int staffId) throws SQLException {
+
+        return update(c, """
+            UPDATE dbo.Booking
+            SET Status = 'Confirmed',
+                StaffID = ?,
+                Channel = 'Counter'
+            WHERE BookingID = ?
+              AND Status = 'Pending'
+            """,
+                staffId,
+                bookingId
+        );
     }
 
     private Booking mapBooking(ResultSet rs) throws SQLException {

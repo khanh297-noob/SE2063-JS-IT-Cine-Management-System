@@ -53,7 +53,7 @@
                 <div>
                     <p class="kp-eyebrow">Không gian quản trị</p>
                     <h1 id="portal-title">Quản lý chuỗi rạp</h1>
-                    <p class="kp-intro">Chọn phân hệ để bắt đầu công việc.</p>
+
                 </div>
                 <span class="kp-role">
                     <span class="kp-role-dot" aria-hidden="true"></span>
@@ -267,7 +267,7 @@
             <p id="portal-preview-note" class="kp-preview-note" hidden></p>
             <footer class="kp-footer">
                 <span>Cine Management System</span>
-                <span>Chọn phân hệ · Thao tác theo quyền được cấp</span>
+
             </footer>
         </main>
     </body>
