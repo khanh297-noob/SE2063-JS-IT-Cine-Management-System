@@ -105,25 +105,6 @@ public class F_BOrderService {
         });
     }
 
-    public void progress(User actor, int booking, String next) throws SQLException {
-        AccessService.fnb(actor);
-        DBContext.transaction(c -> {
-            Booking b = orders.findBooking(c, booking, true);
-            requireAccess(actor, b);
-            if (!"Confirmed".equals(b.getStatus()) || !"Success".equals(b.getPaymentStatus()))
-                throw new IllegalArgumentException("Chỉ chế biến sau khi thanh toán thành công.");
-            List<F_BOrder> lines = orders.lines(c, booking);
-            if (lines.isEmpty()) throw new IllegalArgumentException("Đơn không có món.");
-            String current = lines.get(0).getOrderStatus();
-            String expected = Map.of("Confirmed", "Preparing", "Preparing", "Ready", "Ready", "Delivered").get(current);
-            if (next == null || !next.equals(expected)
-                    || lines.stream().anyMatch(x -> !current.equals(x.getOrderStatus())))
-                throw new IllegalArgumentException("Bước chuyển trạng thái không hợp lệ.");
-            if (orders.updateStatus(c, booking, current, next) != lines.size())
-                throw new SQLException("Không cập nhật đủ dòng.");
-            return null;
-        });
-    }
 
     // Nam gọi bằng đúng Connection trong transaction thanh toán.
     public void confirmLinesInPayment(Connection c, int booking) throws SQLException {
@@ -149,21 +130,59 @@ public class F_BOrderService {
             throw new SQLException("Không xác nhận đủ dòng.");
     }
 
-    public void returnLinesInRefund(Connection c, int booking) throws SQLException {
+    public void returnLinesInRefund(Connection c, int bookingId)
+            throws SQLException {
         requireTransaction(c);
-        Booking b = orders.findBooking(c, booking, true);
-        if (b == null || b.getBranchId() == null || !"Refunded".equals(b.getPaymentStatus()))
-            throw new IllegalArgumentException("Chưa có hoàn tiền hợp lệ.");
-        for (F_BOrder line : orders.lines(c, booking)) {
+
+        Booking b = orders.findBooking(c, bookingId, true);
+
+        if (b == null || b.getBranchId() == null
+                || !"Cancelled".equals(b.getStatus())
+                || !"Refunded".equals(b.getPaymentStatus())) {
+            throw new IllegalArgumentException(
+                    "Chưa có hủy/hoàn tiền hợp lệ.");
+        }
+
+        List<F_BOrder> lines = orders.lines(c, bookingId);
+
+        // Kiểm tra tất cả trước khi thay đổi kho.
+        for (F_BOrder line : lines) {
             String status = line.getOrderStatus();
-            if ("Cancelled".equals(status)) continue;
-            if ("Delivered".equals(status)) throw new IllegalArgumentException("Món đã giao không được tự nhập kho.");
-            if (Set.of("Confirmed", "Preparing", "Ready").contains(status)) {
-                if (stocks.adjustStock(c, b.getBranchId(), line.getItemId(), line.getQuantity()) != 1)
-                    throw new SQLException("Không hoàn được tồn.");
-            } else if (!"Pending".equals(status)) throw new IllegalArgumentException("Trạng thái món không hợp lệ.");
-            if (orders.updateOneStatus(c, booking, line.getItemId(), status, "Cancelled") != 1)
-                throw new SQLException("Không hủy được dòng.");
+
+            if (!"Pending".equals(status)
+                    && !"Confirmed".equals(status)
+                    && !"Cancelled".equals(status)) {
+                throw new IllegalArgumentException(
+                        "Món đã chế biến hoặc giao; không được tự nhập lại kho.");
+            }
+        }
+
+        for (F_BOrder line : lines) {
+            String status = line.getOrderStatus();
+
+            // Gửi lại yêu cầu không cộng tồn lần nữa.
+            if ("Cancelled".equals(status)) {
+                continue;
+            }
+
+            // Chỉ Confirmed đã trừ kho nên mới được cộng lại.
+            if ("Confirmed".equals(status)
+                    && stocks.adjustStock(
+                    c,
+                    b.getBranchId(),
+                    line.getItemId(),
+                    line.getQuantity()) != 1) {
+                throw new SQLException("Không hoàn được tồn kho.");
+            }
+
+            if (orders.updateOneStatus(
+                    c,
+                    bookingId,
+                    line.getItemId(),
+                    status,
+                    "Cancelled") != 1) {
+                throw new SQLException("Dòng món đã thay đổi.");
+            }
         }
     }
 

@@ -52,7 +52,7 @@
                                 <button class="btn btn-outline-danger" type="submit">Hủy đơn chưa thanh toán</button>
                             </form>
                         </c:if>
-                        <c:if test="${selectedBooking.status eq 'Confirmed' and selectedBooking.paymentStatus eq 'Success' and not empty orderLines}">
+
                             <c:set var="current" value="${orderLines[0].orderStatus}"/>
                             <c:set var="next" value="${current eq 'Confirmed' ? 'Preparing' : (current eq 'Preparing' ? 'Ready' : (current eq 'Ready' ? 'Delivered' : ''))}"/>
                             <c:if test="${not empty next}">

@@ -57,6 +57,22 @@ public class PosVnpayQrServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/pos/print?bookingId=" + bookingId + "&auto=1");
             return;
         }
+
+        if ("REVIEW".equals(status)) {
+            session.removeAttribute("vnpayPayUrl_" + bookingId);
+
+            request.setAttribute(
+                    "errorMsg",
+                    "Đã ghi nhận tiền nhưng đơn không thể giao. "
+                            + "Vui lòng liên hệ quản lý để đối soát/hoàn tiền."
+            );
+
+            request.getRequestDispatcher(
+                    "/WEB-INF/view/common/error-nam.jsp"
+            ).forward(request, response);
+
+            return;
+        }
         if ("FAILED".equals(status)) {
             session.removeAttribute("vnpayPayUrl_" + bookingId);
             session.setAttribute("flashType", "error");

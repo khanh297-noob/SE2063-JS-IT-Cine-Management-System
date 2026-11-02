@@ -93,6 +93,11 @@ public class F_BCheckoutService {
         return DBContext.transaction(c -> {
             Booking b = requireBooking(c, bookingId);
             requirePending(b);
+            if (b.getTotalAmount().signum() <= 0) {
+                throw new IllegalArgumentException(
+                        "Đơn 0 đồng: dùng luồng xác nhận miễn phí."
+                );
+            }
             Payment p = payments.payment(c, bookingId);
             if (p != null) {
                 if (!"Pending".equals(p.getGatewayStatus()) || !"VNPay".equals(p.getPaymentMethod())
@@ -167,6 +172,7 @@ public class F_BCheckoutService {
                 throw new SQLException("Không ghi nhận được tiền thanh toán.");
             }
             if ("Confirmed".equals(b.getStatus())) {
+                payments.cancelForReview(c, bookingId);
                 logs.insert(c, b.getUserId(), "PAYMENT_REVIEW|booking=" + bookingId
                         + "|reason=legacy_confirmed_with_pending_payment", "system");
                 return "REVIEW";
@@ -222,69 +228,233 @@ public class F_BCheckoutService {
      * Nam/Hiệp chỉ gọi sau bước duyệt hoàn tương ứng. Đây là ghi nhận hoàn trong DB;
      * với VNPay, việc hoàn tiền thật do module Payment đối soát/thực hiện.
      */
-    public void refundApproved(User actor, int bookingId, String ip) throws SQLException {
+    /**
+     * true: đã ghi nhận hoàn.
+     * false: mới tiếp nhận yêu cầu hoàn VNPay.
+     */
+    public boolean refundApproved(User actor, int bookingId, String ip)
+            throws SQLException {
         AccessService.active(actor);
-        DBContext.transaction(c -> {
+
+        return DBContext.transaction(c -> {
             Booking b = requireBooking(c, bookingId);
             boolean customer = "Customer".equals(actor.getRole());
+
             if (customer) {
-                if (b.getUserId() != actor.getUserID()) throw new SecurityException("Không phải đơn của bạn.");
+                if (b.getUserId() != actor.getUserID()) {
+                    throw new SecurityException(
+                            "Đơn không thuộc tài khoản này.");
+                }
             } else {
-                AccessService.branch(actor, b.getBranchId());
-                if ("Ticket Cashier".equals(actor.getRole())
-                        && !Integer.valueOf(actor.getUserID()).equals(payments.staff(c, bookingId))) {
-                    throw new SecurityException("Không phải đơn do thu ngân này bán.");
-                }
+                // Thu ngân phải đi qua refundCounter để có quản lý duyệt.
+                AccessService.configureBranch(actor, b.getBranchId());
             }
+
             Payment p = payments.payment(c, bookingId);
-            if ("Cancelled".equals(b.getStatus()) && p != null && "Refunded".equals(p.getGatewayStatus())) return null;
-            if (!"Confirmed".equals(b.getStatus()) || p == null || !"Success".equals(p.getGatewayStatus())) {
-                throw new IllegalArgumentException("Đơn chưa đủ điều kiện ghi nhận hoàn.");
+
+            if (alreadyRefunded(b, p)) {
+                return true;
             }
-            boolean hasTicket = orders.hasTicket(c, bookingId);
-            if (hasTicket && !payments.ticketRefundAllowed(c, bookingId, customer ? 120 : 60)) {
-                throw new IllegalArgumentException("Vé đã check-in hoặc quá hạn hủy.");
-            }
-            // Chính sách bảo thủ: chỉ nhập lại món chưa bắt đầu chế biến.
-            for (F_BOrder line : orders.lines(c, bookingId)) {
-                if (!"Confirmed".equals(line.getOrderStatus())) {
-                    throw new IllegalArgumentException("Món đã chế biến/giao; cần chính sách hoàn riêng.");
-                }
-            }
-            payments.refund(c, bookingId);
-            food.returnLinesInRefund(c, bookingId);
-            logs.insert(c, actor.getUserID(), "ORDER_REFUND_RECORDED|booking=" + bookingId
-                    + "|amount=" + b.getTotalAmount().toPlainString(), ip);
-            return null;
+
+            requireRefundable(c, b, p, customer ? 120 : 60);
+
+            return finishRefund(
+                    c,
+                    b,
+                    p,
+                    actor.getUserID(),
+                    actor.getUserID(),
+                    "ORDER_REFUND_RECORDED",
+                    "customer_or_staff_request",
+                    ip);
         });
     }
 
-    /** Nút hoàn tiền mặt cho đơn chỉ F&B: chỉ Admin/Quản lý, không phải endpoint hoàn ngân hàng. */
-    public void refundFoodCash(User actor, int bookingId, String ip) throws SQLException {
-        AccessService.fnb(actor);
-        DBContext.transaction(c -> {
+
+
+    public boolean cancelUnpaid(int bookingId) throws SQLException {
+        return DBContext.transaction(c -> {
             Booking b = requireBooking(c, bookingId);
-            AccessService.configureBranch(actor, b.getBranchId());
+
+            if (!"Pending".equals(b.getStatus())) {
+                return false;
+            }
+
             Payment p = payments.payment(c, bookingId);
-            if (orders.hasTicket(c, bookingId) || p == null || !"Cash".equals(p.getPaymentMethod())) {
-                throw new IllegalArgumentException("Chỉ xử lý đơn F&B tiền mặt tại đây.");
+
+            if (p != null && !"Pending".equals(p.getGatewayStatus())) {
+                return false;
             }
-            if ("Cancelled".equals(b.getStatus()) && "Refunded".equals(p.getGatewayStatus())) return null;
-            if (!"Confirmed".equals(b.getStatus()) || !"Success".equals(p.getGatewayStatus())) {
-                throw new IllegalArgumentException("Đơn chưa đủ điều kiện hoàn.");
-            }
-            for (F_BOrder line : orders.lines(c, bookingId)) {
-                if (!"Confirmed".equals(line.getOrderStatus())) {
-                    throw new IllegalArgumentException("Chỉ hoàn kho khi món chưa bắt đầu chế biến.");
-                }
-            }
-            payments.refund(c, bookingId);
-            food.returnLinesInRefund(c, bookingId);
-            logs.insert(c, actor.getUserID(), "COUNTER_REFUND|booking=" + bookingId
-                    + "|amount=" + b.getTotalAmount().toPlainString()
-                    + "|method=Cash|approvedBy=" + actor.getUserID() + "|reason=FNB_unprepared", ip);
-            return null;
+
+            payments.failPending(c, bookingId);
+            payments.cancelPending(c, bookingId);
+
+            return true;
         });
+    }
+
+    /**
+     * Nam gọi khi thu ngân yêu cầu hủy và quản lý đã nhập mật khẩu duyệt.
+     */
+    public boolean refundCounter(
+            User cashier,
+            User supervisor,
+            int bookingId,
+            String reason,
+            String ip) throws SQLException {
+
+        String normalizedReason = reason == null ? "" : reason.trim();
+
+        if (normalizedReason.isEmpty()) {
+            throw new IllegalArgumentException("Cần nhập lý do hủy.");
+        }
+
+        if (cashier == null || supervisor == null) {
+            throw new SecurityException(
+                    "Thiếu người thao tác hoặc người duyệt.");
+        }
+
+        return DBContext.transaction(c -> {
+            // Đọc lại quyền hiện tại, không chỉ tin dữ liệu cũ trong session.
+            dao.admin.AdminUserDAO users = new dao.admin.AdminUserDAO();
+
+            User freshCashier = users.findById(c, cashier.getUserID());
+            User freshSupervisor = users.findById(c, supervisor.getUserID());
+
+            Booking b = requireBooking(c, bookingId);
+
+            AccessService.branch(freshCashier, b.getBranchId());
+
+            if (!"Ticket Cashier".equals(freshCashier.getRole())
+                    || !"Counter".equals(b.getChannel())
+                    || !Integer.valueOf(freshCashier.getUserID())
+                    .equals(payments.staff(c, bookingId))) {
+                throw new SecurityException(
+                        "Không phải đơn do thu ngân này bán.");
+            }
+
+            // Admin được toàn hệ thống; quản lý chỉ duyệt đúng chi nhánh.
+            AccessService.configureBranch(
+                    freshSupervisor,
+                    b.getBranchId());
+
+            Payment p = payments.payment(c, bookingId);
+
+            if (alreadyRefunded(b, p)) {
+                return true;
+            }
+
+            requireRefundable(c, b, p, 60);
+
+            return finishRefund(
+                    c,
+                    b,
+                    p,
+                    freshCashier.getUserID(),
+                    freshSupervisor.getUserID(),
+                    "COUNTER_REFUND",
+                    normalizedReason,
+                    ip);
+        });
+    }
+
+    private boolean alreadyRefunded(Booking b, Payment p) {
+        return "Cancelled".equals(b.getStatus())
+                && p != null
+                && "Refunded".equals(p.getGatewayStatus());
+    }
+
+    private void requireRefundable(
+
+            Connection c,
+            Booking b,
+            Payment p,
+            int cutoffMinutes) throws SQLException {
+        if (!orders.hasTicket(c, b.getBookingId())) {
+            throw new IllegalArgumentException(
+                    "Không hỗ trợ hủy/hoàn đơn F&B đã thanh toán.");
+        }
+        if (!"Confirmed".equals(b.getStatus())
+                || p == null
+                || !"Success".equals(p.getGatewayStatus())) {
+            throw new IllegalArgumentException(
+                    "Đơn chưa đủ điều kiện hoàn.");
+        }
+
+        if (p.getAmount().compareTo(b.getTotalAmount()) != 0) {
+            throw new IllegalArgumentException(
+                    "Số tiền đơn và thanh toán không khớp; cần đối soát.");
+        }
+
+        // Giữ mốc thời gian đang dùng: khách 120 phút, tại quầy 60 phút.
+        if (orders.hasTicket(c, b.getBookingId())
+                && !payments.ticketRefundAllowed(
+                c,
+                b.getBookingId(),
+                cutoffMinutes)) {
+            throw new IllegalArgumentException(
+                    "Vé đã check-in hoặc không còn đủ thời gian hủy.");
+        }
+
+        for (F_BOrder line : orders.lines(c, b.getBookingId())) {
+            if (!"Confirmed".equals(line.getOrderStatus())) {
+                throw new IllegalArgumentException(
+                        "Món đã chế biến/giao hoặc chưa xác nhận; "
+                                + "cần đối soát riêng.");
+            }
+        }
+    }
+
+    private boolean finishRefund(
+            Connection c,
+            Booking b,
+            Payment p,
+            int actorId,
+            int approverId,
+            String cashLog,
+            String reason,
+            String ip) throws SQLException {
+
+        if ("VNPay".equals(p.getPaymentMethod())) {
+            // Chưa có API hoàn tiền: chỉ ghi yêu cầu.
+            // Giữ nguyên Booking, Payment và tồn kho.
+            if (!payments.hasRefundRequest(c, b.getBookingId())) {
+                logs.insert(
+                        c,
+                        actorId,
+                        "REFUND_REQUEST|booking=" + b.getBookingId()
+                                + "|amount="
+                                + b.getTotalAmount().toPlainString()
+                                + "|method=VNPay"
+                                + "|requestedBy=" + actorId
+                                + "|supervisor=" + approverId
+                                + "|reason=" + clean(reason),
+                        ip);
+            }
+
+            return false;
+        }
+
+        if (!"Cash".equals(p.getPaymentMethod())) {
+            throw new IllegalArgumentException(
+                    "Phương thức hoàn chưa được hỗ trợ.");
+        }
+
+        // Tiền mặt: thao tác này ghi nhận việc nhân viên xác nhận hoàn.
+        payments.refund(c, b.getBookingId());
+        food.returnLinesInRefund(c, b.getBookingId());
+
+        logs.insert(
+                c,
+                actorId,
+                cashLog + "|booking=" + b.getBookingId()
+                        + "|amount=" + b.getTotalAmount().toPlainString()
+                        + "|method=Cash"
+                        + "|approvedBy=" + approverId
+                        + "|reason=" + clean(reason),
+                ip);
+
+        return true;
     }
 
     private Booking requireBooking(Connection c, int id) throws SQLException {

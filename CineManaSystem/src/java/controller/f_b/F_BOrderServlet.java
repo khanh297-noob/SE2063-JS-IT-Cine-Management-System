@@ -87,8 +87,6 @@ public class F_BOrderServlet extends HttpServlet {
                 booking = FormUtil.integer(request, "bookingId");
                 if ("quantity".equals(action)) {
                     service.quantity(actor, booking, FormUtil.integer(request, "itemId"), FormUtil.integer(request, "quantity"));
-                } else if ("progress".equals(action)) {
-                    service.progress(actor, booking, request.getParameter("nextStatus"));
                 } else if ("payCash".equals(action)) {
                     java.math.BigDecimal change = service.payCash(
                             actor,

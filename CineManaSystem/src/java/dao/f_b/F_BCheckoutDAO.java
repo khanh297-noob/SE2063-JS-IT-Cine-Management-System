@@ -130,6 +130,23 @@ public class F_BCheckoutDAO {
         }
     }
 
+    public int failPending(Connection c, int bookingId) throws SQLException {
+        return execute(c, """
+            UPDATE dbo.Payment SET GatewayStatus = 'Failed'
+            WHERE BookingID = ? AND GatewayStatus = 'Pending'
+            """, bookingId);
+    }
+
+    public void cancelForReview(Connection c, int bookingId) throws SQLException {
+        execute(c, """
+            UPDATE dbo.Booking
+            SET Status = 'Cancelled', CancelledAt = SYSDATETIME()
+            WHERE BookingID = ? AND Status = 'Confirmed'
+            """, bookingId);
+
+        cancelPending(c, bookingId);
+    }
+
     public void cancelPending(Connection c, int booking) throws SQLException {
         execute(c, """
                 UPDATE dbo.Booking SET Status = 'Cancelled', CancelledAt = SYSDATETIME()
@@ -145,6 +162,23 @@ public class F_BCheckoutDAO {
                 """, booking);
     }
 
+    public boolean hasRefundRequest(Connection c, int bookingId)
+            throws SQLException {
+        try (PreparedStatement ps = c.prepareStatement("""
+            SELECT TOP 1 1
+            FROM dbo.AuditLog
+            WHERE Action LIKE ?
+            """)) {
+
+            ps.setString(
+                    1,
+                    "REFUND_REQUEST|booking=" + bookingId + "|%");
+
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
     public void refund(Connection c, int booking) throws SQLException {
         if (execute(c, """
                 UPDATE dbo.Payment SET GatewayStatus = 'Refunded'

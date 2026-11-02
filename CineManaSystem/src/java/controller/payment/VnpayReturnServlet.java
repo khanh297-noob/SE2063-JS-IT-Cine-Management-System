@@ -36,7 +36,7 @@ public class VnpayReturnServlet extends HttpServlet {
 
         String code = paymentService.processVnpayResult(params);
         int bookingId = paymentService.getBookingIdFromTxnRef(params.get("vnp_TxnRef"));
-        if ("97".equals(code) || "01".equals(code) || "04".equals(code)) {
+        if ("97".equals(code) || "01".equals(code) || "04".equals(code) || "99".equals(code)) {
             request.setAttribute("errorMsg", "Invalid payment response (code " + code + "). "
                     + "Please contact support if your account was charged.");
             request.getRequestDispatcher("/WEB-INF/view/common/error-nam.jsp").forward(request, response);

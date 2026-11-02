@@ -133,18 +133,112 @@ public class VNPayGateway {
                 + "}";
         String json = postJson(QUERY_URL, body);
 
-        Map<String, String> result = new HashMap<>();
-        result.put("responseCode", getJsonValue(json, "vnp_ResponseCode"));
-        result.put("transactionStatus", getJsonValue(json, "vnp_TransactionStatus"));
-        result.put("transactionNo", getJsonValue(json, "vnp_TransactionNo"));
-        result.put("message", getJsonValue(json, "vnp_Message"));
-        String amount = getJsonValue(json, "vnp_Amount");
-        if (amount != null && !amount.isEmpty()) {
-            result.put("amount", new BigDecimal(amount).divide(BigDecimal.valueOf(100)).toPlainString());
+        try {
+            return readQueryResult(json, txnRef);
+        } catch (RuntimeException e) {
+            throw new IllegalArgumentException(
+                    "Không xác minh được kết quả tra cứu VNPay.",
+                    e
+            );
         }
+    }
+
+    private static Map<String, String> readQueryResult(
+            String json,
+            String txnRef) {
+
+        com.google.gson.JsonObject data =
+                com.google.gson.JsonParser.parseString(json)
+                        .getAsJsonObject();
+
+        Map<String, String> result = new HashMap<>();
+
+        String code = queryValue(data, "vnp_ResponseCode");
+        result.put("responseCode", code);
+
+        if (!"00".equals(code)) {
+            return result;
+        }
+
+        String[] keys = {
+                "vnp_ResponseId",
+                "vnp_Command",
+                "vnp_ResponseCode",
+                "vnp_Message",
+                "vnp_TmnCode",
+                "vnp_TxnRef",
+                "vnp_Amount",
+                "vnp_BankCode",
+                "vnp_PayDate",
+                "vnp_TransactionNo",
+                "vnp_TransactionType",
+                "vnp_TransactionStatus",
+                "vnp_OrderInfo",
+                "vnp_PromotionCode",
+                "vnp_PromotionAmount"
+        };
+
+        java.util.StringJoiner signed =
+                new java.util.StringJoiner("|");
+
+        for (String key : keys) {
+            signed.add(queryValue(data, key));
+        }
+
+        String receivedHash = queryValue(data, "vnp_SecureHash");
+
+        String expectedHash = HashUtil.hmacSHA512(
+                HASH_SECRET,
+                signed.toString()
+        );
+
+        if (receivedHash.isBlank()
+                || !expectedHash.equalsIgnoreCase(receivedHash)
+                || !TMN_CODE.equals(queryValue(data, "vnp_TmnCode"))
+                || !txnRef.equals(queryValue(data, "vnp_TxnRef"))
+                || !"01".equals(queryValue(data, "vnp_TransactionType"))) {
+
+            throw new IllegalArgumentException(
+                    "Kết quả tra cứu VNPay không hợp lệ."
+            );
+        }
+
+        String amount = queryValue(data, "vnp_Amount");
+
+        if (!amount.matches("[0-9]+")) {
+            throw new IllegalArgumentException("Thiếu số tiền VNPay.");
+        }
+
+        result.put(
+                "amount",
+                new BigDecimal(amount)
+                        .divide(BigDecimal.valueOf(100))
+                        .toPlainString()
+        );
+
+        result.put(
+                "transactionStatus",
+                queryValue(data, "vnp_TransactionStatus")
+        );
+
+        result.put(
+                "transactionNo",
+                queryValue(data, "vnp_TransactionNo")
+        );
+
         return result;
     }
 
+    private static String queryValue(
+            com.google.gson.JsonObject data,
+            String key) {
+
+        com.google.gson.JsonElement value = data.get(key);
+
+        return value == null || value.isJsonNull()
+                ? ""
+                : value.getAsString();
+    }
     // Định dạng ngày giờ VNPay: yyyyMMddHHmmss, giờ Việt Nam
     private static SimpleDateFormat vnTimeFormat() {
         SimpleDateFormat fmt = new SimpleDateFormat("yyyyMMddHHmmss");

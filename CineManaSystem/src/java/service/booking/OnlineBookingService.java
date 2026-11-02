@@ -331,18 +331,39 @@ public class OnlineBookingService {
         return null;
     }
 
-    public BigDecimal cancel(User user, int bookingId, String ip) throws BusinessException {
+    public BigDecimal cancel(User user, int bookingId, String ip)
+            throws BusinessException {
+
         Booking b = getBooking(user, bookingId);
         String reason = cancelBlockReason(user, b);
+
         if (reason != null) {
-            throw new BusinessException("Không thể hủy đơn " + b.getBookingCode() + ": " + reason);
+            throw new BusinessException(
+                    "Không thể hủy đơn "
+                            + b.getBookingCode()
+                            + ": "
+                            + reason);
         }
-        if (!bookingDAO.cancelCounterBooking(bookingId)) {
-            throw new BusinessException("Đơn đã được hủy trước đó.");
+
+        try {
+            new service.f_b.F_BCheckoutService().refundApproved(
+                    user,
+                    bookingId,
+                    ip);
+
+            return b.getTotalAmount();
+        } catch (IllegalArgumentException | SecurityException e) {
+            throw new BusinessException(e.getMessage());
+        } catch (SQLException e) {
+            System.getLogger(OnlineBookingService.class.getName()).log(
+                    System.Logger.Level.ERROR,
+                    "Không xử lý được yêu cầu hủy",
+                    e);
+
+            throw new BusinessException(
+                    "Chưa xử lý được yêu cầu. "
+                            + "Hãy tải lại đơn để kiểm tra.");
         }
-        auditLogDAO.insert(user.getUserId(), "ONLINE_CANCEL|booking=" + bookingId
-                + "|refund=" + b.getTotalAmount().toPlainString(), ip);
-        return b.getTotalAmount();
     }
 
     public void deactivate(User user, String password, boolean confirmed, String ip) throws SQLException, BusinessException {

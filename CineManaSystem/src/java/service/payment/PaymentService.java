@@ -4,6 +4,7 @@ import dao.booking.BookingDAO;
 import dao.payment.PaymentDAO;
 import dao.payment.PromotionDAO;
 import dao.pos.AuditLogDAO;
+
 import model.User;
 import model.booking.Booking;
 import model.payment.Payment;
@@ -16,6 +17,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
+
 /**
  * Nghiệp vụ thanh toán online (phần 6): checkout, voucher, VNPay (sandbox), đối soát.
  * Lỗi nghiệp vụ được báo bằng IllegalArgumentException(message) - Servlet bắt và hiển thị message.
@@ -26,6 +28,8 @@ public class PaymentService {
     private final PaymentDAO paymentDAO = new PaymentDAO();
     private final PromotionDAO promotionDAO = new PromotionDAO();
     private final AuditLogDAO auditLogDAO = new AuditLogDAO();
+    private final service.f_b.F_BCheckoutService fnbCheckout =
+            new service.f_b.F_BCheckoutService();
 
     public Booking getBooking(int bookingId) {
         return bookingDAO.getBooking(bookingId);
@@ -49,7 +53,7 @@ public class PaymentService {
     public int releaseExpiredBookings() {
         List<Integer> ids = bookingDAO.getExpiredPendingIds(HOLD_MINUTES);
         for (int id : ids) {
-            bookingDAO.cancelUnpaid(id);
+            cancelUnpaidBooking(id);
         }
         return ids.size();
     }
@@ -209,52 +213,128 @@ public class PaymentService {
     // ===================== Tạo thanh toán =====================
     // Đơn 0đ (voucher giảm hết) thì xác nhận luôn, không cần thanh toán
     public void payFreeBooking(Booking b) {
-        // Cột PaymentMethod chỉ cho phép VNPay / MoMo / Cash / Credit Card (CHECK trong DB) -> ghi Cash, mã FREE-... để phân biệt
-        paymentDAO.savePending(b.getBookingId(), BigDecimal.ZERO, "Cash", "FREE-" + b.getBookingCode());
-        bookingDAO.confirmPaid(b.getBookingId(), null);
+        if (b == null) {
+            throw new IllegalArgumentException("Không tìm thấy đơn.");
+        }
+
+        try {
+            fnbCheckout.payFree(b.getBookingId());
+        } catch (java.sql.SQLException e) {
+            throw paymentError(e);
+        }
     }
 
-    // VNPay: lưu Payment Pending rồi trả về link chuyển sang VNPay
-    public String createVnpayUrl(Booking b, String returnUrl, String clientIp) {
-        String txnRef = b.getBookingId() + "_" + System.currentTimeMillis();
-        paymentDAO.savePending(b.getBookingId(), b.getTotalAmount(), "VNPay", txnRef);
-        return VNPayGateway.createPaymentUrl(txnRef, b.getTotalAmount(),
-                "Thanh toan ve xem phim don " + b.getBookingCode(), returnUrl, clientIp);
+    public String createVnpayUrl(
+            Booking b,
+            String returnUrl,
+            String clientIp) {
+
+        if (b == null) {
+            throw new IllegalArgumentException("Không tìm thấy đơn.");
+        }
+
+        if (VNPayGateway.TMN_CODE.isBlank()
+                || VNPayGateway.HASH_SECRET.isBlank()) {
+            throw new IllegalArgumentException("Chưa cấu hình VNPay.");
+        }
+
+        try {
+            String proposedRef =
+                    b.getBookingId() + "_" + System.currentTimeMillis();
+
+            Payment p = fnbCheckout.prepareGateway(
+                    b.getBookingId(), proposedRef
+            );
+
+            return VNPayGateway.createPaymentUrl(
+                    p.getTransactionCode(),
+                    p.getAmount(),
+                    "Thanh toan don " + b.getBookingCode(),
+                    returnUrl,
+                    clientIp
+            );
+
+        } catch (java.sql.SQLException e) {
+            throw paymentError(e);
+        }
     }
 
-    // ===================== Kết quả VNPay =====================
-    /**
-     * Xử lý kết quả VNPay gửi về (dùng cho cả Return URL và IPN).
-     * @return mã theo chuẩn VNPay: 00 ok, 01 không thấy đơn, 02 đã xử lý, 04 sai số tiền, 97 sai chữ ký
-     */
     public String processVnpayResult(Map<String, String> params) {
-        if (!VNPayGateway.verifySignature(params)) {
+        if (params == null
+                || VNPayGateway.TMN_CODE.isBlank()
+                || VNPayGateway.HASH_SECRET.isBlank()
+                || !VNPayGateway.verifySignature(params)
+                || !VNPayGateway.TMN_CODE.equals(params.get("vnp_TmnCode"))) {
             return "97";
         }
+
         String txnRef = params.get("vnp_TxnRef");
         int bookingId = getBookingIdFromTxnRef(txnRef);
         Payment p = paymentDAO.getByBookingId(bookingId);
-        if (p == null || p.getTransactionCode() == null || !p.getTransactionCode().startsWith(txnRef)) {
+
+        if (txnRef == null || txnRef.isBlank() || p == null
+                || !"VNPay".equals(p.getPaymentMethod())
+                || p.getTransactionCode() == null
+                || !(p.getTransactionCode().equals(txnRef)
+                || p.getTransactionCode().startsWith(txnRef + "-"))) {
             return "01";
         }
-        BigDecimal paid = new BigDecimal(params.get("vnp_Amount")).divide(BigDecimal.valueOf(100));
+
+        String rawAmount = params.get("vnp_Amount");
+
+        if (rawAmount == null || !rawAmount.matches("[0-9]+")) {
+            return "04";
+        }
+
+        BigDecimal paid = new BigDecimal(rawAmount)
+                .divide(BigDecimal.valueOf(100));
+
         if (paid.compareTo(p.getAmount()) != 0) {
             return "04";
         }
-        if (!"Pending".equals(p.getGatewayStatus())) {
+
+        if ("Success".equals(p.getGatewayStatus())
+                || "Refunded".equals(p.getGatewayStatus())) {
             return "02";
         }
-        boolean success = "00".equals(params.get("vnp_ResponseCode"))
-                && "00".equals(params.get("vnp_TransactionStatus"));
-        if (success) {
-            confirm(bookingId, txnRef + "-" + params.get("vnp_TransactionNo"));
-        } else {
-            bookingDAO.cancelUnpaid(bookingId);
+
+        boolean success =
+                "00".equals(params.get("vnp_ResponseCode"))
+                        && "00".equals(params.get("vnp_TransactionStatus"));
+
+        try {
+            if (success) {
+                String transactionNo = params.get("vnp_TransactionNo");
+
+                if (transactionNo == null || transactionNo.isBlank()) {
+                    return "99";
+                }
+
+                String result = confirm(
+                        bookingId,
+                        txnRef + "-" + transactionNo
+                );
+
+                return "ALREADY".equals(result) ? "02" : "00";
+            }
+
+            if (!"Pending".equals(p.getGatewayStatus())) {
+                return "02";
+            }
+
+            return cancelUnpaidBooking(bookingId) ? "00" : "02";
+
+        } catch (IllegalArgumentException e) {
+            System.getLogger(PaymentService.class.getName()).log(
+                    System.Logger.Level.ERROR,
+                    "Không lưu được kết quả VNPay cho đơn " + bookingId,
+                    e
+            );
+
+            return "99";
         }
-        return "00";
     }
 
-    // txnRef dạng "{bookingId}_{millis}" -> bookingId
     public int getBookingIdFromTxnRef(String txnRef) {
         try {
             return Integer.parseInt(txnRef.split("_")[0]);
@@ -263,72 +343,170 @@ public class PaymentService {
         }
     }
 
-    /**
-     * Hỏi VNPay xem đơn đã được thanh toán chưa (dùng cho VNPay QR tại quầy).
-     * @return "PAID" (đã trả, đơn Confirmed) | "WAITING" (khách chưa trả xong) | "FAILED" (thất bại / hết giờ, đơn đã hủy)
-     */
-    public String checkVnpayPayment(Booking b) {
-        if ("Confirmed".equals(b.getStatus())) {
-            return "PAID";      // Return URL đã xác nhận trước rồi
-        }
-        if (!"Pending".equals(b.getStatus()) || !"Pending".equals(b.getPaymentStatus())) {
+    public String checkVnpayPayment(Booking input) {
+        if (input == null) {
             return "FAILED";
         }
-        Map<String, String> r;
+
+        Booking b = bookingDAO.getBooking(input.getBookingId());
+
+        if (b == null) {
+            return "WAITING";
+        }
+
+        String state = paymentState(b.getBookingId());
+
+        if (!"WAITING".equals(state)) {
+            return state;
+        }
+
         try {
-            r = VNPayGateway.queryPayment(b.getTransactionCode(), "127.0.0.1");
-        } catch (IllegalArgumentException e) {
-            return "WAITING";   // mất mạng tạm thời -> lần tải lại sau hỏi tiếp
-        }
-        if ("00".equals(r.get("responseCode")) && "00".equals(r.get("transactionStatus"))) {
-            // Đã trả: kiểm tra đúng số tiền rồi xác nhận đơn
-            if (r.get("amount") != null && new BigDecimal(r.get("amount")).compareTo(b.getTotalAmount()) != 0) {
-                return "WAITING";
+            Map<String, String> result = VNPayGateway.queryPayment(
+                    b.getTransactionCode(), "127.0.0.1"
+            );
+
+            if ("00".equals(result.get("responseCode"))
+                    && "00".equals(result.get("transactionStatus"))) {
+
+                String amount = result.get("amount");
+                String number = result.get("transactionNo");
+
+                if (amount == null || number == null || number.isBlank()
+                        || new BigDecimal(amount)
+                        .compareTo(b.getTotalAmount()) != 0) {
+                    return "WAITING";
+                }
+
+                confirm(
+                        b.getBookingId(),
+                        b.getTransactionCode() + "-" + number
+                );
+
+            } else if (("00".equals(result.get("responseCode"))
+                    && "02".equals(result.get("transactionStatus")))
+                    || getSecondsLeft(b) <= 0) {
+
+                cancelUnpaidBooking(b.getBookingId());
             }
-            confirm(b.getBookingId(), b.getTransactionCode() + "-" + r.get("transactionNo"));
-            return "PAID";
-        }
-        if ("00".equals(r.get("responseCode")) && "02".equals(r.get("transactionStatus"))) {
-            bookingDAO.cancelUnpaid(b.getBookingId());     // giao dịch lỗi
-            return "FAILED";
-        }
-        if (getSecondsLeft(b) <= 0) {
-            bookingDAO.cancelUnpaid(b.getBookingId());     // hết 10 phút giữ ghế
-            return "FAILED";
-        }
-        return "WAITING";       // "91" chưa có giao dịch / "01" khách đang thanh toán
-    }
 
-    // Xác nhận đã nhận tiền. Nếu tiền về khi đơn đã bị hủy (hết giờ giữ ghế) thì ghi log để hoàn tiền thủ công.
-    private void confirm(int bookingId, String txnCode) {
-        String result = bookingDAO.confirmPaid(bookingId, txnCode);
-        if ("LATE".equals(result)) {
-            Booking b = bookingDAO.getBooking(bookingId);
-            auditLogDAO.insert(b.getUserId(), "PAYMENT_LATE|booking=" + bookingId
-                    + "|amount=" + b.getTotalAmount().toPlainString() + "|needRefund=true", "system");
+            return paymentState(b.getBookingId());
+
+        } catch (IllegalArgumentException e) {
+            return "WAITING";
         }
     }
 
-    // ===================== Admin đối soát =====================
-    /**
-     * Admin / Quản lý cập nhật thủ công giao dịch đang Pending (đối chiếu với trang quản trị VNPay).
-     * Success -> xác nhận đơn; Failed -> hủy đơn và nhả ghế.
-     */
-    public void reconcile(int paymentId, String newStatus, User admin, String ip) {
+    private String paymentState(int bookingId) {
+        Booking b = bookingDAO.getBooking(bookingId);
+
+        if (b == null) {
+            return "WAITING";
+        }
+
+        if ("Success".equals(b.getPaymentStatus())) {
+            return "Confirmed".equals(b.getStatus())
+                    ? "PAID"
+                    : "REVIEW";
+        }
+
+        return "Pending".equals(b.getStatus())
+                && "Pending".equals(b.getPaymentStatus())
+                ? "WAITING"
+                : "FAILED";
+    }
+
+    private String confirm(int bookingId, String txnCode) {
+        try {
+            return fnbCheckout.confirmCaptured(bookingId, txnCode);
+        } catch (java.sql.SQLException e) {
+            throw paymentError(e);
+        }
+    }
+
+    public void reconcile(
+            int paymentId,
+            String newStatus,
+            User admin,
+            String ip) {
+
         Payment p = paymentDAO.getById(paymentId);
+
         if (p == null) {
-            throw new IllegalArgumentException("No search results.");
+            throw new IllegalArgumentException("Không tìm thấy giao dịch.");
         }
+
+        Booking b = bookingDAO.getBooking(p.getBookingId());
+
+        if (b == null) {
+            throw new IllegalArgumentException("Không tìm thấy đơn.");
+        }
+
+        try {
+            service.common.AccessService.configureBranch(
+                    admin, b.getBranchId()
+            );
+        } catch (SecurityException e) {
+            throw new IllegalArgumentException(
+                    "Không có quyền đối soát đơn này.", e
+            );
+        }
+
         if (!"Pending".equals(p.getGatewayStatus())) {
-            throw new IllegalArgumentException("Only Pending payments can be reconciled.");
+            throw new IllegalArgumentException(
+                    "Chỉ đối soát giao dịch Pending."
+            );
         }
+
         if ("Success".equals(newStatus)) {
-            confirm(p.getBookingId(), null);
+            String result = confirm(p.getBookingId(), null);
+
+            if ("LATE".equals(result) || "REVIEW".equals(result)) {
+                throw new IllegalArgumentException(
+                        "Đã ghi nhận tiền nhưng đơn không thể giao. "
+                                + "Cần đối soát/hoàn tiền."
+                );
+            }
+
         } else if ("Failed".equals(newStatus)) {
-            bookingDAO.cancelUnpaid(p.getBookingId());
+            if (!cancelUnpaidBooking(p.getBookingId())) {
+                throw new IllegalArgumentException(
+                        "Trạng thái đã thay đổi. Hãy tải lại giao dịch."
+                );
+            }
+
         } else {
-            throw new IllegalArgumentException("Invalid status.");
+            throw new IllegalArgumentException(
+                    "Trạng thái đối soát không hợp lệ."
+            );
         }
-        auditLogDAO.insert(admin.getUserId(), "PAYMENT_RECONCILE|payment=" + paymentId + "|status=" + newStatus, ip);
+
+        auditLogDAO.insert(
+                admin.getUserId(),
+                "PAYMENT_RECONCILE|payment=" + paymentId
+                        + "|status=" + newStatus,
+                ip
+        );
+    }
+
+    public boolean cancelUnpaidBooking(int bookingId) {
+        try {
+            return fnbCheckout.cancelUnpaid(bookingId);
+        } catch (java.sql.SQLException e) {
+            throw paymentError(e);
+        }
+    }
+
+    private IllegalArgumentException paymentError(java.sql.SQLException e) {
+        System.getLogger(PaymentService.class.getName()).log(
+                System.Logger.Level.ERROR,
+                "Không lưu được giao dịch thanh toán",
+                e
+        );
+
+        return new IllegalArgumentException(
+                "Chưa lưu được giao dịch. "
+                        + "Hãy tải lại để kiểm tra trạng thái.",
+                e
+        );
     }
 }

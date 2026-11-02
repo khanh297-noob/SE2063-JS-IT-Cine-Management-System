@@ -228,111 +228,133 @@ public class BookingDAO extends DBContext {
      * Khách tại quầy không có tài khoản nên UserID = thu ngân; StaffID = thu ngân, Channel = 'Counter'.
      * @return BookingID, hoặc -1 nếu ghế vừa bị người khác đặt / lỗi DB
      */
-    public int createCounterBooking(int cashierId, int branchId, Integer promoId, BigDecimal total, int showtimeId,
-            List<Seat> seats, List<FnbItem> items, String method, String txnCode) {
+    /**
+     * Ghi dữ liệu đơn POS bằng Connection do Service cung cấp.
+     * Booking ban đầu Pending; Service xác nhận sau khi xử lý F&B.
+     * Hàm này không mở Connection và không commit/rollback.
+     */
+    public int createCounterBooking(
+            Connection con,
+            int cashierId,
+            int branchId,
+            Integer promoId,
+            BigDecimal total,
+            int showtimeId,
+            List<Seat> seats,
+            List<FnbItem> items,
+            String method,
+            String txnCode) throws SQLException {
+
         boolean paid = "Cash".equals(method);
-        try (Connection con = getConnection()) {
-            con.setAutoCommit(false);
-            con.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
-            try {
-                // 1. Kiểm tra lại ghế còn trống (khóa dòng để 2 quầy không bán trùng):
-                //    chưa có vé còn hiệu lực VÀ không có khách online đang giữ (bảng SeatHold)
-                String checkSql = "SELECT 1 FROM Ticket WITH (UPDLOCK, HOLDLOCK) "
-                        + "WHERE ShowtimeID = ? AND SeatID = ? AND Status <> 'Cancelled' "
-                        + "UNION ALL "
-                        + "SELECT 1 FROM SeatHold WHERE ShowtimeID = ? AND SeatID = ? AND ExpiresAt > SYSDATETIME()";
-                for (Seat s : seats) {
-                    try (PreparedStatement ps = con.prepareStatement(checkSql)) {
-                        ps.setInt(1, showtimeId);
-                        ps.setInt(2, s.getSeatId());
-                        ps.setInt(3, showtimeId);
-                        ps.setInt(4, s.getSeatId());
-                        try (ResultSet rs = ps.executeQuery()) {
-                            if (rs.next()) {
-                                con.rollback();
-                                return -1;
-                            }
-                        }
-                    }
+
+        String checkSql = """
+            SELECT 1 FROM Ticket WITH (UPDLOCK, HOLDLOCK)
+            WHERE ShowtimeID = ? AND SeatID = ? AND Status <> 'Cancelled'
+            UNION ALL
+            SELECT 1 FROM SeatHold
+            WHERE ShowtimeID = ? AND SeatID = ?
+              AND ExpiresAt > SYSDATETIME()
+            """;
+
+        for (Seat seat : seats) {
+            try (PreparedStatement ps = con.prepareStatement(checkSql)) {
+                ps.setInt(1, showtimeId);
+                ps.setInt(2, seat.getSeatId());
+                ps.setInt(3, showtimeId);
+                ps.setInt(4, seat.getSeatId());
+
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) return -1;
                 }
-
-                // 2. Tạo Booking
-                int bookingId;
-                String bookingSql = "INSERT INTO Booking (UserID, PromoID, BranchID, BookingDate, TotalAmount, Status, Channel, StaffID) "
-                        + "VALUES (?, ?, ?, SYSDATETIME(), ?, ?, 'Counter', ?)";
-                try (PreparedStatement ps = con.prepareStatement(bookingSql, Statement.RETURN_GENERATED_KEYS)) {
-                    ps.setInt(1, cashierId);
-                    if (promoId == null) {
-                        ps.setNull(2, Types.INTEGER);
-                    } else {
-                        ps.setInt(2, promoId);
-                    }
-                    ps.setInt(3, branchId);
-                    ps.setBigDecimal(4, total);
-                    ps.setString(5, paid ? "Confirmed" : "Pending");
-                    ps.setInt(6, cashierId);
-                    ps.executeUpdate();
-                    try (ResultSet rs = ps.getGeneratedKeys()) {
-                        rs.next();
-                        bookingId = rs.getInt(1);
-                    }
-                }
-
-                // 3. Tạo vé cho từng ghế
-                String ticketSql = "INSERT INTO Ticket (BookingID, ShowtimeID, SeatID, TicketCode, FinalPrice, Status) "
-                        + "VALUES (?, ?, ?, ?, ?, 'Valid')";
-                for (Seat s : seats) {
-                    try (PreparedStatement ps = con.prepareStatement(ticketSql)) {
-                        ps.setInt(1, bookingId);
-                        ps.setInt(2, showtimeId);
-                        ps.setInt(3, s.getSeatId());
-                        ps.setString(4, newTicketCode());
-                        ps.setBigDecimal(5, s.getPrice());
-                        ps.executeUpdate();
-                    }
-                }
-
-                // 4. Đồ ăn
-                // F&B: lưu đơn giá tại thời điểm tạo đơn.
-
-                String fnbSql = """
-                INSERT INTO Booking_F_B (BookingID, ItemID, Quantity, UnitPrice, OrderStatus)
-                   VALUES (?, ?, ?, ?, 'Pending')
-                       """;
-
-                for (FnbItem f : items) {
-                    try (PreparedStatement ps = con.prepareStatement(fnbSql)) {
-                        ps.setInt(1, bookingId);
-                        ps.setInt(2, f.getItemId());
-                        ps.setInt(3, f.getQuantity());
-                        ps.setBigDecimal(4, f.getPrice());
-
-                        ps.executeUpdate();
-                    }
-                }
-
-                // 5. Thanh toán (tiền mặt => Success luôn; VNPay => Pending chờ khách trả)
-                String paySql = "INSERT INTO Payment (BookingID, Amount, PaymentMethod, PaymentTime, TransactionCode, GatewayStatus) "
-                        + "VALUES (?, ?, ?, GETDATE(), ?, ?)";
-                try (PreparedStatement ps = con.prepareStatement(paySql)) {
-                    ps.setInt(1, bookingId);
-                    ps.setBigDecimal(2, total);
-                    ps.setString(3, method);
-                    ps.setString(4, txnCode);
-                    ps.setString(5, paid ? "Success" : "Pending");
-                    ps.executeUpdate();
-                }
-
-                con.commit();
-                return bookingId;
-            } catch (SQLException e) {
-                con.rollback();
-                System.out.println("Lỗi createCounterBooking: " + e.getMessage());
             }
-        } catch (SQLException e) {
-            System.out.println("Lỗi kết nối createCounterBooking: " + e.getMessage());
         }
-        return -1;
+
+        int bookingId;
+
+        String bookingSql = """
+            INSERT INTO Booking (
+                UserID, PromoID, BranchID, BookingDate,
+                TotalAmount, Status, Channel, StaffID
+            )
+            VALUES (?, ?, ?, SYSDATETIME(), ?, 'Pending', 'Counter', ?)
+            """;
+
+        try (PreparedStatement ps = con.prepareStatement(
+                bookingSql, Statement.RETURN_GENERATED_KEYS)) {
+
+            ps.setInt(1, cashierId);
+
+            if (promoId == null) ps.setNull(2, Types.INTEGER);
+            else ps.setInt(2, promoId);
+
+            ps.setInt(3, branchId);
+            ps.setBigDecimal(4, total);
+            ps.setInt(5, cashierId);
+            ps.executeUpdate();
+
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                if (!rs.next()) {
+                    throw new SQLException("Không lấy được BookingID.");
+                }
+
+                bookingId = rs.getInt(1);
+            }
+        }
+
+        String ticketSql = """
+            INSERT INTO Ticket (
+                BookingID, ShowtimeID, SeatID,
+                TicketCode, FinalPrice, Status
+            )
+            VALUES (?, ?, ?, ?, ?, 'Valid')
+            """;
+
+        for (Seat seat : seats) {
+            try (PreparedStatement ps = con.prepareStatement(ticketSql)) {
+                ps.setInt(1, bookingId);
+                ps.setInt(2, showtimeId);
+                ps.setInt(3, seat.getSeatId());
+                ps.setString(4, newTicketCode());
+                ps.setBigDecimal(5, seat.getPrice());
+                ps.executeUpdate();
+            }
+        }
+
+        String foodSql = """
+            INSERT INTO Booking_F_B (
+                BookingID, ItemID, Quantity, UnitPrice, OrderStatus
+            )
+            VALUES (?, ?, ?, ?, 'Pending')
+            """;
+
+        for (FnbItem item : items) {
+            try (PreparedStatement ps = con.prepareStatement(foodSql)) {
+                ps.setInt(1, bookingId);
+                ps.setInt(2, item.getItemId());
+                ps.setInt(3, item.getQuantity());
+                ps.setBigDecimal(4, item.getPrice());
+                ps.executeUpdate();
+            }
+        }
+
+        String paymentSql = """
+            INSERT INTO Payment (
+                BookingID, Amount, PaymentMethod, PaymentTime,
+                TransactionCode, GatewayStatus
+            )
+            VALUES (?, ?, ?, SYSDATETIME(), ?, ?)
+            """;
+
+        try (PreparedStatement ps = con.prepareStatement(paymentSql)) {
+            ps.setInt(1, bookingId);
+            ps.setBigDecimal(2, total);
+            ps.setString(3, method);
+            ps.setString(4, txnCode);
+            ps.setString(5, paid ? "Success" : "Pending");
+            ps.executeUpdate();
+        }
+
+        return bookingId;
     }
 
     /**

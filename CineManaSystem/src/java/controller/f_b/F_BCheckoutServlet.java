@@ -34,7 +34,7 @@ public class F_BCheckoutServlet extends HttpServlet {
                     request.getSession().setAttribute("toastSuccess",
                             "Đã thu tiền. Tiền thừa: " + change.toPlainString() + " đ.");
                 }
-                case "refund" -> service.refundFoodCash(actor, bookingId, request.getRemoteAddr());
+
                 default -> throw new IllegalArgumentException("Thao tác không hợp lệ.");
             }
             if (request.getSession().getAttribute("toastSuccess") == null) {
