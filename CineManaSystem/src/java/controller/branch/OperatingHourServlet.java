@@ -51,6 +51,8 @@ public class OperatingHourServlet extends BranchScopedServlet {
         try {
             hourService.save(branchId, week);
             flashSuccess(req, "Đã lưu giờ mở cửa.");
+            notifyBranchManagers(req, branchId, "Giờ mở cửa của " + branchService.get(branchId).getName() + " đã thay đổi",
+                    "Kiểm tra lại lịch suất chiếu theo giờ mở cửa mới.", "/manage/branch/hours?branchId=" + branchId);
             redirect(req, resp, "/manage/branch/hours?branchId=" + branchId);
         } catch (BusinessException e) {
             req.setAttribute("errors", e.getErrors());

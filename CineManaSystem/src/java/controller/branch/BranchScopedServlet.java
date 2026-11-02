@@ -2,6 +2,8 @@ package controller.branch;
 
 import controller.BaseServlet;
 import model.User;
+import model.notification.Notification;
+import service.notification.NotificationService;
 import util.ForbiddenException;
 import util.PermissionUtil;
 
@@ -21,6 +23,8 @@ import java.io.IOException;
  * Mọi view đều nhận sẵn: isAdmin (boolean), managedBranchId (null với Admin).
  */
 public abstract class BranchScopedServlet extends BaseServlet {
+
+    private final NotificationService notificationService = new NotificationService();
 
     protected boolean isAdmin(HttpServletRequest req) {
         return PermissionUtil.isAdmin(req);
@@ -48,6 +52,16 @@ public abstract class BranchScopedServlet extends BaseServlet {
         Integer managed = managedBranchId(req);
         if (managed != null && managed != branchId)
             throw new ForbiddenException("Không có quyền với chi nhánh #" + branchId);
+    }
+
+    /**
+     * Báo cho Quản lý của chi nhánh branchId về thay đổi vừa lưu (gọi sau khi lưu thành công).
+     * Người vừa thao tác không nhận (BR-NT-04), nên Quản lý tự sửa chi nhánh mình thì không bị báo.
+     */
+    protected void notifyBranchManagers(HttpServletRequest req, int branchId, String title, String content, String link) {
+        User actor = PermissionUtil.getCurrentUser(req);
+        notificationService.notifyBranchManagers(branchId, actor == null ? null : actor.getUserId(),
+                Notification.TYPE_BRANCH, title, content, link);
     }
 
     @Override

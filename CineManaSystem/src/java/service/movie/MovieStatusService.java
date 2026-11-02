@@ -8,6 +8,8 @@ import dao.movie.MovieMediaDAO;
 import model.movie.Movie;
 import model.movie.MovieMedia;
 import model.movie.MovieStatusDTO;
+import model.notification.Notification;
+import service.notification.NotificationService;
 import util.BusinessException;
 import util.JdbcContext;
 import util.NotFoundException;
@@ -32,12 +34,14 @@ import java.util.Map;
  *           Phim không có thể loại (vd thể loại duy nhất bị xoá) không được phát sóng.
  * BR-MS-02  Sang "End of Screening": không còn suất chiếu sắp tới.
  * BR-MS-03  Đối soát tự động (khi khởi động, mỗi ngày lúc 00:01, mỗi lần mở trang quản lý phim / thể loại,
- *           sau khi đổi trạng thái chi nhánh):
- *           - Phim "Now Showing" không còn đủ BR-MS-01 (vd chi nhánh bị xoá / ngưng, hết khung ngày chiếu)
- *             -> về "Coming Soon", giống BR-GE-02. Còn suất chiếu sắp tới thì không tự chuyển, chỉ báo Admin.
- *           - Phim "Coming Soon" đã tới ngày khởi chiếu và đủ BR-MS-01 -> tự sang "Now Showing".
- *           - Phim "Coming Soon" đã quá ngày khởi chiếu nhưng chưa đủ BR-MS-01 -> giữ nguyên, báo Admin
- *             (và không hiện ở mục "Phim sắp chiếu" của khách).
+ *           sau khi đổi trạng thái chi nhánh): phim "Now Showing" không còn chi nhánh đang chiếu / thể loại /
+ *           poster (vd chi nhánh bị xoá / ngưng, hết khung ngày chiếu) -> về "Coming Soon", giống BR-GE-02.
+ *           Còn suất chiếu sắp tới thì không tự chuyển, chỉ báo Admin.
+ *           Ngày khởi chiếu KHÔNG làm trạng thái tự đổi: sửa ngày khởi chiếu thoải mái, trạng thái do Admin quyết.
+ * Thông báo (gửi sau khi đã commit, lỗi gửi không ảnh hưởng đổi trạng thái):
+ *   - Phim sang "Now Showing" -> mọi khách hàng ("Phim mới đang chiếu" / "Phim chiếu lại").
+ *   - Phim bị đối soát chuyển về "Coming Soon" -> mọi Admin.
+ *   - Mọi lần đổi trạng thái (tay hoặc đối soát) -> Quản lý các chi nhánh đang gán phim đó.
  */
 public class MovieStatusService {
 
@@ -51,13 +55,14 @@ public class MovieStatusService {
     private final MovieBranchDAO movieBranchDAO = new MovieBranchDAO();
     private final MovieMediaDAO movieMediaDAO = new MovieMediaDAO();
     private final ShowtimeDAO showtimeDAO = new ShowtimeDAO();
+    private final NotificationService notificationService = new NotificationService();
 
     public MovieStatusDTO getStatus(int movieId) throws SQLException, BusinessException {
         return JdbcContext.query(con -> load(con, movieId));
     }
 
     public void changeStatus(int movieId, String target) throws SQLException, BusinessException {
-        JdbcContext.transaction(con -> {
+        Movie before = JdbcContext.transaction(con -> {
             MovieStatusDTO s = load(con, movieId);
             Movie m = s.getMovie();
             if (target == null || !s.getAllowedTargets().contains(target))
@@ -77,35 +82,48 @@ public class MovieStatusService {
             if (!errors.isEmpty()) throw new BusinessException(errors);
 
             movieDAO.updateStatus(con, movieId, target);
-            return null;
+            return m;
         });
+        if (Movie.STATUS_NOW_SHOWING.equals(target)) {
+            boolean rerun = before.isEnded();
+            notificationService.notifyAllCustomers(Notification.TYPE_MOVIE,
+                    (rerun ? "Phim chiếu lại: " : "Phim mới đang chiếu: ") + before.getTitle(),
+                    "Đặt vé ngay tại các rạp CineGo.",
+                    "/movies/detail?id=" + movieId);
+        }
+        notificationService.notifyManagersOfMovie(movieId, Notification.TYPE_MOVIE_STATUS,
+                "Phim \"" + before.getTitle() + "\" chuyển sang " + statusLabel(target),
+                "Admin đã đổi trạng thái từ " + statusLabel(before.getStatus()) + " sang " + statusLabel(target)
+                        + ". Phim đang được gán cho chi nhánh của bạn.",
+                "/movies/detail?id=" + movieId);
+    }
+
+    /** Tên trạng thái hiển thị trong thông báo. */
+    private static String statusLabel(String status) {
+        if (Movie.STATUS_NOW_SHOWING.equals(status)) return "Đang chiếu";
+        if (Movie.STATUS_COMING_SOON.equals(status)) return "Sắp chiếu";
+        if (Movie.STATUS_ENDED.equals(status)) return "Ngừng chiếu";
+        return status;
     }
 
     /** Kết quả đối soát BR-MS-03, để báo lại cho Admin / ghi log. */
     public static final class RuleCheckResult {
-        private final List<String> promoted = new ArrayList<>();
         private final List<String> demoted = new ArrayList<>();
         private final List<String> needsAttention = new ArrayList<>();
-        private final List<String> overdue = new ArrayList<>();
+        /** Phim vừa bị chuyển về "Coming Soon": [movieId, tên, lý do] để gửi thông báo cho Admin. */
+        private final List<Object[]> demotedMovies = new ArrayList<>();
 
-        /** Phim "Coming Soon" đã tự sang "Now Showing". */
-        public List<String> getPromoted() { return promoted; }
         /** Phim đã chuyển về "Coming Soon", kèm lý do. */
         public List<String> getDemoted() { return demoted; }
         /** Phim vi phạm nhưng còn suất chiếu sắp tới nên không tự chuyển. */
         public List<String> getNeedsAttention() { return needsAttention; }
-        /** Phim "Coming Soon" đã quá ngày khởi chiếu nhưng chưa đủ điều kiện chiếu, kèm lý do. */
-        public List<String> getOverdue() { return overdue; }
         /** true nếu lần đối soát này không đổi dữ liệu và không có gì cần Admin xử lý gấp. */
-        public boolean isClean() { return promoted.isEmpty() && demoted.isEmpty() && needsAttention.isEmpty(); }
+        public boolean isClean() { return demoted.isEmpty() && needsAttention.isEmpty(); }
 
-        /** Thông báo cho Admin về các thay đổi / việc cần xử lý; null nếu isClean(). Không gồm danh sách quá hạn. */
+        /** Thông báo cho Admin về các thay đổi / việc cần xử lý; null nếu isClean(). */
         public String toMessage() {
             if (isClean()) return null;
             StringBuilder msg = new StringBuilder();
-            if (!promoted.isEmpty())
-                msg.append("Đã tự chuyển ").append(promoted.size()).append(" phim sang Now Showing (đã tới ngày khởi chiếu): ")
-                   .append(String.join(", ", promoted)).append(". ");
             if (!demoted.isEmpty())
                 msg.append("Đã chuyển ").append(demoted.size())
                    .append(" phim từ Now Showing về Coming Soon vì không còn đủ điều kiện đang chiếu: ")
@@ -117,14 +135,14 @@ public class MovieStatusService {
         }
     }
 
-    /** BR-MS-03: đưa trạng thái phim về đúng BR-MS-01 theo dữ liệu hiện có và ngày hôm nay. */
+    /** BR-MS-03: phim "Now Showing" không còn chi nhánh đang chiếu / thể loại / poster -> về "Coming Soon". */
     public RuleCheckResult enforceStatusRules() throws SQLException, BusinessException {
-        return JdbcContext.transaction(con -> {
+        RuleCheckResult checked = JdbcContext.transaction(con -> {
             RuleCheckResult result = new RuleCheckResult();
             LocalDate today = LocalDate.now();
 
             for (Movie m : movieDAO.findAll(con, Movie.STATUS_NOW_SHOWING, null)) {
-                List<String> missing = missingForShowing(con, m, today);
+                List<String> missing = missingShowingData(con, m, today);
                 if (missing.isEmpty()) continue;
                 String reason = "\"" + m.getTitle() + "\" (" + String.join(", ", missing);
                 int upcoming = showtimeDAO.countUpcomingByMovie(con, m.getMovieId());
@@ -133,29 +151,29 @@ public class MovieStatusService {
                 } else {
                     movieDAO.updateStatus(con, m.getMovieId(), Movie.STATUS_COMING_SOON);
                     result.demoted.add(reason + ")");
-                }
-            }
-
-            for (Movie m : movieDAO.findAll(con, Movie.STATUS_COMING_SOON, null)) {
-                if (m.getReleaseDate() == null || m.getReleaseDate().isAfter(today)) continue;
-                List<String> missing = missingForShowing(con, m, today);
-                if (missing.isEmpty()) {
-                    movieDAO.updateStatus(con, m.getMovieId(), Movie.STATUS_NOW_SHOWING);
-                    result.promoted.add("\"" + m.getTitle() + "\"");
-                } else {
-                    result.overdue.add("\"" + m.getTitle() + "\" (khởi chiếu " + m.getReleaseDate() + ", "
-                            + String.join(", ", missing) + ")");
+                    result.demotedMovies.add(new Object[]{m.getMovieId(), m.getTitle(), String.join(", ", missing)});
                 }
             }
             return result;
         });
+        // Chỉ báo khi trạng thái vừa đổi (một lần), không báo lại các phim "Cần xử lý" mỗi lần đối soát
+        for (Object[] d : checked.demotedMovies) {
+            notificationService.notifyAdmins(Notification.TYPE_MOVIE_STATUS,
+                    "Phim bị chuyển về Sắp chiếu: " + d[1],
+                    "Lý do: " + d[2] + ". Bổ sung dữ liệu rồi chuyển lại sang Đang chiếu.",
+                    "/manage/movie/status?movieId=" + d[0]);
+            notificationService.notifyManagersOfMovie((Integer) d[0], Notification.TYPE_MOVIE_STATUS,
+                    "Phim \"" + d[1] + "\" tạm chuyển về Sắp chiếu",
+                    "Hệ thống tự chuyển vì " + d[2] + ". Khách tạm thời không thấy phim ở mục Đang chiếu.",
+                    "/movies/detail?id=" + d[0]);
+        }
+        return checked;
     }
 
-    /** Các điều kiện BR-MS-01 phim còn thiếu vào ngày today; rỗng = đủ điều kiện "Now Showing". */
-    private List<String> missingForShowing(Connection con, Movie m, LocalDate today) throws SQLException {
+    /** Dữ liệu phim đang chiếu còn thiếu (chi nhánh đang chiếu / thể loại / poster); rỗng = đủ. Không xét ngày khởi chiếu. */
+    private List<String> missingShowingData(Connection con, Movie m, LocalDate today) throws SQLException {
         int movieId = m.getMovieId();
         List<String> missing = new ArrayList<>();
-        if (m.getReleaseDate() == null || m.getReleaseDate().isAfter(today)) missing.add("chưa tới ngày khởi chiếu");
         if (movieBranchDAO.countScreeningByMovie(con, movieId, today) == 0) missing.add("không có chi nhánh đang chiếu");
         if (movieGenreDAO.countByMovie(con, movieId) == 0) missing.add("không có thể loại");
         if (movieMediaDAO.countByMovieAndType(con, movieId, MovieMedia.TYPE_POSTER) == 0) missing.add("không có poster");

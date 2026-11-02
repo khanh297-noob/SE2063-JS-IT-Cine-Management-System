@@ -17,7 +17,7 @@ import service.movie.MovieStatusService;
 /**
  * Đối soát trạng thái phim BR-MS-03 (MovieStatusService.enforceStatusRules):
  * - Khi ứng dụng khởi động: dữ liệu có thể bị sửa thẳng trong database lúc ứng dụng tắt (vd xoá chi nhánh).
- * - Mỗi ngày lúc 00:01: trạng thái phụ thuộc ngày (tới ngày khởi chiếu, hết khung ngày chiếu của chi nhánh).
+ * - Mỗi ngày lúc 00:01: khung ngày chiếu của chi nhánh có thể vừa hết hạn (phim không còn chi nhánh đang chiếu).
  * Lỗi kết nối DB chỉ ghi log, không chặn ứng dụng; trang quản lý phim sẽ đối soát lại khi mở.
  */
 @WebListener
@@ -49,12 +49,8 @@ public class MovieRuleStartupCheck implements ServletContextListener {
     private void runCheck(String when) {
         try {
             MovieStatusService.RuleCheckResult r = new MovieStatusService().enforceStatusRules();
-            for (String s : r.getPromoted()) LOG.info("BR-MS-03 (" + when + "): chuyển sang Now Showing " + s);
             for (String s : r.getDemoted()) LOG.warning("BR-MS-03 (" + when + "): chuyển về Coming Soon " + s);
             for (String s : r.getNeedsAttention()) LOG.warning("BR-MS-03 (" + when + "): cần Admin xử lý " + s);
-            if (!r.getOverdue().isEmpty())
-                LOG.info("BR-MS-03 (" + when + "): " + r.getOverdue().size()
-                        + " phim Coming Soon đã quá ngày khởi chiếu nhưng chưa đủ điều kiện chiếu.");
             if (r.isClean()) LOG.info("BR-MS-03 (" + when + "): không có phim nào cần đổi trạng thái.");
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "Không đối soát được trạng thái phim (BR-MS-03, " + when + ")", e);

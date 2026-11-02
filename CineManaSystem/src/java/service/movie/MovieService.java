@@ -15,7 +15,6 @@ import util.NotFoundException;
 import util.TextUtil;
 
 import java.sql.SQLException;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -31,8 +30,9 @@ import java.util.Set;
  * BR-MV-02  Phân loại tuổi thuộc P, K, T13, T16, T18.
  * BR-MV-03  Phim phải có ít nhất một thể loại.
  * BR-MV-04  Phim mới luôn ở trạng thái "Coming Soon"; đổi trạng thái qua màn Movie Status.
- * BR-MV-05  Không xoá phim đã có suất chiếu; hãy chuyển "End of Screening".
- * BR-MV-06  Phim đang "Now Showing" không được đổi ngày khởi chiếu sang sau hôm nay (BR-MS-01).
+ * BR-MV-05  Không xoá phim khỏi database. Muốn ẩn phim khỏi khách thì chuyển sang "End of Screening"
+ *           (Coming Soon -> End of Screening là huỷ chiếu) để giữ lịch sử suất chiếu, vé, doanh thu.
+ *           Sửa ngày khởi chiếu không làm đổi trạng thái phim (trạng thái đổi qua màn Movie Status).
  */
 public class MovieService {
 
@@ -44,7 +44,6 @@ public class MovieService {
     private final MovieGenreDAO movieGenreDAO = new MovieGenreDAO();
     private final MovieMediaDAO movieMediaDAO = new MovieMediaDAO();
     private final MovieBranchDAO movieBranchDAO = new MovieBranchDAO();
-    private final ShowtimeDAO showtimeDAO = new ShowtimeDAO();
 
     public List<MovieSummaryDTO> list(String keyword, String status, Integer genreId)
             throws SQLException, BusinessException {
@@ -120,9 +119,6 @@ public class MovieService {
             if (m.getMovieId() != 0) {
                 existing = movieDAO.findById(con, m.getMovieId());
                 if (existing == null) throw new NotFoundException("Không tìm thấy phim #" + m.getMovieId());
-                if (existing.isNowShowing() && m.getReleaseDate() != null && m.getReleaseDate().isAfter(LocalDate.now()))
-                    errors.add("Phim đang chiếu nên ngày khởi chiếu không được sau hôm nay. "
-                            + "Muốn dời ngày khởi chiếu, hãy chuyển phim sang End of Screening trước.");
             }
             if (!errors.isEmpty()) throw new BusinessException(errors);
 
@@ -136,18 +132,6 @@ public class MovieService {
             }
             movieGenreDAO.replaceForMovie(con, id, genreIds);
             return id;
-        });
-    }
-
-    public void delete(int movieId) throws SQLException, BusinessException {
-        JdbcContext.transaction(con -> {
-            Movie m = movieDAO.findById(con, movieId);
-            if (m == null) throw new NotFoundException("Không tìm thấy phim #" + movieId);
-            if (showtimeDAO.countByMovie(con, movieId) > 0)
-                throw new BusinessException("\"" + m.getTitle() + "\" đã có suất chiếu nên không xoá được. "
-                        + "Hãy chuyển trạng thái sang Ngưng chiếu.");
-            movieDAO.delete(con, movieId); // MovieGenres, MovieMedia, MovieBranches xoá theo ON DELETE CASCADE
-            return null;
         });
     }
 

@@ -19,7 +19,8 @@ import java.util.Set;
  * Manage Movie.
  * GET  /manage/movie[?q=&status=&genreId=]
  * GET  /manage/movie?action=create | edit&id= | view&id=
- * POST action=save | delete
+ * POST action=save
+ * Không có xoá phim (BR-MV-05): muốn ẩn phim thì chuyển trạng thái sang End of Screening.
  */
 @WebServlet("/manage/movie")
 public class MovieServlet extends MovieAdminServlet {
@@ -58,9 +59,10 @@ public class MovieServlet extends MovieAdminServlet {
     protected void handlePost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException, SQLException, BusinessException {
         if ("delete".equals(action(req, "save"))) {
-            movieService.delete(requiredId(req, "id"));
-            flashSuccess(req, "Đã xoá phim.");
-            redirect(req, resp, "/manage/movie");
+            // BR-MV-05: không xoá phim khỏi database (kể cả gửi form tự sửa), chỉ chuyển trạng thái
+            int id = requiredId(req, "id");
+            flashError(req, "Không xoá phim khỏi hệ thống. Muốn ẩn phim với khách, hãy chuyển trạng thái sang Ngưng chiếu.");
+            redirect(req, resp, "/manage/movie/status?movieId=" + id);
             return;
         }
 

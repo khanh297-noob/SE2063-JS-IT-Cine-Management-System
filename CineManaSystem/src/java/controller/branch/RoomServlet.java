@@ -60,15 +60,20 @@ public class RoomServlet extends BranchScopedServlet {
             throws ServletException, IOException, SQLException, BusinessException {
         switch (action(req, "save")) {
             case "status" -> {
-                int id = roomInScope(req, requiredId(req, "id")).getRoomId();
-                roomService.changeStatus(id, str(req, "status"));
+                Room room = roomInScope(req, requiredId(req, "id"));
+                String status = str(req, "status");
+                roomService.changeStatus(room.getRoomId(), status);
                 flashSuccess(req, "Đã cập nhật trạng thái phòng.");
+                notifyBranchManagers(req, room.getBranchId(), "Phòng " + room.getRoomName() + " chuyển sang " + status,
+                        "Trạng thái phòng chiếu tại chi nhánh của bạn vừa thay đổi.", "/manage/rooms?branchId=" + room.getBranchId());
                 redirect(req, resp, "/manage/rooms" + branchQuery(req));
             }
             case "delete" -> {
-                int id = roomInScope(req, requiredId(req, "id")).getRoomId();
-                roomService.delete(id);
+                Room room = roomInScope(req, requiredId(req, "id"));
+                roomService.delete(room.getRoomId());
                 flashSuccess(req, "Đã xoá phòng.");
+                notifyBranchManagers(req, room.getBranchId(), "Phòng " + room.getRoomName() + " đã bị xoá",
+                        "Phòng chiếu và sơ đồ ghế của phòng đã bị xoá khỏi chi nhánh của bạn.", "/manage/rooms?branchId=" + room.getBranchId());
                 redirect(req, resp, "/manage/rooms" + branchQuery(req));
             }
             default -> {
@@ -87,6 +92,10 @@ public class RoomServlet extends BranchScopedServlet {
                 r.setRoomTypeId(intParam(req, "roomTypeId"));
                 try {
                     int savedId = roomService.save(r);
+                    notifyBranchManagers(req, r.getBranchId(),
+                            (id == null ? "Phòng mới " + r.getRoomName() + " được thêm" : "Phòng " + r.getRoomName() + " được cập nhật"),
+                            id == null ? "Chi nhánh của bạn có thêm phòng chiếu." : "Tên hoặc loại phòng chiếu vừa được sửa.",
+                            "/manage/rooms?branchId=" + r.getBranchId());
                     if (id == null) {
                         flashSuccess(req, "Đã tạo " + r.getRoomName() + ". Tiếp theo, sắp xếp ghế cho phòng.");
                         redirect(req, resp, "/manage/rooms/seats?roomId=" + savedId);

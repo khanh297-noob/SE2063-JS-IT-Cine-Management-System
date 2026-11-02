@@ -23,6 +23,7 @@
             <a class="cnav-link current" href="${ctx}/branch" aria-current="page">Rạp</a>
         </nav>
 
+        <%@ include file="/WEB-INF/views/common/notification-bell.jspf" %>
         <%-- Tài khoản (góc phải), giống trang Phim. Bấm tên để vào hồ sơ cá nhân. --%>
         <div class="account">
             <c:choose>

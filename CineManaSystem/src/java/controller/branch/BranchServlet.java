@@ -64,7 +64,13 @@ public class BranchServlet extends BranchScopedServlet {
             int id = requiredId(req, "id");
             String status = str(req, "status");
             branchService.changeStatus(id, status);
-            flashSuccess(req, Branch.STATUS_ACTIVE.equals(status) ? "Đã mở lại chi nhánh." : "Đã ngưng hoạt động chi nhánh.");
+            boolean reopened = Branch.STATUS_ACTIVE.equals(status);
+            flashSuccess(req, reopened ? "Đã mở lại chi nhánh." : "Đã ngưng hoạt động chi nhánh.");
+            notifyBranchManagers(req, id, "Chi nhánh " + branchService.get(id).getName()
+                            + (reopened ? " đã được mở lại" : " đã bị ngưng hoạt động"),
+                    reopened ? "Chi nhánh hoạt động trở lại, khách có thể đặt vé tại đây."
+                             : "Khách không đặt vé được tại chi nhánh. Liên hệ Admin nếu cần mở lại.",
+                    "/manage/branch");
             // BR-MS-03: chi nhánh đổi trạng thái có thể làm phim đủ / mất điều kiện đang chiếu
             String movieChanges = movieStatusService.enforceStatusRules().toMessage();
             if (movieChanges != null) flashError(req, movieChanges);
@@ -86,6 +92,9 @@ public class BranchServlet extends BranchScopedServlet {
         try {
             branchService.save(b);
             flashSuccess(req, (id == null ? "Đã thêm " : "Đã cập nhật ") + b.getName() + ".");
+            if (id != null)
+                notifyBranchManagers(req, id, "Thông tin chi nhánh " + b.getName() + " đã được cập nhật",
+                        "Địa chỉ, thành phố, hotline hoặc email của chi nhánh vừa được sửa.", "/manage/branch?action=edit&id=" + id);
             redirect(req, resp, "/manage/branch");
         } catch (BusinessException e) {
             req.setAttribute("errors", e.getErrors());

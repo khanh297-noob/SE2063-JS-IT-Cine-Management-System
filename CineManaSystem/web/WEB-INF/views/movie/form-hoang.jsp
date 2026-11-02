@@ -99,15 +99,10 @@
     </div>
 </form>
 
+<%-- BR-MV-05: phim không bị xoá khỏi hệ thống; ẩn phim bằng cách chuyển sang Ngưng chiếu --%>
 <c:if test="${not isNew}">
-    <form method="post" action="${ctx}/manage/movie" style="margin-top:20px">
-        <input type="hidden" name="action" value="delete">
-        <input type="hidden" name="id" value="${movie.movieId}">
-        <button class="btn btn-danger" type="submit"
-                data-confirm="Xoá phim ${fn:escapeXml(movie.title)} cùng poster, trailer và cấu hình chi nhánh?">Xoá phim</button>
-        <span class="meta">Chỉ xoá được phim chưa từng có suất chiếu.</span>
-    </form>
-    <script src="${ctx}/assets/js/confirm-hoang.js?v=${assetVer}"></script>
+    <p class="meta" style="margin-top:20px">Phim không xoá được khỏi hệ thống. Muốn ẩn phim với khách, hãy
+        <a href="${ctx}/manage/movie/status?movieId=${movie.movieId}">chuyển sang Ngưng chiếu</a>.</p>
 </c:if>
 <script src="${ctx}/assets/js/movie-cast-hoang.js?v=${assetVer}"></script>
 <%@ include file="/WEB-INF/views/common/footer-hoang.jspf" %>
