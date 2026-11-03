@@ -21,6 +21,9 @@
                     <div class="card-title">Bắt Đầu Ca Làm Việc</div>
                     <form method="post" action="${ctx}/pos/shift">
                         <input type="hidden" name="action" value="start">
+                        <c:if test="${empty branches}">
+                            <div class="alert alert-error">Không tải được danh sách rạp. Kiểm tra kết nối CSDL (ConnectDB.properties).</div>
+                        </c:if>
                         <div class="field">
                             <label>Rạp làm việc *</label>
                             <select name="branchId" required>
