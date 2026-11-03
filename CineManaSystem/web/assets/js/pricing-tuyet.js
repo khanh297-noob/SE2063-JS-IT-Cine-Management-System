@@ -1,23 +1,23 @@
 // Lọc bảng giá vé ở trang chủ (#pricing) theo chi nhánh.
-// Mỗi nút có data-branch (id chi nhánh hoặc "all"), mỗi dòng của bảng có data-branch tương ứng.
+// Mỗi nút có data-branch (id chi nhánh hoặc "all"), mỗi bảng giá (.price-board) có data-branch tương ứng.
 (function () {
     'use strict';
 
     var filter = document.getElementById('branchFilter');
-    var table = document.getElementById('priceTable');
-    if (!filter || !table) {
+    var container = document.getElementById('priceBoards');
+    if (!filter || !container) {
         return;
     }
 
     var chips = filter.querySelectorAll('.branch-chip');
-    var rows = table.querySelectorAll('tbody tr');
+    var boards = container.querySelectorAll('.price-board');
     var empty = document.getElementById('priceEmpty');
 
     function apply(branch) {
         var shown = 0;
-        rows.forEach(function (row) {
-            var visible = branch === 'all' || row.getAttribute('data-branch') === branch;
-            row.hidden = !visible;
+        boards.forEach(function (board) {
+            var visible = branch === 'all' || board.getAttribute('data-branch') === branch;
+            board.hidden = !visible;
             if (visible) {
                 shown++;
             }
@@ -25,7 +25,6 @@
         chips.forEach(function (chip) {
             chip.classList.toggle('active', chip.getAttribute('data-branch') === branch);
         });
-        table.parentNode.hidden = shown === 0;
         if (empty) {
             empty.hidden = shown !== 0;
         }

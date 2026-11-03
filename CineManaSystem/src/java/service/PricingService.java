@@ -3,7 +3,7 @@ package service;
 import dao.PricingDao;
 import dao.PricingDao.MenuItem;
 import dao.PricingDao.ShowtimePrice;
-import dao.PricingDao.TicketPriceRow;
+import dao.PricingDao.RoomTypePriceBoard;
 import dao.PricingDao.Surcharge;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -34,20 +34,17 @@ public class PricingService implements AutoCloseable {
 
     // ==================== BẢNG GIÁ VÉ CÔNG KHAI (TRANG CHỦ) ====================
 
+    /** Số ngày tới được tính vào bảng giá ở trang chủ và số suất tối đa đọc từ DB. */
+    public static final int PUBLIC_DAYS = 30;
+    public static final int PUBLIC_MAX_ROWS = 3000;
+
     /**
-     * Bảng giá vé hiển thị cho khách ở trang chủ, theo từng chi nhánh.
-     * Giá vé = giá chuẩn + phụ thu loại phòng (+ phụ thu cuối tuần) + phụ thu loại ghế của chi nhánh,
-     * cùng công thức với ShowtimePriceCalculator khi tạo suất chiếu và khi tính tiền vé.
+     * Bảng giá vé cho khách xem ở trang chủ: mỗi chi nhánh một bảng cho từng loại phòng (2D, 3D, ...).
+     * Giá lấy từ Showtime.BasePrice các suất sắp chiếu nên luôn trùng với giá quản lý đã đặt ở trang
+     * Quản lý giá vé (đổi từng suất hay đổi hàng loạt theo phim đều hiện ra).
      */
-    public List<TicketPriceRow> listPublicTicketPrices() {
-        List<TicketPriceRow> rows = dao.findPublicPriceRows();
-        for (TicketPriceRow row : rows) {
-            BigDecimal weekday = ShowtimePriceCalculator.ticketPrice(
-                    ShowtimePriceCalculator.basePrice(row.getRoomSurcharge(), null), row.getSeatSurcharge());
-            row.setWeekdayPrice(weekday);
-            row.setWeekendPrice(weekday.add(ShowtimePriceCalculator.WEEKEND_SURCHARGE));
-        }
-        return rows;
+    public List<RoomTypePriceBoard> listPublicPriceBoards() {
+        return dao.findPriceBoards(PUBLIC_DAYS, PUBLIC_MAX_ROWS);
     }
 
     // ==================== GIÁ VÉ: SUẤT CHIẾU ====================
@@ -56,33 +53,36 @@ public class PricingService implements AutoCloseable {
      * Suất chiếu sắp tới trong phạm vi chi nhánh và bộ lọc, kèm giá gốc và giá hiện tại.
      * Giá gốc không lưu trong database mà tính lại bằng đúng công thức lúc tạo suất
      * (giá chuẩn + phụ thu loại phòng + phụ thu cuối tuần), nên không ai sửa được.
-     * Giá hiện tại là cột Showtime.BasePrice, quản lý được đổi.
+     * Giá cơ bản = Showtime.BasePrice trừ phụ thu loại phòng, quản lý được đổi. Khi lưu, BasePrice = giá cơ bản + phụ thu loại phòng.
      */
     public List<ShowtimePrice> listShowtimePrices(List<Integer> branchScope, Integer movieId,
             LocalDate from, LocalDate to) {
         List<ShowtimePrice> rows = dao.findShowtimePrices(branchScope, movieId, from.toString(), to.toString());
         for (ShowtimePrice row : rows) {
             row.setOriginalPrice(ShowtimePriceCalculator.basePrice(row.getRoomSurcharge(), row.getShowDate().toLocalDate()));
+            // Giá cơ bản = BasePrice đã lưu trừ phụ thu loại phòng (không âm)
+            BigDecimal base = row.getCurrentPrice().subtract(row.getRoomSurcharge());
+            row.setBasePrice(base.signum() < 0 ? BigDecimal.ZERO : base);
         }
         return rows;
     }
 
-    /** Đổi giá hiện tại của một suất chiếu. Giá gốc không đổi vì được tính lại, không lưu. */
+    /** Đổi giá cơ bản của một suất chiếu (lưu BasePrice = giá cơ bản + phụ thu loại phòng). Giá gốc không đổi vì được tính lại, không lưu. */
     public void updateShowtimePrice(List<Integer> branchScope, int showtimeId, String priceText)
             throws IllegalArgumentException {
-        BigDecimal price = MoneyUtil.parse(priceText, "Giá vé", false);
+        BigDecimal price = MoneyUtil.parse(priceText, "Giá cơ bản", false);
         if (dao.updateShowtimePrice(showtimeId, price, branchScope) == 0) {
             throw new IllegalArgumentException("Không đổi được giá: suất chiếu đã bắt đầu, đã đóng hoặc không thuộc chi nhánh của bạn!");
         }
     }
 
-    /** Đổi giá hiện tại cho tất cả suất chiếu sắp tới khớp bộ lọc. Trả về số suất được cập nhật. */
+    /** Đổi giá cơ bản cho tất cả suất chiếu sắp tới khớp bộ lọc (mỗi suất lưu giá cơ bản + phụ thu phòng của nó). Trả về số suất được cập nhật. */
     public int updateShowtimePricesInBulk(List<Integer> branchScope, Integer movieId,
             LocalDate from, LocalDate to, String priceText) throws IllegalArgumentException {
         if (from == null || to == null) {
             throw new IllegalArgumentException("Vui lòng chọn khoảng ngày chiếu trước khi đổi giá hàng loạt!");
         }
-        BigDecimal price = MoneyUtil.parse(priceText, "Giá vé", false);
+        BigDecimal price = MoneyUtil.parse(priceText, "Giá cơ bản", false);
         int updated = dao.updateShowtimePrices(branchScope, movieId, from.toString(), to.toString(), price);
         if (updated == 0) {
             throw new IllegalArgumentException("Không có suất chiếu nào phù hợp để đổi giá!");
@@ -100,18 +100,21 @@ public class PricingService implements AutoCloseable {
         return dao.findSeatTypes();
     }
 
-    /** Đổi phụ thu loại phòng. Phụ thu áp dụng cho mọi chi nhánh nên chỉ Admin được sửa. */
+    /**
+     * Đổi phụ thu loại phòng. Phụ thu áp dụng cho mọi chi nhánh nên chỉ Admin được sửa.
+     * Giá cơ bản của các suất sắp chiếu giữ nguyên, giá bán (BasePrice) đổi theo phụ thu mới.
+     */
     public void updateRoomTypeSurcharge(boolean isAdmin, int roomTypeId, String text) throws IllegalArgumentException {
         requireAdmin(isAdmin);
         BigDecimal surcharge = MoneyUtil.parse(text, "Phụ thu", true);
-        if (dao.updateRoomTypeSurcharge(roomTypeId, surcharge) == 0) {
+        if (dao.updateRoomTypeSurchargeKeepingBasePrice(roomTypeId, surcharge) == 0) {
             throw new IllegalArgumentException("Không tìm thấy loại phòng này!");
         }
     }
 
     /**
      * Quản lý chi nhánh chỉnh phụ thu loại phòng cho riêng chi nhánh mình: cộng (hoặc trừ, nhập số âm) một khoản
-     * vào giá hiện tại các suất sắp chiếu của loại phòng đó tại chi nhánh. Không đổi bảng RoomType nên không ảnh
+     * vào giá (BasePrice) các suất sắp chiếu của loại phòng đó tại chi nhánh. Không đổi bảng RoomType nên không ảnh
      * hưởng chi nhánh khác. Admin đổi phụ thu chung cho cả chuỗi bằng updateRoomTypeSurcharge.
      *
      * @return số suất chiếu được điều chỉnh

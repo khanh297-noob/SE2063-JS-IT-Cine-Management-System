@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import dao.PricingDao.TicketPriceRow;
+import dao.PricingDao.RoomTypePriceBoard;
 import service.PricingService;
 import service.movie.CustomerMovieService;
 import util.BusinessException;
@@ -20,8 +20,8 @@ import util.SessionUtil;
  * nên cùng quy tắc hiển thị: "Sắp chiếu" chỉ gồm phim có ngày khởi chiếu sau hôm nay (BR-MS-03).
  * GET /home?tab=showing|coming   phim đang chiếu (mặc định) hoặc sắp chiếu
  *
- * Mục "Giá vé" (#pricing) lấy từ PricingService.listPublicTicketPrices():
- *   ticketPrices     danh sách dòng giá (chi nhánh, loại phòng, loại ghế, giá ngày thường, giá cuối tuần)
+ * Mục "Giá vé" (#pricing) lấy từ PricingService.listPublicPriceBoards():
+ *   priceBoards      bảng giá vé của từng loại phòng tại từng chi nhánh (gộp từ Showtime.BasePrice các suất sắp chiếu)
  *   pricingBranches  các chi nhánh có bảng giá (branchId -> tên) dùng cho bộ lọc chi nhánh
  * Lỗi khi tải bảng giá không làm hỏng trang chủ, mục giá vé chỉ hiển thị thông báo.
  */
@@ -52,11 +52,11 @@ public class HomeServlet extends HttpServlet {
     private void loadTicketPrices(HttpServletRequest request) {
         Map<Integer, String> branches = new LinkedHashMap<>();
         try (PricingService pricingService = new PricingService()) {
-            java.util.List<TicketPriceRow> rows = pricingService.listPublicTicketPrices();
-            for (TicketPriceRow row : rows) {
+            java.util.List<RoomTypePriceBoard> rows = pricingService.listPublicPriceBoards();
+            for (RoomTypePriceBoard row : rows) {
                 branches.putIfAbsent(row.getBranchId(), row.getBranchName());
             }
-            request.setAttribute("ticketPrices", rows);
+            request.setAttribute("priceBoards", rows);
         } catch (RuntimeException e) {
             request.setAttribute("pricingError", true);
         }

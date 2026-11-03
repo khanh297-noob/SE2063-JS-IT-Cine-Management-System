@@ -26,11 +26,11 @@ import util.PermissionUtil;
 
 /**
  * Quản lý giá vé (Admin, Quản lý chi nhánh).
- * GET : danh sách suất chiếu sắp tới kèm giá gốc (cố định) và giá hiện tại (sửa được), và bảng phụ thu loại phòng, loại ghế.
+ * GET : danh sách suất chiếu sắp tới kèm giá gốc (cố định) và giá cơ bản (sửa được), và bảng phụ thu loại phòng, loại ghế.
  * POST: action = updatePrice (một suất) | bulkPrice (nhiều suất theo bộ lọc)
  *              | roomTypeSurcharge | seatTypeSurcharge (hai loại này chỉ Admin, áp dụng cả chuỗi)
  *              | seatTypeBranch | seatTypeBranchReset (Quản lý chi nhánh: đặt / bỏ phụ thu loại ghế riêng của chi nhánh mình)
- *              | roomTypeAdjust (Quản lý chi nhánh: cộng/trừ phụ thu loại phòng vào giá hiện tại các suất của chi nhánh mình).
+ *              | roomTypeAdjust (Quản lý chi nhánh: cộng/trừ phụ thu loại phòng vào giá các suất của chi nhánh mình).
  *
  * Quản lý chỉ thao tác trên chi nhánh của mình ([User].BranchID). Giá vé đã bán (Ticket.FinalPrice)
  * không đổi khi đổi giá, chỉ ảnh hưởng vé bán sau đó.
@@ -117,18 +117,18 @@ public class TicketPricingServlet extends HttpServlet {
             if ("updatePrice".equals(action)) {
                 Integer showtimeId = requireId(request.getParameter("showtimeId"));
                 service.updateShowtimePrice(BranchScope.allowed(user, isAdmin), showtimeId, price);
-                Flash.success(request, "Đã cập nhật giá hiện tại của suất chiếu #" + showtimeId + ".");
+                Flash.success(request, "Đã cập nhật giá cơ bản của suất chiếu #" + showtimeId + " (đã cộng phụ thu loại phòng).");
 
             } else if ("bulkPrice".equals(action)) {
                 List<Integer> scope = BranchScope.resolve(user, isAdmin, branchId);
                 int updated = service.updateShowtimePricesInBulk(scope, movieId,
                         DateRange.parseDate(request.getParameter("fromDate")),
                         DateRange.parseDate(request.getParameter("toDate")), price);
-                Flash.success(request, "Đã cập nhật giá hiện tại của " + updated + " suất chiếu.");
+                Flash.success(request, "Đã cập nhật giá cơ bản của " + updated + " suất chiếu (đã cộng phụ thu loại phòng).");
 
             } else if ("roomTypeSurcharge".equals(action)) {
                 service.updateRoomTypeSurcharge(isAdmin, requireId(request.getParameter("id")), price);
-                Flash.success(request, "Đã cập nhật phụ thu loại phòng.");
+                Flash.success(request, "Đã cập nhật phụ thu loại phòng. Giá cơ bản các suất sắp chiếu giữ nguyên, giá bán đổi theo phụ thu mới.");
 
             } else if ("roomTypeAdjust".equals(action)) {
                 int updated = service.adjustRoomTypePriceForBranch(BranchScope.allowed(user, isAdmin), isAdmin,

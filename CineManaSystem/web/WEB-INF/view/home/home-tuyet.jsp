@@ -6,7 +6,7 @@
   Trang chủ khách hàng. HomeServlet (/home) đặt sẵn:
     movies       danh sách phim của tab đang chọn (model.movie.MovieSummaryDTO: movie, posterUrl, genreText)
     tab          showing | coming
-    ticketPrices, pricingBranches   bảng giá vé theo chi nhánh cho mục #pricing (pricingError nếu tải lỗi)
+    priceBoards, pricingBranches   bảng giá vé theo loại phòng của từng chi nhánh cho mục #pricing (pricingError nếu tải lỗi)
     currentUser  người đang đăng nhập, null nếu là khách
 --%>
 <c:set var="ctx" value="${pageContext.request.contextPath}"/>
@@ -218,12 +218,12 @@
                 <c:when test="${pricingError}">
                     <div class="movie-empty">Hiện chưa tải được bảng giá vé. Vui lòng thử lại sau.</div>
                 </c:when>
-                <c:when test="${empty ticketPrices}">
-                    <div class="movie-empty">Hiện chưa có bảng giá vé.</div>
+                <c:when test="${empty priceBoards}">
+                    <div class="movie-empty">Hiện chưa có suất chiếu sắp tới nên chưa có giá vé.</div>
                 </c:when>
                 <c:otherwise>
-                    <%-- Bộ lọc chi nhánh: assets/js/pricing-tuyet.js ẩn/hiện các dòng theo data-branch.
-                         Khi chưa có JS, tất cả dòng vẫn hiển thị. --%>
+                    <%-- Bộ lọc chi nhánh: assets/js/pricing-tuyet.js ẩn/hiện các bảng giá theo data-branch.
+                         Khi chưa có JS, tất cả bảng vẫn hiển thị. --%>
                     <div class="branch-filter" id="branchFilter" role="group" aria-label="Lọc giá vé theo chi nhánh">
                         <button type="button" class="branch-chip active" data-branch="all">Tất cả chi nhánh</button>
                         <c:forEach var="b" items="${pricingBranches}">
@@ -231,35 +231,54 @@
                         </c:forEach>
                     </div>
 
-                    <div class="price-table-wrap">
-                        <table class="price-table" id="priceTable">
-                            <thead>
-                                <tr>
-                                    <th>Chi nhánh</th>
-                                    <th>Loại phòng</th>
-                                    <th>Loại ghế</th>
-                                    <th class="price-col">Thứ 2 - Thứ 6</th>
-                                    <th class="price-col">Thứ 7 &amp; Chủ nhật</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <c:forEach var="p" items="${ticketPrices}">
-                                    <tr data-branch="${p.branchId}">
-                                        <td><c:out value="${p.branchName}"/></td>
-                                        <td><c:out value="${p.roomType}"/></td>
-                                        <td><c:out value="${p.seatType}"/></td>
-                                        <td class="price-col"><fmt:formatNumber value="${p.weekdayPrice}" pattern="#,##0"/> ₫</td>
-                                        <td class="price-col"><fmt:formatNumber value="${p.weekendPrice}" pattern="#,##0"/> ₫</td>
-                                    </tr>
-                                </c:forEach>
-                            </tbody>
-                        </table>
+                    <div class="price-boards" id="priceBoards">
+                        <c:forEach var="bd" items="${priceBoards}">
+                            <article class="price-board" data-branch="${bd.branchId}">
+                                <div class="price-board-type"><span><c:out value="${bd.roomType}"/></span></div>
+                                <div class="price-board-body">
+                                    <h3 class="price-board-title">
+                                        BẢNG GIÁ VÉ <c:out value="${bd.roomType}"/> - <c:out value="${bd.branchName}"/>
+                                    </h3>
+                                    <table class="price-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Ngày chiếu</th>
+                                                <th class="price-col">Trước 18h</th>
+                                                <th class="price-col">Từ 18h</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>Thứ 2 - Thứ 6</td>
+                                                <td class="price-col">${bd.weekdayBefore.text}</td>
+                                                <td class="price-col">${bd.weekdayAfter.text}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Thứ 7, Chủ nhật</td>
+                                                <td class="price-col">${bd.weekendBefore.text}</td>
+                                                <td class="price-col">${bd.weekendAfter.text}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <ul class="price-board-notes">
+                                        <li>Giá vé ghế thường, áp dụng cho ${bd.showtimeCount} suất chiếu sắp tới.</li>
+                                        <c:if test="${not empty bd.seatExtras}">
+                                            <li>Phụ thu loại ghế:
+                                                <c:forEach var="x" items="${bd.seatExtras}" varStatus="st">
+                                                    <c:out value="${x.text}"/><c:if test="${!st.last}">; </c:if>
+                                                </c:forEach>
+                                            </li>
+                                        </c:if>
+                                    </ul>
+                                </div>
+                            </article>
+                        </c:forEach>
                     </div>
-                    <p class="price-empty" id="priceEmpty" hidden>Chi nhánh này chưa có bảng giá.</p>
+                    <p class="price-empty" id="priceEmpty" hidden>Chi nhánh này chưa có bảng giá (chưa có suất chiếu sắp tới).</p>
 
                     <p class="price-note">
-                        Giá vé = giá chuẩn + phụ thu loại phòng + phụ thu loại ghế của chi nhánh (cộng thêm phụ thu cuối tuần).
-                        Giá của từng suất chiếu có thể được rạp điều chỉnh, giá chính xác hiển thị khi bạn chọn suất chiếu và ghế.
+                        Giá lấy từ giá hiện tại do từng chi nhánh thiết lập cho các suất chiếu trong 30 ngày tới; hiển thị khoảng giá nếu
+                        các suất trong cùng khung có giá khác nhau, dấu — là chưa có suất chiếu ở khung đó.
                     </p>
                 </c:otherwise>
             </c:choose>

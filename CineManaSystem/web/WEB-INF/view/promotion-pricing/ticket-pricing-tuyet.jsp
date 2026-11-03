@@ -65,7 +65,7 @@
                 <div class="page-header">
                     <div>
                         <h1 class="page-title"><i class="fa-solid fa-ticket"></i> Quản lý giá vé</h1>
-                        <p class="page-subtitle">Giá gốc là giá ban đầu của suất chiếu và cố định; giá hiện tại là giá đang bán và có thể thay đổi. Vé đã bán giữ nguyên giá cũ, giá mới chỉ áp dụng cho vé bán sau đó.</p>
+                        <p class="page-subtitle">Giá gốc là giá ban đầu của suất chiếu và cố định; giá cơ bản là giá chưa gồm phụ thu loại phòng và có thể thay đổi. Khi lưu, hệ thống cộng phụ thu loại phòng vào giá cơ bản để ra giá của suất. Vé đã bán giữ nguyên giá cũ, giá mới chỉ áp dụng cho vé bán sau đó.</p>
                     </div>
                 </div>
 
@@ -105,11 +105,11 @@
                 <c:if test="${editableCount > 0}">
                     <div class="card">
                         <form method="post" action="${pageUrl}" class="filter-row"
-                              onsubmit="return confirm('Đổi giá hiện tại của ${editableCount} suất chiếu sắp tới đang hiển thị thành giá mới?');">
+                              onsubmit="return confirm('Đổi giá cơ bản của ${editableCount} suất chiếu sắp tới đang hiển thị thành giá mới?');">
                             <input type="hidden" name="action" value="bulkPrice">
                             <%@ include file="/WEB-INF/view/promotion-pricing/fragments/filter-hidden-tuyet.jsp" %>
                             <div class="filter-group">
-                                <label class="filter-label" for="bulkPrice">Đổi giá hiện tại hàng loạt cho ${editableCount} suất sắp tới đang hiển thị (đồng)</label>
+                                <label class="filter-label" for="bulkPrice">Đổi giá cơ bản hàng loạt cho ${editableCount} suất sắp tới đang hiển thị (đồng)</label>
                                 <input id="bulkPrice" type="text" inputmode="numeric" name="price" class="filter-input" placeholder="Ví dụ 85000" autocomplete="off">
                             </div>
                             <div class="filter-actions">
@@ -126,7 +126,7 @@
                             <thead>
                                 <tr>
                                     <th>Chi nhánh</th><th>Phim</th><th>Phòng</th><th>Ngày</th><th>Giờ</th>
-                                    <th>Trạng thái</th><th class="align-right">Vé đã bán</th><th class="align-right">Giá gốc (cố định)</th><th>Giá hiện tại (đồng)</th>
+                                    <th>Trạng thái</th><th class="align-right">Vé đã bán</th><th class="align-right">Giá gốc (cố định)</th><th>Giá cơ bản (đồng)</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -157,14 +157,14 @@
                                                                 <input type="hidden" name="showtimeId" value="${r.showtimeId}">
                                                                 <%@ include file="/WEB-INF/view/promotion-pricing/fragments/filter-hidden-tuyet.jsp" %>
                                                                 <input class="price-input" type="text" inputmode="numeric" name="price" autocomplete="off"
-                                                                       value="<fmt:formatNumber value='${r.currentPrice}' maxFractionDigits='0' groupingUsed='false'/>"
-                                                                       aria-label="Giá hiện tại suất chiếu ${r.showtimeId}">
+                                                                       value="<fmt:formatNumber value='${r.basePrice}' maxFractionDigits='0' groupingUsed='false'/>"
+                                                                       aria-label="Giá cơ bản suất chiếu ${r.showtimeId}">
                                                                 <button type="submit" class="btn-save">Lưu</button>
                                                             </form>
                                                         </c:when>
                                                         <c:otherwise>
                                                             <span title="Suất chiếu đã bắt đầu hoặc đã kết thúc, không thể đổi giá">
-                                                                <fmt:formatNumber value="${r.currentPrice}" pattern="#,##0"/> ₫
+                                                                <fmt:formatNumber value="${r.basePrice}" pattern="#,##0"/> ₫
                                                             </span>
                                                         </c:otherwise>
                                                     </c:choose>
@@ -180,14 +180,14 @@
                         </table>
                     </div>
                     <c:if test="${truncated}"><p class="note">Chỉ hiển thị ${maxRows} suất đầu tiên. Hãy thu hẹp bộ lọc để xem các suất còn lại.</p></c:if>
-                        <p class="note">Chỉ đổi được giá của suất chưa bắt đầu chiếu. Giá vé cuối = giá hiện tại + phụ thu loại ghế (phụ thu loại phòng đã nằm trong giá gốc khi tạo suất). Giá gốc được tính lại từ phụ thu loại phòng và ngày chiếu nên không sửa được.</p>
+                        <p class="note">Chỉ đổi được giá của suất chưa bắt đầu chiếu. Khi lưu, giá của suất = giá cơ bản + phụ thu loại phòng của phòng chiếu; giá vé cuối = giá của suất + phụ thu loại ghế. Admin đổi phụ thu loại phòng thì giá cơ bản giữ nguyên, giá của suất đổi theo. Giá gốc được tính lại từ phụ thu loại phòng và ngày chiếu nên không sửa được.</p>
                     </div>
 
                 <%-- Phụ thu: áp dụng cho mọi chi nhánh nên chỉ Admin sửa --%>
                 <div class="two-col">
                     <div class="card">
                         <h2 class="card-title">Phụ thu loại phòng</h2>
-                        <c:if test="${not isAdminUser}"><p class="note">Phụ thu chung do Admin đặt. Bạn có thể cộng hoặc trừ (nhập số âm) vào giá hiện tại các suất sắp chiếu của loại phòng đó tại chi nhánh mình; chi nhánh khác không bị ảnh hưởng.</p></c:if>
+                        <c:if test="${not isAdminUser}"><p class="note">Phụ thu chung do Admin đặt. Bạn có thể cộng hoặc trừ (nhập số âm) vào giá các suất sắp chiếu của loại phòng đó tại chi nhánh mình (giá cơ bản đổi theo khoản này); chi nhánh khác không bị ảnh hưởng.</p></c:if>
                             <table>
                                 <thead><tr><th>Loại phòng</th><th>Phụ thu chung (đồng)</th><c:if test="${not isAdminUser}"><th>Điều chỉnh cho chi nhánh mình (đồng)</th></c:if></tr></thead>
                                 <tbody>
@@ -213,7 +213,7 @@
                                         <c:if test="${not isAdminUser}">
                                             <td>
                                                 <form method="post" action="${pageUrl}" class="inline-form"
-                                                      onsubmit="return confirm('Cộng/trừ khoản này vào giá hiện tại các suất sắp chiếu của loại phòng này tại chi nhánh bạn?');">
+                                                      onsubmit="return confirm('Cộng/trừ khoản này vào giá các suất sắp chiếu của loại phòng này tại chi nhánh bạn?');">
                                                     <input type="hidden" name="action" value="roomTypeAdjust">
                                                     <input type="hidden" name="id" value="${t.id}">
                                                     <%@ include file="/WEB-INF/view/promotion-pricing/fragments/filter-hidden-tuyet.jsp" %>
