@@ -146,6 +146,56 @@ public class PricingDao extends DBContext {
         return list;
     }
 
+    /**
+     * Bảng giá vé công khai: mỗi dòng là một tổ hợp (chi nhánh, loại phòng, loại ghế) đang có thật,
+     * tức chi nhánh đang hoạt động có phòng Active thuộc loại đó và ghế Active thuộc loại ghế đó.
+     * Phụ thu loại ghế là phụ thu đang áp dụng tại chi nhánh (riêng của chi nhánh nếu có, không thì phụ thu chung).
+     * Giá ngày thường / cuối tuần được tính ở PricingService.
+     */
+    public List<TicketPriceRow> findPublicPriceRows() {
+        List<TicketPriceRow> list = new ArrayList<>();
+        String sql = "SELECT DISTINCT b.BranchID, b.Name AS BranchName, r.RoomType, ISNULL(rt.Surcharge, 0) AS RoomSurcharge, "
+                + "se.SeatType, sty.SeatTypeID, ISNULL(sty.Surcharge, 0) AS SeatSurcharge "
+                + "FROM Seat se "
+                + "INNER JOIN Room r ON r.RoomID = se.RoomID "
+                + "INNER JOIN Branch b ON b.BranchID = r.BranchID "
+                + "LEFT JOIN RoomType rt ON rt.Name = r.RoomType "
+                + "LEFT JOIN SeatType sty ON sty.Name = se.SeatType "
+                + "WHERE b.Status = 'Active' AND r.Status = 'Active' AND se.Status = 'Active' "
+                + "ORDER BY b.Name, RoomSurcharge, r.RoomType, SeatSurcharge, se.SeatType";
+        Map<Integer, Map<Integer, BigDecimal>> overridesByBranch = new java.util.HashMap<>();
+
+        try (PreparedStatement st = connection.prepareStatement(sql); ResultSet rs = st.executeQuery()) {
+            while (rs.next()) {
+                TicketPriceRow row = new TicketPriceRow();
+                row.branchId = rs.getInt("BranchID");
+                row.branchName = rs.getString("BranchName");
+                row.roomType = rs.getString("RoomType");
+                row.roomSurcharge = rs.getBigDecimal("RoomSurcharge");
+                row.seatType = rs.getString("SeatType");
+                row.seatSurcharge = rs.getBigDecimal("SeatSurcharge");
+
+                // Chi nhánh có phụ thu riêng cho loại ghế này thì dùng phụ thu riêng
+                int seatTypeId = rs.getInt("SeatTypeID");
+                if (!rs.wasNull()) {
+                    Map<Integer, BigDecimal> overrides = overridesByBranch.get(row.branchId);
+                    if (overrides == null) {
+                        overrides = SeatSurchargeDao.findOverrides(connection, row.branchId);
+                        overridesByBranch.put(row.branchId, overrides);
+                    }
+                    BigDecimal own = overrides.get(seatTypeId);
+                    if (own != null) {
+                        row.seatSurcharge = own;
+                    }
+                }
+                list.add(row);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     /** Tên loại ghế, null nếu không tồn tại. */
     public String findSeatTypeName(int seatTypeId) {
         try (PreparedStatement st = connection.prepareStatement("SELECT Name FROM SeatType WHERE SeatTypeID = ?")) {
@@ -409,6 +459,32 @@ public class PricingDao extends DBContext {
         public BigDecimal getBranchSurcharge() { return branchSurcharge; }
         /** Phụ thu đang áp dụng tại chi nhánh: giá riêng nếu có, không thì giá chung. */
         public BigDecimal getEffectiveSurcharge() { return branchSurcharge != null ? branchSurcharge : surcharge; }
+    }
+
+    /** Một dòng bảng giá vé công khai: (chi nhánh, loại phòng, loại ghế) và giá ngày thường / cuối tuần. */
+    public static class TicketPriceRow {
+        private int branchId;
+        private String branchName;
+        private String roomType;
+        private String seatType;
+        private BigDecimal roomSurcharge;
+        private BigDecimal seatSurcharge;
+        private BigDecimal weekdayPrice;
+        private BigDecimal weekendPrice;
+
+        public int getBranchId() { return branchId; }
+        public String getBranchName() { return branchName; }
+        public String getRoomType() { return roomType; }
+        public String getSeatType() { return seatType; }
+        public BigDecimal getRoomSurcharge() { return roomSurcharge; }
+        /** Phụ thu loại ghế đang áp dụng tại chi nhánh. */
+        public BigDecimal getSeatSurcharge() { return seatSurcharge; }
+        /** Giá vé thứ Hai đến thứ Sáu. */
+        public BigDecimal getWeekdayPrice() { return weekdayPrice; }
+        /** Giá vé thứ Bảy và Chủ nhật. */
+        public BigDecimal getWeekendPrice() { return weekendPrice; }
+        public void setWeekdayPrice(BigDecimal weekdayPrice) { this.weekdayPrice = weekdayPrice; }
+        public void setWeekendPrice(BigDecimal weekendPrice) { this.weekendPrice = weekendPrice; }
     }
 
     /** Một món trong thực đơn của chi nhánh. */

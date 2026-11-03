@@ -3,6 +3,7 @@ package service;
 import dao.PricingDao;
 import dao.PricingDao.MenuItem;
 import dao.PricingDao.ShowtimePrice;
+import dao.PricingDao.TicketPriceRow;
 import dao.PricingDao.Surcharge;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -29,6 +30,24 @@ public class PricingService implements AutoCloseable {
     @Override
     public void close() {
         dao.close();
+    }
+
+    // ==================== BẢNG GIÁ VÉ CÔNG KHAI (TRANG CHỦ) ====================
+
+    /**
+     * Bảng giá vé hiển thị cho khách ở trang chủ, theo từng chi nhánh.
+     * Giá vé = giá chuẩn + phụ thu loại phòng (+ phụ thu cuối tuần) + phụ thu loại ghế của chi nhánh,
+     * cùng công thức với ShowtimePriceCalculator khi tạo suất chiếu và khi tính tiền vé.
+     */
+    public List<TicketPriceRow> listPublicTicketPrices() {
+        List<TicketPriceRow> rows = dao.findPublicPriceRows();
+        for (TicketPriceRow row : rows) {
+            BigDecimal weekday = ShowtimePriceCalculator.ticketPrice(
+                    ShowtimePriceCalculator.basePrice(row.getRoomSurcharge(), null), row.getSeatSurcharge());
+            row.setWeekdayPrice(weekday);
+            row.setWeekendPrice(weekday.add(ShowtimePriceCalculator.WEEKEND_SURCHARGE));
+        }
+        return rows;
     }
 
     // ==================== GIÁ VÉ: SUẤT CHIẾU ====================
