@@ -21,7 +21,7 @@
             <div class="info-grid">
                 <div><small>Payment ID</small>${p.paymentId}</div>
                 <div><small>Mã đơn</small><b>${p.bookingCode}</b> <span class="st st-${p.bookingStatus}">${p.bookingStatus}</span></div>
-                <div><small>Phương thức</small>${p.paymentMethod}</div>
+                <div><small>Hình thức</small><span class="src ${p.counter ? 'src-counter' : 'src-online'}"><c:out value="${p.sourceLabel}"/></span></div>
                 <div><small>Số tiền</small><b class="text-red"><fmt:formatNumber value="${p.amount}" pattern="#,##0"/> ₫</b></div>
                 <div><small>Mã giao dịch</small><span style="word-break:break-all"><c:out value="${p.transactionCode}"/></span></div>
                 <div><small>Thời gian thanh toán</small><fmt:formatDate value="${p.paymentTime}" pattern="HH:mm:ss dd/MM/yyyy"/></div>

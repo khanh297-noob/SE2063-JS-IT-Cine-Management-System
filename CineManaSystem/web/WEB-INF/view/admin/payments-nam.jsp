@@ -24,12 +24,12 @@
         <form method="get" class="row" style="flex-wrap:wrap">
             <div style="flex:2"><label>Tìm kiếm</label>
                 <input type="text" name="q" value="<c:out value='${q}'/>" placeholder="Tên, email, mã đơn CG-..., mã giao dịch"></div>
-            <div><label>Phương thức</label>
+            <div><label>Hình thức</label>
                 <select name="method">
                     <option value="">Tất cả</option>
-                    <c:forEach var="m" items="VNPay,Cash">
-                        <option value="${m}" ${method == m ? 'selected' : ''}>${m}</option>
-                    </c:forEach>
+                    <option value="Cash" ${method == 'Cash' ? 'selected' : ''}>Tiền mặt tại quầy</option>
+                    <option value="VNPay-Counter" ${method == 'VNPay-Counter' ? 'selected' : ''}>VNPay tại quầy</option>
+                    <option value="VNPay-Online" ${method == 'VNPay-Online' ? 'selected' : ''}>VNPay online (đặt trên web)</option>
                 </select></div>
             <div><label>Trạng thái</label>
                 <select name="status">
@@ -56,16 +56,16 @@
             <c:when test="${empty payments}"><p class="text-muted center">No search results.</p></c:when>
             <c:otherwise>
                 <table class="tbl">
-                    <tr><th>#</th><th>Mã đơn</th><th>Khách / Người tạo</th><th>Phim · Rạp</th><th>Phương thức</th>
+                    <tr><th>#</th><th>Mã đơn</th><th>Khách / Người tạo</th><th>Phim · Rạp</th><th>Hình thức</th>
                         <th>Mã giao dịch</th><th>Thời gian</th><th class="right">Số tiền</th><th>Trạng thái</th><th></th></tr>
                     <c:forEach var="p" items="${payments}">
                         <tr>
                             <td>${p.paymentId}</td>
                             <td><b>${p.bookingCode}</b><div><span class="st st-${p.bookingStatus}">${p.bookingStatus}</span></div></td>
                             <td><c:out value="${p.customerName}"/><div class="text-muted"><c:out value="${p.customerEmail}"/>
-                                <c:if test="${p.customerRole != 'Customer'}"> · tại quầy</c:if></div></td>
+                                <c:if test="${p.counter}"> · tại quầy</c:if></div></td>
                             <td><c:out value="${p.movieTitle}"/><div class="text-muted"><c:out value="${p.branchName}"/></div></td>
-                            <td>${p.paymentMethod}</td>
+                            <td><span class="src ${p.counter ? 'src-counter' : 'src-online'}"><c:out value="${p.sourceLabel}"/></span></td>
                             <td style="max-width:170px;word-break:break-all" class="text-muted"><c:out value="${p.transactionCode}"/></td>
                             <td><fmt:formatDate value="${p.paymentTime}" pattern="HH:mm dd/MM/yyyy"/></td>
                             <td class="right"><b><fmt:formatNumber value="${p.amount}" pattern="#,##0"/> ₫</b></td>
