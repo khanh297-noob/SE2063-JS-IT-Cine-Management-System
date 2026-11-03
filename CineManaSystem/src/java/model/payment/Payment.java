@@ -24,12 +24,32 @@ public class Payment {
     private String bookingStatus;
     private Timestamp bookingDate;
     private int ticketCount;
+    private String channel;           // Booking.Channel: Online (khách đặt trên web) | Counter (bán tại quầy)
 
     public Payment() {
     }
 
     public String getBookingCode() {
         return String.format("CG-%08d", bookingId);
+    }
+
+    // Đơn cũ có thể để Channel NULL => coi như đặt online
+    public boolean isCounter() {
+        return "Counter".equals(channel);
+    }
+
+    // Hình thức thanh toán để hiển thị: Tiền mặt tại quầy | VNPay tại quầy | VNPay online
+    public String getSourceLabel() {
+        String m = "Cash".equals(paymentMethod) ? "Tiền mặt" : paymentMethod;
+        return m + (isCounter() ? " tại quầy" : " online");
+    }
+
+    public String getChannel() {
+        return channel;
+    }
+
+    public void setChannel(String channel) {
+        this.channel = channel;
     }
 
     public int getPaymentId() {
