@@ -2,7 +2,9 @@
    Định dạng layout: hàng nối bằng "/", ô nối bằng ",";
    ""=lối đi, "3"=ghế loại 3, "3x"=ghế loại 3 bị hỏng.
    Kiểm tra lối đi (BFS từ 4 góc) và Sweetbox theo cặp giống SeatLayoutValidator phía server,
-   để báo lỗi ngay khi tô; server vẫn kiểm tra lại khi lưu. */
+   để báo lỗi ngay khi tô; server vẫn kiểm tra lại khi lưu.
+   Ghế đôi (Sweetbox / Couple): 1 ghế đôi = 2 ô liền nhau trong hàng, ghép từ trái sang phải (1-2, 3-4...).
+   Tô 1 ô ghế đôi thì tự tô luôn ô bên cạnh để thành 1 cặp; đổi 1 ô của cặp thì đổi luôn ô còn lại. */
 (function () {
     var root = document.getElementById('matrixEditor');
     if (!root) return;
@@ -54,8 +56,27 @@
         return !!(original[r] && original[r][c]); // khoá: chỉ sửa ô vốn có ghế
     }
 
-    function apply(r, c) {
-        if (!canEdit(r, c)) return;
+    function isCouple(r, c) { return !!(grid[r][c] && sweetbox[grid[r][c].t]); }
+
+    /* Cột của ô còn lại trong cặp ghế đôi chứa ô (r, c); -1 nếu ô lẻ hoặc không phải ghế đôi. */
+    function partnerOf(r, c) {
+        if (!isCouple(r, c)) return -1;
+        var start = c;
+        while (start > 0 && isCouple(r, start - 1)) start--;
+        var end = c;
+        while (end + 1 < cols && isCouple(r, end + 1)) end++;
+        var p = (c - start) % 2 === 0 ? c + 1 : c - 1;
+        return p >= start && p <= end ? p : -1;
+    }
+
+    function runLength(r, c) {
+        var a = c, b = c;
+        while (a > 0 && isCouple(r, a - 1)) a--;
+        while (b + 1 < cols && isCouple(r, b + 1)) b++;
+        return b - a + 1;
+    }
+
+    function setCell(r, c) {
         var cur = grid[r][c];
         if (brush.kind === 'aisle') {
             if (locked) return;
@@ -65,7 +86,31 @@
         } else {
             grid[r][c] = { t: brush.type, b: false };
         }
-        paintCell(r, c);
+    }
+
+    /* single = tô từng ô bằng chuột: ghế đôi tự đi theo cặp. Tô cả hàng / cột / vùng thì giữ nguyên từng ô. */
+    function apply(r, c, single) {
+        if (!canEdit(r, c)) return;
+        var oldPartner = single ? partnerOf(r, c) : -1;
+        setCell(r, c);
+        if (single) {
+            if (oldPartner >= 0 && canEdit(r, oldPartner)
+                    && (brush.kind !== 'type' || !sweetbox[brush.type] || grid[r][oldPartner].t !== brush.type)) {
+                setCell(r, oldPartner); // đổi 1 chỗ của ghế đôi thì đổi cả ghế
+            }
+            if (isCouple(r, c) && runLength(r, c) % 2 !== 0) {
+                // ô ghế đôi còn lẻ: thêm 1 ô ở phía chưa có ghế đôi (không xô lệch các cặp sẵn có),
+                // ưu tiên ghế bên phải rồi bên trái; không có ghế mới lấn sang ô lối đi
+                var lc = c > 0 && isCouple(r, c - 1), rc = c + 1 < cols && isCouple(r, c + 1);
+                var sides = !lc && !rc ? [c + 1, c - 1] : !lc ? [c - 1] : !rc ? [c + 1] : [];
+                var free = function (k) { return k >= 0 && k < cols && canEdit(r, k) && !isCouple(r, k); };
+                var n = sides.filter(function (k) { return free(k) && grid[r][k]; })[0];
+                if (n === undefined && !locked) n = sides.filter(free)[0];
+                if (n !== undefined) grid[r][n] = { t: grid[r][c].t, b: grid[r][c].b };
+            }
+        }
+        for (var k = 0; k < cols; k++) paintCell(r, k, true); // cập nhật cách vẽ ghép cặp trong hàng
+        updateStats();
     }
 
     function cellEl(r, c) {
@@ -76,10 +121,13 @@
         var el = cellEl(r, c);
         if (!el) return;
         var s = grid[r][c];
+        var p = partnerOf(r, c);
         el.className = 'cell' + (s ? '' : ' aisle') + (s && s.b ? ' broken' : '') + (canEdit(r, c) ? '' : ' locked')
+                + (p > c ? ' pair-l' : p >= 0 ? ' pair-r' : '')
                 + (issues.cells[r + ',' + c] ? ' invalid' : '');
         el.style.backgroundColor = s ? (colors[s.t] || '#7d8299') : '';
-        el.setAttribute('aria-label', cellName(r, c) + (s ? (s.b ? ' hỏng' : '') : ' lối đi'));
+        el.setAttribute('aria-label', cellName(r, c) + (s ? (s.b ? ' hỏng' : '') : ' lối đi')
+                + (p >= 0 ? ' (ghế đôi ' + cellName(r, Math.min(c, p)) + '-' + (Math.max(c, p) + 1) + ')' : ''));
         if (!skipStats) updateStats();
     }
 
@@ -222,20 +270,20 @@
         var t = e.target;
         if (t.dataset.r !== undefined) {
             painting = true;
-            apply(+t.dataset.r, +t.dataset.c);
+            apply(+t.dataset.r, +t.dataset.c, true);
             e.preventDefault();
         }
     });
     gridEl.addEventListener('pointerover', function (e) {
         var t = e.target;
-        if (painting && t.dataset.r !== undefined) apply(+t.dataset.r, +t.dataset.c);
+        if (painting && t.dataset.r !== undefined) apply(+t.dataset.r, +t.dataset.c, true);
     });
     window.addEventListener('pointerup', function () { painting = false; });
 
     // ---- bàn phím (Enter / Space trên ô), tô cả hàng / cột ----
     gridEl.addEventListener('click', function (e) {
         var t = e.target;
-        if (t.dataset.r !== undefined && e.detail === 0) apply(+t.dataset.r, +t.dataset.c);
+        if (t.dataset.r !== undefined && e.detail === 0) apply(+t.dataset.r, +t.dataset.c, true);
         if (t.dataset.row !== undefined) for (var c = 0; c < cols; c++) apply(+t.dataset.row, c);
         if (t.dataset.col !== undefined) for (var r = 0; r < rows; r++) apply(r, +t.dataset.col);
     });

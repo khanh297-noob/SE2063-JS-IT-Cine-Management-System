@@ -93,7 +93,9 @@ public class OnlineBookingService {
             Set<Integer> sold = seatDAO.soldSeatIds(con, st.getShowtimeId());
             Map<Integer, Integer> holds = holdDAO.findActiveByShowtime(con, st.getShowtimeId());
             Map<String, SeatRow> rows = new LinkedHashMap<>();
-            for (SeatView seat : seatDAO.findByRoom(con, st.getRoomId())) {
+            List<SeatView> seats = seatDAO.findByRoom(con, st.getRoomId());
+            linkCouplePairs(seats);
+            for (SeatView seat : seats) {
                 if (seat.isBroken()) {
                     seat.setState(SeatView.BROKEN);
                 } else if (sold.contains(seat.getSeatId())) {
@@ -106,6 +108,20 @@ public class OnlineBookingService {
             }
             return new ArrayList<>(rows.values());
         });
+    }
+
+    /** Ghế đôi: nối 2 ô liền nhau của cùng một ghế đôi với nhau (SeatView.pair). */
+    static Map<Integer, Integer> linkCouplePairs(List<SeatView> seats) {
+        Map<Integer, Integer> pairs = CoupleSeats.pairs(seats, SeatView::getSeatId, SeatView::getRowLabel,
+                SeatView::getColNum, SeatView::getSeatType);
+        if (pairs.isEmpty()) return pairs;
+        Map<Integer, SeatView> byId = new HashMap<>();
+        for (SeatView s : seats) byId.put(s.getSeatId(), s);
+        for (SeatView s : seats) {
+            Integer other = pairs.get(s.getSeatId());
+            if (other != null) s.setPair(byId.get(other));
+        }
+        return pairs;
     }
 
     public int seatColumns(List<SeatRow> rows) {
@@ -159,11 +175,20 @@ public class OnlineBookingService {
         }
         JdbcContext.transaction(con -> {
             Map<Integer, SeatView> roomSeats = new HashMap<>();
-            for (SeatView s : seatDAO.findByRoom(con, st.getRoomId())) roomSeats.put(s.getSeatId(), s);
+            List<SeatView> allSeats = seatDAO.findByRoom(con, st.getRoomId());
+            for (SeatView s : allSeats) roomSeats.put(s.getSeatId(), s);
+            Map<Integer, Integer> couplePairs = linkCouplePairs(allSeats);
             for (int id : seatIds) {
                 SeatView s = roomSeats.get(id);
                 if (s == null) throw new BusinessException("Ghế không thuộc phòng chiếu của suất này (GB-07).");
                 if (s.isBroken()) throw new BusinessException("Ghế " + s.getCode() + " đang hỏng, vui lòng chọn ghế khác.");
+                Integer mate = couplePairs.get(id);
+                if (mate != null && !seatIds.contains(mate)) {
+                    throw new BusinessException("Ghế đôi " + s.getUnitCode() + " gồm 2 chỗ liền nhau, phải đặt cả 2 chỗ.");
+                }
+                if (mate != null && roomSeats.get(mate).isBroken()) {
+                    throw new BusinessException("Ghế đôi " + s.getUnitCode() + " đang hỏng, vui lòng chọn ghế khác.");
+                }
             }
             holdDAO.deleteByUserShowtime(con, user.getUserId(), showtimeId);
             holdDAO.deleteExpiredForShowtime(con, showtimeId);

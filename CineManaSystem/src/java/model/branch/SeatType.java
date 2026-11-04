@@ -10,9 +10,21 @@ public class SeatType {
     private BigDecimal surcharge = BigDecimal.ZERO;
     private String color;
 
-    /** Ghế đôi: tên "Sweetbox" / "Sweet box" (không phân biệt hoa thường, khoảng trắng). Phải xếp theo cặp. */
+    /** Ghế đôi: một ghế đôi chiếm 2 ô liền nhau trong sơ đồ, nên phải xếp theo cặp. */
     public boolean isSweetbox() {
-        return name != null && name.toLowerCase().replaceAll("[\\s_-]", "").contains("sweetbox");
+        return isCoupleName(name);
+    }
+
+    /**
+     * Tên loại ghế có phải ghế đôi không: "Sweetbox", "Sweet box", "Couple", "Ghế đôi", "Double"
+     * (không phân biệt hoa thường, dấu, khoảng trắng). Dùng chung cho sơ đồ ghế, đặt vé online và POS.
+     */
+    public static boolean isCoupleName(String name) {
+        if (name == null) return false;
+        String n = java.text.Normalizer.normalize(name, java.text.Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "").replace('đ', 'd').replace('Đ', 'd')
+                .toLowerCase().replaceAll("[\\s_-]", "");
+        return n.contains("sweetbox") || n.contains("couple") || n.contains("ghedoi") || n.contains("double");
     }
 
     public int getSeatTypeId() { return seatTypeId; }

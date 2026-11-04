@@ -89,7 +89,7 @@ public class PosCounterServlet extends HttpServlet {
             List<Seat> seats = new ArrayList<>();
             if (st != null) {
                 for (Seat s : posService.getSeats(st)) {
-                    if (selectedIds.contains(s.getSeatId())) {
+                    if (isChosen(s, selectedIds)) {
                         seats.add(s);
                     }
                 }
@@ -144,6 +144,12 @@ public class PosCounterServlet extends HttpServlet {
         showPage(request, response, shift, selectedIds, menu);
     }
 
+    /** Ghế được chọn; ghế đôi chỉ có 1 checkbox (ô bên trái) nhưng bán luôn cả 2 chỗ liền nhau. */
+    private static boolean isChosen(Seat s, List<Integer> selectedIds) {
+        return selectedIds.contains(s.getSeatId())
+                || (s.getPair() != null && selectedIds.contains(s.getPair().getSeatId()));
+    }
+
     /**
      * Đưa dữ liệu ra counter-nam.jsp: suất chiếu, sơ đồ ghế (đánh dấu ghế đang chọn), đồ ăn, hóa đơn.
      */
@@ -168,7 +174,7 @@ public class PosCounterServlet extends HttpServlet {
             Map<String, List<Seat>> seatRows = new LinkedHashMap<>();
             List<Seat> selectedSeats = new ArrayList<>();
             for (Seat s : posService.getSeats(st)) {
-                if (selectedIds.contains(s.getSeatId()) && "AVAILABLE".equals(s.getState())) {
+                if (isChosen(s, selectedIds) && "AVAILABLE".equals(s.getUnitState())) {
                     s.setSelected(true);
                     selectedSeats.add(s);
                 }

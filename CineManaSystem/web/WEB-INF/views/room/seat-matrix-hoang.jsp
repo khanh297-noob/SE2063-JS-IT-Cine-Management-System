@@ -96,7 +96,7 @@
         <hr>
         <p><strong id="totalSeats">0</strong> ghế dùng được</p>
         <p class="meta">Nhấn giữ và kéo để tô nhiều ô. Nhấn chữ cái đầu hàng hoặc số đầu cột để tô cả hàng, cả cột.</p>
-        <p class="meta">Lối đi phải liền nhau và thông ra ít nhất một góc phòng. Ghế Sweetbox phải đi theo cặp.</p>
+        <p class="meta">Lối đi phải liền nhau và thông ra ít nhất một góc phòng. Ghế đôi (Sweetbox) chiếm 2 ô liền nhau: tô 1 ô thì ô bên cạnh tự được tô theo, khi bán vé 2 ô là 1 ghế (2 vé).</p>
     </aside>
 </div>
 

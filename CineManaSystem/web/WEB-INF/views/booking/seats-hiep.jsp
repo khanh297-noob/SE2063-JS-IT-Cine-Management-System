@@ -58,12 +58,30 @@
                             <span class="bk-row-label">${row.label}</span>
                             <div class="bk-seat-cols" style="grid-template-columns: repeat(${seatCols}, 34px)">
                                 <c:forEach var="sv" items="${row.seats}">
-                                    <label class="bk-seat state-${sv.state}" style="grid-column: ${sv.colNum}; border-bottom-color: ${fn:escapeXml(sv.color)}"
-                                           title="${sv.code} · ${fn:escapeXml(sv.seatType)}${sv.broken ? ' · Ghế hỏng' : ''}" ${sv.broken ? 'data-broken="1"' : ''}>
-                                        <input type="checkbox" name="seatIds" value="${sv.seatId}" data-code="${sv.code}" data-price="${sv.price}"
-                                               ${sv.mine ? 'checked' : ''} ${sv.selectable ? '' : 'disabled'}>
-                                        <span>${sv.seatNumber}</span>
-                                    </label>
+                                    <c:choose>
+                                        <c:when test="${sv.coupleRight}"><%-- đã vẽ chung với ô bên trái của ghế đôi --%></c:when>
+                                        <c:when test="${sv.coupleLeft}">
+                                            <%-- Ghế đôi: 1 ghế rộng 2 chỗ liền nhau, chọn là giữ cả 2 chỗ (2 vé) --%>
+                                            <c:set var="mate" value="${sv.pair}"/>
+                                            <label class="bk-seat bk-couple state-${sv.unitState}" style="grid-column: ${sv.colNum} / span 2; border-bottom-color: ${fn:escapeXml(sv.color)}"
+                                                   title="Ghế đôi ${sv.unitCode} · ${fn:escapeXml(sv.seatType)} · 2 chỗ${sv.broken || mate.broken ? ' · Ghế hỏng' : ''}" ${sv.broken || mate.broken ? 'data-broken="1"' : ''}>
+                                                <input type="checkbox" name="seatIds" value="${sv.seatId}" data-code="${sv.unitCode}" data-price="${sv.unitPrice}"
+                                                       data-mate="${mate.seatId}" data-seats="2"
+                                                       ${sv.mine && mate.mine ? 'checked' : ''} ${sv.selectable ? '' : 'disabled'}>
+                                                <input type="checkbox" name="seatIds" value="${mate.seatId}" class="bk-mate" hidden tabindex="-1" aria-hidden="true"
+                                                       ${sv.mine && mate.mine ? 'checked' : ''}>
+                                                <span>${sv.seatNumber}-${mate.seatNumber}</span>
+                                            </label>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <label class="bk-seat state-${sv.state}" style="grid-column: ${sv.colNum}; border-bottom-color: ${fn:escapeXml(sv.color)}"
+                                                   title="${sv.code} · ${fn:escapeXml(sv.seatType)}${sv.broken ? ' · Ghế hỏng' : ''}" ${sv.broken ? 'data-broken="1"' : ''}>
+                                                <input type="checkbox" name="seatIds" value="${sv.seatId}" data-code="${sv.code}" data-price="${sv.price}"
+                                                       ${sv.mine ? 'checked' : ''} ${sv.selectable ? '' : 'disabled'}>
+                                                <span>${sv.seatNumber}</span>
+                                            </label>
+                                        </c:otherwise>
+                                    </c:choose>
                                 </c:forEach>
                             </div>
                             <span class="bk-row-label">${row.label}</span>
@@ -75,6 +93,7 @@
                     <span><i class="bk-dot state-selected"></i>Đang chọn</span>
                     <span><i class="bk-dot state-held"></i>Người khác đang giữ</span>
                     <span><i class="bk-dot state-sold"></i>Đã bán / hỏng</span>
+                    <span><i class="bk-dot bk-dot-couple"></i>Ghế đôi (2 chỗ liền, tính 2 vé)</span>
                 </div>
             </section>
             <aside class="bk-panel bk-summary">
@@ -92,23 +111,31 @@
 <script>
 (function () {
     var max = ${maxSeats};
-    var boxes = Array.prototype.slice.call(document.querySelectorAll('#seatForm input[name=seatIds]'));
+    // Mỗi ô hiển thị là 1 checkbox; ghế đôi có thêm checkbox ẩn (.bk-mate) cho chỗ thứ 2, luôn đi cùng ô chính.
+    var boxes = Array.prototype.slice.call(document.querySelectorAll('#seatForm input[name=seatIds]:not(.bk-mate)'));
+    function mateOf(b) { return b.dataset.mate ? b.parentNode.querySelector('.bk-mate') : null; }
+    function seatsOf(b) { return parseInt(b.dataset.seats || '1', 10); }
     var fmt = new Intl.NumberFormat('vi-VN');
     function refresh() {
-        var codes = [], total = 0;
+        var codes = [], total = 0, count = 0;
         boxes.forEach(function (b) {
+            var mate = mateOf(b);
+            if (mate) mate.checked = b.checked;
             b.parentNode.classList.toggle('state-selected', b.checked);
-            if (b.checked) { codes.push(b.dataset.code); total += parseFloat(b.dataset.price); }
+            if (b.checked) { codes.push(b.dataset.code); total += parseFloat(b.dataset.price); count += seatsOf(b); }
         });
         document.getElementById('selCodes').textContent = codes.length ? codes.join(', ') : 'Chưa chọn ghế';
-        document.getElementById('selCount').textContent = codes.length;
+        document.getElementById('selCount').textContent = count;
         document.getElementById('selTotal').textContent = fmt.format(total) + ' ₫';
-        document.getElementById('continueBtn').disabled = codes.length === 0;
+        document.getElementById('continueBtn').disabled = count === 0;
     }
     boxes.forEach(function (b) {
         b.addEventListener('change', function () {
-            var n = boxes.filter(function (x) { return x.checked; }).length;
-            if (n > max) { b.checked = false; alert('Mỗi đơn chỉ được chọn tối đa ' + max + ' ghế.'); }
+            var n = boxes.reduce(function (sum, x) { return sum + (x.checked ? seatsOf(x) : 0); }, 0);
+            if (n > max) {
+                b.checked = false;
+                alert('Mỗi đơn chỉ được chọn tối đa ' + max + ' ghế' + (seatsOf(b) > 1 ? ' (ghế đôi tính 2 ghế).' : '.'));
+            }
             refresh();
         });
     });
@@ -122,6 +149,9 @@
                     var label = b.parentNode;
                     if (b.checked || label.dataset.broken) return;
                     var s = states[b.value] || 'available';
+                    var mate = mateOf(b);
+                    // Ghế đôi: chỉ cần 1 trong 2 chỗ bận là cả ghế bận
+                    if (mate && s === 'available') s = states[mate.value] || 'available';
                     ['available', 'held', 'sold', 'mine'].forEach(function (k) { label.classList.remove('state-' + k); });
                     label.classList.add('state-' + s);
                     b.disabled = (s === 'held' || s === 'sold');

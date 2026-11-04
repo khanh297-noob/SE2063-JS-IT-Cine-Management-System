@@ -57,6 +57,9 @@ tr.is-today td { background: var(--velvet-soft); }
     background-image: repeating-linear-gradient(45deg, rgba(255,255,255,.55) 0 3px, transparent 3px 6px);
 }
 .cell.locked { cursor: not-allowed; }
+/* Ghế đôi: 2 ô liền nhau vẽ thành 1 ghế, ô trái phủ qua khoảng hở giữa 2 ô */
+.cell.pair-l { width: 30px; border-radius: 8px 0 0 3px; position: relative; z-index: 1; }
+.cell.pair-r { border-radius: 0 8px 3px 0; }
 .palette { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; }
 .palette h2 { font-size: 15px; margin: 0 0 10px; }
 .brush {
