@@ -16,12 +16,42 @@ public class Seat {
     private BigDecimal price;
     private BigDecimal surcharge;   // phụ thu loại ghế (bảng SeatType)
     private boolean selected;       // thu ngân đang chọn ghế này (màn bán vé)
+    private Seat pair;              // ghế đôi: ô còn lại của cặp (2 chỗ liền nhau), null nếu không phải ghế đôi
 
     public Seat() {
     }
 
     public String getLabel() {
         return rowLabel + seatNumber;
+    }
+
+    /** Ghế đôi: ô bên trái, vẽ thành 1 ghế rộng 2 chỗ. */
+    public boolean isCoupleLeft() {
+        return pair != null && seatNumber < pair.seatNumber;
+    }
+
+    /** Ghế đôi: ô bên phải, đã vẽ chung với ô bên trái. */
+    public boolean isCoupleRight() {
+        return pair != null && seatNumber > pair.seatNumber;
+    }
+
+    /** Trạng thái của cả ghế đôi: 1 trong 2 chỗ không trống thì cả ghế không bán được. */
+    public String getUnitState() {
+        if (pair == null || !"AVAILABLE".equals(state)) return state;
+        return pair.state;
+    }
+
+    public BigDecimal getUnitPrice() {
+        if (pair == null || price == null || pair.price == null) return price;
+        return price.add(pair.price);
+    }
+
+    public Seat getPair() {
+        return pair;
+    }
+
+    public void setPair(Seat pair) {
+        this.pair = pair;
     }
 
     public int getSeatId() {

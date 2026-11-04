@@ -21,9 +21,34 @@ public class SeatView {
     private boolean broken;
     private String state = AVAILABLE;
     private BigDecimal price = BigDecimal.ZERO;
+    /** Ghế đôi: ô còn lại của cặp (null nếu không phải ghế đôi). */
+    private SeatView pair;
 
     public String getCode() { return rowLabel + seatNumber; }
-    public boolean isSelectable() { return AVAILABLE.equals(state) || MINE.equals(state); }
+    public boolean isSelectable() {
+        if (MINE.equals(state)) return true;
+        if (!AVAILABLE.equals(state)) return false;
+        // Ghế đôi chỉ chọn được khi cả 2 chỗ đều trống
+        return pair == null || AVAILABLE.equals(pair.state) || MINE.equals(pair.state);
+    }
+
+    /** Ghế đôi: ô bên trái của cặp, hiển thị thành 1 ghế rộng 2 chỗ. */
+    public boolean isCoupleLeft() { return pair != null && colNum < pair.colNum; }
+    /** Ghế đôi: ô bên phải, đã được vẽ chung với ô bên trái nên bỏ qua khi vẽ. */
+    public boolean isCoupleRight() { return pair != null && colNum > pair.colNum; }
+    /** Mã hiển thị: "A1" hoặc "A1-A2" với ghế đôi. */
+    public String getUnitCode() {
+        if (pair == null) return getCode();
+        return isCoupleLeft() ? getCode() + "-" + pair.getSeatNumber() : pair.getCode() + "-" + seatNumber;
+    }
+    /** Trạng thái hiển thị của cả ghế đôi: ô nào bận thì cả ghế bận. */
+    public String getUnitState() {
+        if (pair == null || AVAILABLE.equals(pair.state) || MINE.equals(pair.state) && MINE.equals(state)) return state;
+        return AVAILABLE.equals(state) || MINE.equals(state) ? pair.state : state;
+    }
+    public BigDecimal getUnitPrice() { return pair == null ? price : price.add(pair.price); }
+    public SeatView getPair() { return pair; }
+    public void setPair(SeatView pair) { this.pair = pair; }
     public boolean isMine() { return MINE.equals(state); }
 
     public int getSeatId() { return seatId; }

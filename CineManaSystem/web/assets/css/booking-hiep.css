@@ -84,6 +84,10 @@
 .bk-seat.state-held:hover, .bk-seat.state-sold:hover, .bk-seat.state-broken:hover { transform: none; }
 .bk-seat.state-held input, .bk-seat.state-sold input, .bk-seat.state-broken input { cursor: not-allowed; }
 .bk-seat.state-selected { background: var(--velvet); color: #fff; box-shadow: 0 0 14px rgba(163, 38, 59, .7); }
+/* Ghế đôi: 1 ghế liền chiếm 2 cột của sơ đồ */
+.bk-seat.bk-couple { width: auto; border-radius: 14px 14px 6px 6px; letter-spacing: .02em; }
+.bk-seat.bk-couple::before { content: "\2665"; position: absolute; top: 1px; left: 50%; transform: translateX(-50%); font-size: 8px; opacity: .7; }
+.bk-dot.bk-dot-couple { width: 26px; border-radius: 7px; }
 .bk-legend { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; margin-top: 26px; font-size: 12.5px; }
 .bk-legend span { display: inline-flex; align-items: center; gap: 6px; }
 .bk-dot { width: 14px; height: 14px; border-radius: 4px; display: inline-block; background: #3a4062; }
