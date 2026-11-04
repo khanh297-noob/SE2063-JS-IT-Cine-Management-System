@@ -33,8 +33,7 @@
                                 <section class="card">
                                     <div class="head-row">
                                         <div>
-                                            <h1 class="title"><i class="fa-solid fa-chart-pie"></i> Báo Cáo Rạp (Branch
-                                                Report Dashboard)</h1>
+                                            <h1 class="title"><i class="fa-solid fa-chart-pie"></i> Báo Cáo Rạp</h1>
                                             <p class="subtitle">Branch Manager xem báo cáo doanh thu, tỷ lệ lấp đầy và
                                                 hiệu suất suất chiếu của chi nhánh mình quản lý.</p>
                                         </div>
