@@ -37,15 +37,13 @@
             </div>
         </c:when>
         <c:when test="${state == 'LATE'}">
-            <div class="big">
-                Đã ghi nhận thanh toán, đơn cần đối soát
+            <div class="clearance no" style="margin-bottom:18px">
+                <div class="icon">!</div>
+                <span class="pill">CẦN HỖ TRỢ</span>
+                <div class="big">Đã ghi nhận thanh toán, đơn cần đối soát</div>
+                <p class="text-muted">Đơn chưa đủ điều kiện phục vụ. Vui lòng liên hệ hỗ trợ để đối soát/hoàn tiền.
+                    Mã đơn: <b>${b.bookingCode}</b></p>
             </div>
-
-            <p class="text-muted">
-                Đơn chưa đủ điều kiện phục vụ.
-                Vui lòng liên hệ hỗ trợ để đối soát/hoàn tiền.
-                Mã đơn: <b>${b.bookingCode}</b>
-            </p>
         </c:when>
         <c:when test="${state == 'FAILED'}">
             <div class="clearance no" style="margin-bottom:18px">

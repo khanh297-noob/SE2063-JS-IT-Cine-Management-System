@@ -88,13 +88,16 @@ public class PosTransactionServlet extends HttpServlet {
         String reason = request.getParameter("reason");
 
         try {
-            posService.cancelCounterBooking(user, id,
+            // true: đã hủy + hoàn tiền mặt; false: đơn VNPay, mới ghi yêu cầu hoàn (đơn giữ nguyên)
+            boolean refunded = posService.cancelCounterBooking(user, id,
                     request.getParameter("supervisorEmail"),
                     request.getParameter("supervisorPassword"),
                     reason == null ? "" : reason.trim(),
                     request.getRemoteAddr());
             session.setAttribute("flashType", "success");
-            session.setAttribute("flashMsg", "Booking cancelled successfully. Refund processed successfully.");
+            session.setAttribute("flashMsg", refunded
+                    ? "Booking cancelled successfully. Refund processed successfully."
+                    : "Đã ghi nhận yêu cầu hoàn tiền VNPay. Đơn giữ nguyên cho đến khi quản lý hoàn tiền trên VNPay.");
         } catch (IllegalArgumentException e) {
             session.setAttribute("flashType", "error");
             session.setAttribute("flashMsg", e.getMessage());
