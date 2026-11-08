@@ -44,6 +44,7 @@ public class F_BOrderService {
         if (online) {
             if (actor.getUserID() != customer) throw new SecurityException("Không được đặt đơn cho người khác.");
         } else AccessService.branch(actor, branch);
+        //kiem tra gio hang
         if (cart == null || cart.isEmpty() || cart.size() > 100)
             throw new IllegalArgumentException("Giỏ hàng phải có từ 1 đến 100 món.");
         Map<Integer, Integer> sorted = new TreeMap<>(cart);
@@ -106,7 +107,7 @@ public class F_BOrderService {
     }
 
 
-    // Nam gọi bằng đúng Connection trong transaction thanh toán.
+
     public void confirmLinesInPayment(Connection c, int booking) throws SQLException {
         requireTransaction(c);
         Booking b = orders.findBooking(c, booking, true);
@@ -255,7 +256,7 @@ public class F_BOrderService {
                                 + b.getTotalAmount().toPlainString() + " đ.");
             }
 
-            // Liên quan Nam: thu ngân cần có ca tại đúng chi nhánh.
+
             if ("Ticket Cashier".equals(actor.getRole())) {
                 model.pos.WorkShift shift =
                         new service.pos.ShiftService().getActiveShift(actor);
@@ -270,7 +271,7 @@ public class F_BOrderService {
             new service.promotion.PromotionService()
                     .revalidateInPayment(c, bookingId);
 
-            // Liên quan Nam: ghi nhận thanh toán vào Payment chung.
+            //Ghi payment thành công
             if (orders.insertCashPayment(
                     c, bookingId, b.getTotalAmount()) != 1) {
                 throw new SQLException("Không ghi nhận được thanh toán.");
@@ -280,8 +281,7 @@ public class F_BOrderService {
             // kiểm tra kho, trừ kho, đổi dòng món Pending -> Confirmed.
             confirmLinesInPayment(c, bookingId);
 
-            if (orders.confirmCashBooking(
-                    c, bookingId, actor.getUserID()) != 1) {
+            if (orders.confirmCashBooking(c, bookingId, actor.getUserID()) != 1) {
                 throw new SQLException("Không xác nhận được Booking.");
             }
 
@@ -314,7 +314,7 @@ public class F_BOrderService {
         if (!"Pending".equals(b.getStatus()) || orders.paymentExists(c, b.getBookingId()))
             throw new IllegalArgumentException("Đơn đã vào thanh toán, không được sửa/hủy tại đây.");
         if (orders.hasTicket(c, b.getBookingId()))
-            throw new IllegalArgumentException("Đơn có vé: xử lý qua Booking chung của Hiệp/Nam.");
+            throw new IllegalArgumentException("Đơn có vé: xử lý qua Booking.");
         if (orders.lines(c, b.getBookingId()).stream()
                 .anyMatch(line -> line.getUnitPrice() == null)) {
             throw new IllegalArgumentException(

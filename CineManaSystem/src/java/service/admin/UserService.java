@@ -44,6 +44,7 @@ public class UserService {
         }
     }
 
+    //kiem tra quyen, search
     public List<User> searchUsers(User actor, String rawKeyword) throws SQLException {
         AccessService.admin(actor);
         String keyword = rawKeyword == null ? "" : rawKeyword.trim();

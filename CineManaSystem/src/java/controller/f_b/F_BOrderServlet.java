@@ -67,6 +67,7 @@ public class F_BOrderServlet extends HttpServlet {
             FormUtil.checkCsrf(request);
             User actor = SessionUtil.getLoggedInUser(request);
             branch = optionalInt(request, "branchId");
+            //tao don
             String action = request.getParameter("action");
             if ("create".equals(action)) {
                 if (branch == null) throw new IllegalArgumentException("Hãy chọn chi nhánh.");

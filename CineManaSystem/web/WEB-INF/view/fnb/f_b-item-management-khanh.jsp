@@ -65,6 +65,19 @@
                                 placeholder="Tìm kiếm theo tên sản phẩm...">
                             </div>
                         </div>
+
+
+                                                <div class="col-md-3">
+                                                    <form method="get" action="${pageContext.request.contextPath}/staff/fnb/items">
+                                                        <select name="status" class="form-select rounded-pill" onchange="this.form.submit()">
+                                                            <option value="">-- Tất cả trạng thái --</option>
+                                                            <option value="active" ${status eq 'active' ? 'selected' : ''}>Đang bán</option>
+                                                            <option value="inactive" ${status eq 'inactive' ? 'selected' : ''}>Ngừng bán</option>
+                                                        </select>
+                                                    </form>
+                                                </div>
+
+
                         <div class="col-auto">
                             <button class="btn btn-brand-pill" data-bs-toggle="modal" data-bs-target="#itemModal"
                             onclick="openAddModal()">
@@ -78,6 +91,7 @@
                 <div class="card-custom p-4">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <span class="fw-bold text-uppercase text-secondary small">Danh Sách Sản Phẩm F&B</span>
+
                         <span class="text-muted small">Tổng số: <strong>${itemList.size()}</strong> sản phẩm</span>
                     </div>
                     <div class="table-responsive">

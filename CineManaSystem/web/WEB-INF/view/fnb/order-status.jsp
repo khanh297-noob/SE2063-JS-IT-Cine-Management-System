@@ -52,22 +52,6 @@
                                 <button class="btn btn-outline-danger" type="submit">Hủy đơn chưa thanh toán</button>
                             </form>
                         </c:if>
-
-                            <c:set var="current" value="${orderLines[0].orderStatus}"/>
-                            <c:set var="next" value="${current eq 'Confirmed' ? 'Preparing' : (current eq 'Preparing' ? 'Ready' : (current eq 'Ready' ? 'Delivered' : ''))}"/>
-                            <c:if test="${not empty next}">
-                                <form method="post">
-                                    <input type="hidden" name="csrfToken" value="${sessionScope.khanhCsrf}">
-                                    <input type="hidden" name="action" value="progress">
-                                    <input type="hidden" name="bookingId" value="${selectedBooking.bookingId}">
-                                    <input type="hidden" name="branchId" value="${selectedBranchId}">
-                                    <input type="hidden" name="nextStatus" value="${next}">
-                                    <button class="btn btn-brand-pill" type="submit">
-                                        ${next eq 'Preparing' ? 'Bắt đầu chế biến' : (next eq 'Ready' ? 'Sẵn sàng giao' : 'Đã giao')}
-                                    </button>
-                                </form>
-                            </c:if>
-                        </c:if>
                         <p class="text-muted mt-3"></p>
                     </section>
                 </c:if>
