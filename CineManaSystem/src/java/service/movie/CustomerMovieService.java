@@ -15,6 +15,7 @@ import model.movie.MovieSummaryDTO;
 import util.BusinessException;
 import util.JdbcContext;
 import util.NotFoundException;
+import util.TextUtil;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -37,10 +38,13 @@ import java.util.TreeSet;
  * BR-CU-05  Hiển thị thêm phim sắp chiếu ("Coming Soon"), xem được chi tiết nhưng chưa được đánh giá.
  * BR-CU-06  Lượt yêu thích lưu trong MovieReviews (liked = 1, không có rating / content). Mỗi người xem
  *           1 lượt / phim trong một phiên (controller nhớ trong HttpSession); tổng lượt = số dòng liked = 1.
+ * BR-CU-07  Tìm kiếm theo tên phim, đạo diễn, diễn viên; không phân biệt dấu và hoa thường, từ khoá tối đa
+ *           100 ký tự. Kết hợp được với lọc thể loại / năm / ngôn ngữ; chỉ ra phim đang chiếu và sắp chiếu.
  */
 public class CustomerMovieService {
 
     public static final int RECOMMEND_LIMIT = 10;
+    public static final int MAX_KEYWORD = 100;
 
     private final MovieDAO movieDAO = new MovieDAO();
     private final GenreDAO genreDAO = new GenreDAO();
@@ -69,14 +73,25 @@ public class CustomerMovieService {
     /** Phim đang chiếu, lọc theo các tham số khác null. */
     public List<MovieSummaryDTO> listShowing(Integer genreId, Integer year, String language)
             throws SQLException, BusinessException {
-        return JdbcContext.query(con -> filter(load(con, Movie.STATUS_NOW_SHOWING, genreId), year, language));
+        return listShowing(genreId, year, language, null);
+    }
+
+    /** Phim đang chiếu, lọc theo các tham số khác null và từ khoá (BR-CU-07). */
+    public List<MovieSummaryDTO> listShowing(Integer genreId, Integer year, String language, String keyword)
+            throws SQLException, BusinessException {
+        return JdbcContext.query(con -> filter(load(con, Movie.STATUS_NOW_SHOWING, genreId), year, language, keyword));
     }
 
     /** BR-CU-05: phim sắp chiếu, ngày khởi chiếu gần nhất trước. */
     public List<MovieSummaryDTO> listComingSoon(Integer genreId, Integer year, String language)
             throws SQLException, BusinessException {
+        return listComingSoon(genreId, year, language, null);
+    }
+
+    public List<MovieSummaryDTO> listComingSoon(Integer genreId, Integer year, String language, String keyword)
+            throws SQLException, BusinessException {
         return JdbcContext.query(con -> {
-            List<MovieSummaryDTO> list = filter(load(con, Movie.STATUS_COMING_SOON, genreId), year, language);
+            List<MovieSummaryDTO> list = filter(load(con, Movie.STATUS_COMING_SOON, genreId), year, language, keyword);
             list.sort(Comparator.comparing((MovieSummaryDTO ms) -> ms.getMovie().getReleaseDate(),
                     Comparator.nullsLast(Comparator.naturalOrder())));
             return list;
@@ -203,12 +218,21 @@ public class CustomerMovieService {
 
     // ------------------------------------------------------------------
 
-    private static List<MovieSummaryDTO> filter(List<MovieSummaryDTO> all, Integer year, String language) {
+    /** BR-CU-07: gộp khoảng trắng, cắt còn MAX_KEYWORD ký tự; null nếu rỗng. */
+    public static String normalizeKeyword(String keyword) {
+        if (keyword == null) return null;
+        String k = keyword.trim().replaceAll("\\s+", " ");
+        if (k.isEmpty()) return null;
+        return k.length() > MAX_KEYWORD ? k.substring(0, MAX_KEYWORD).trim() : k;
+    }
+
+    private static List<MovieSummaryDTO> filter(List<MovieSummaryDTO> all, Integer year, String language, String keyword) {
         List<MovieSummaryDTO> result = new ArrayList<>();
         for (MovieSummaryDTO ms : all) {
             Movie m = ms.getMovie();
             if (year != null && !year.equals(m.getReleaseYear())) continue;
             if (language != null && (m.getLanguage() == null || !m.getLanguage().equalsIgnoreCase(language))) continue;
+            if (!TextUtil.matchesAny(keyword, m.getTitle(), m.getDirector(), m.getCastMembers())) continue;
             result.add(ms);
         }
         return result;

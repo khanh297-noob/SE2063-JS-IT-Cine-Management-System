@@ -54,6 +54,22 @@
             </div>
         </nav>
 
+        <%-- Tìm phim (BR-CU-07): giữ bộ lọc đang chọn để tìm trong kết quả lọc --%>
+        <form class="csearch" method="get" action="${ctx}/movies" role="search">
+            <c:if test="${not empty genreId}"><input type="hidden" name="genreId" value="${genreId}"></c:if>
+            <c:if test="${not empty year}"><input type="hidden" name="year" value="${year}"></c:if>
+            <c:if test="${not empty lang}"><input type="hidden" name="lang" value="${fn:escapeXml(lang)}"></c:if>
+            <label class="sr-only" for="movieSearch">Tìm phim</label>
+            <input type="search" id="movieSearch" name="q" value="${fn:escapeXml(q)}" maxlength="100"
+                   placeholder="Tên phim, đạo diễn, diễn viên" autocomplete="off">
+            <button type="submit" aria-label="Tìm kiếm">
+                <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+                    <circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/>
+                    <path d="M20 20l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+            </button>
+        </form>
+
         <%@ include file="/WEB-INF/views/common/notification-bell.jspf" %>
         <%-- Tài khoản (góc phải). Đăng nhập do module Auth xử lý (/login);
              sessionScope.User do Auth đặt khi đăng nhập thành công. Bấm tên để vào hồ sơ cá nhân. --%>
