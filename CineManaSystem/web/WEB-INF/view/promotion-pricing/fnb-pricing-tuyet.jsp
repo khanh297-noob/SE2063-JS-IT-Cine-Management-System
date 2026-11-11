@@ -107,7 +107,7 @@
                                             <th>Giá riêng của chi nhánh (đồng)</th>
                                             <th>Trạng thái</th>
                                             <th></th>
-                                            <c:if test="${isAdminUser}"><th>Giá chung toàn chuỗi (đồng)</th></c:if>
+                                            <th>Giá chung toàn chuỗi (đồng)</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -120,7 +120,12 @@
                                                         <td class="cell-strong"><c:out value="${item.name}"/></td>
                                                         <td class="align-right">
                                                             <c:choose>
-                                                                <c:when test="${item.inMenu}"><b><fmt:formatNumber value="${item.effectivePrice}" pattern="#,##0"/> ₫</b></c:when>
+                                                                <c:when test="${item.inMenu}">
+                                                                    <c:if test="${item.branchPrice != null and item.branchPrice != item.basePrice}">
+                                                                        <span class="badge badge-gray" title="Chi nhánh đang dùng giá riêng, không đổi theo giá chung">Đang dùng giá riêng</span>
+                                                                    </c:if>
+                                                                    <b><fmt:formatNumber value="${item.effectivePrice}" pattern="#,##0"/> ₫</b>
+                                                                </c:when>
                                                                 <c:otherwise><span class="badge badge-gray">Chưa bán</span></c:otherwise>
                                                             </c:choose>
                                                         </td>
@@ -141,6 +146,11 @@
                                                                 <button type="submit" class="btn-save">${item.inMenu ? 'Lưu' : 'Thêm vào thực đơn'}</button>
                                                             </form>
                                                         </td>
+                                                        <c:if test="${not isAdminUser}">
+                                                            <td>
+                                                                <b><fmt:formatNumber value="${item.basePrice}" pattern="#,##0"/> ₫</b>
+                                                            </td>
+                                                        </c:if>
                                                         <c:if test="${isAdminUser}">
                                                             <td>
                                                                 <form method="post" action="${pageUrl}" class="inline-form">
@@ -158,7 +168,7 @@
                                                 </c:forEach>
                                             </c:when>
                                             <c:otherwise>
-                                                <tr><td colspan="${isAdminUser ? 7 : 6}" class="empty-cell"><i class="fa-solid fa-folder-open empty-icon"></i>Chưa có món nào trong danh mục F&amp;B của chuỗi.</td></tr>
+                                                <tr><td colspan="7" class="empty-cell"><i class="fa-solid fa-folder-open empty-icon"></i>Chưa có món nào trong danh mục F&amp;B của chuỗi.</td></tr>
                                             </c:otherwise>
                                         </c:choose>
                                     </tbody>
@@ -166,7 +176,7 @@
                             </div>
                             <p class="note">Món hiện &quot;Chưa bán&quot; sẽ xuất hiện trong thực đơn chi nhánh sau khi bấm &quot;Thêm vào thực đơn&quot;.
                                 <c:if test="${isAdminUser}">Giá gốc áp dụng cho mọi chi nhánh chưa đặt giá riêng.</c:if>
-                                <c:if test="${not isAdminUser}">Giá gốc do Admin quản lý.</c:if>
+                                <c:if test="${not isAdminUser}">Giá chung toàn chuỗi do Admin quản lý, chi nhánh chưa đặt giá riêng sẽ dùng giá này.</c:if>
                             </p>
                         </div>
                     </c:otherwise>

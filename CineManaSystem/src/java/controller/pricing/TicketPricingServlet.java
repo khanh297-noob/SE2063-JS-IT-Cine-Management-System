@@ -160,6 +160,24 @@ public class TicketPricingServlet extends HttpServlet {
                         requireId(request.getParameter("id")), request.getParameter("delta"));
                 Flash.success(request, "Đã điều chỉnh phụ thu loại phòng cho " + updated + " suất chiếu của chi nhánh bạn.");
 
+            } else if ("roomTypeBranch".equals(action)) {
+                int updated = service.saveRoomTypeSurchargeForBranch(isAdmin, user.getBranchID(),
+                        requireId(request.getParameter("id")), price);
+                String msg = "Đã lưu phụ thu định dạng phòng cho chi nhánh của bạn.";
+                if (updated > 0) {
+                    msg += " Đã cập nhật giá " + updated + " suất chiếu sắp tới.";
+                }
+                Flash.success(request, msg);
+
+            } else if ("roomTypeBranchReset".equals(action)) {
+                int updated = service.resetRoomTypeSurchargeForBranch(isAdmin, user.getBranchID(),
+                        requireId(request.getParameter("id")));
+                String msg = "Chi nhánh của bạn đã quay về dùng phụ thu định dạng phòng chung.";
+                if (updated > 0) {
+                    msg += " Đã cập nhật giá " + updated + " suất chiếu sắp tới.";
+                }
+                Flash.success(request, msg);
+
             } else if ("seatTypeSurcharge".equals(action)) {
                 service.updateSeatTypeSurcharge(isAdmin, requireId(request.getParameter("id")), price);
                 Flash.success(request, "Đã cập nhật phụ thu loại ghế.");

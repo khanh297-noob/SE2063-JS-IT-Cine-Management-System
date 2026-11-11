@@ -247,6 +247,49 @@ public class PricingService implements AutoCloseable {
         return updated;
     }
 
+    /**
+     * Quản lý chi nhánh đặt phụ thu định dạng phòng (số cố định) riêng cho chi nhánh mình.
+     * Lưu vào PricingSetting, cộng/trừ chênh lệch vào BasePrice các suất sắp chiếu của loại phòng tại chi nhánh.
+     * Chi nhánh khác và phụ thu chung RoomType không đổi.
+     *
+     * @return số suất chiếu được cập nhật giá (0 nếu mức không đổi)
+     */
+    public int saveRoomTypeSurchargeForBranch(boolean isAdmin, Integer branchId, int roomTypeId, String text)
+            throws IllegalArgumentException {
+        int branch = requireManagerBranch(isAdmin, branchId);
+        BigDecimal surcharge = MoneyUtil.parse(text, "Phụ thu loại phòng", true);
+        java.util.Map<Integer, BigDecimal> one = new java.util.LinkedHashMap<>();
+        one.put(roomTypeId, surcharge);
+        return dao.saveBranchRoomSurcharges(branch, one);
+    }
+
+    /**
+     * Quản lý chi nhánh bỏ phụ thu phòng riêng, quay về phụ thu chung của Admin.
+     * Các suất sắp chiếu được điều chỉnh theo chênh lệch (chung - hiện tại).
+     *
+     * @return số suất chiếu được cập nhật giá
+     */
+    public int resetRoomTypeSurchargeForBranch(boolean isAdmin, Integer branchId, int roomTypeId)
+            throws IllegalArgumentException {
+        int branch = requireManagerBranch(isAdmin, branchId);
+        Surcharge found = null;
+        for (Surcharge t : dao.findRoomTypesForBranch(branch)) {
+            if (t.getId() == roomTypeId) {
+                found = t;
+                break;
+            }
+        }
+        if (found == null) {
+            throw new IllegalArgumentException("Không tìm thấy loại phòng này!");
+        }
+        if (found.getBranchSurcharge() == null) {
+            throw new IllegalArgumentException("Chi nhánh của bạn đang dùng phụ thu chung rồi!");
+        }
+        java.util.Map<Integer, BigDecimal> one = new java.util.LinkedHashMap<>();
+        one.put(roomTypeId, found.getSurcharge()); // bằng phụ thu chung → saveBranchRoomSurcharges sẽ xoá override
+        return dao.saveBranchRoomSurcharges(branch, one);
+    }
+
     /** Loại ghế kèm phụ thu riêng của chi nhánh (dành cho quản lý chi nhánh). */
     public List<Surcharge> listSeatTypesForBranch(int branchId) {
         return dao.findSeatTypesForBranch(branchId);

@@ -460,18 +460,19 @@
                                 </form>
                         </c:if>
                         <c:if test="${not isAdminUser}">
-                            <p class="note">Phụ thu chung do Admin đặt. Quản lý có
-                                thể cộng hoặc trừ (nhập số âm) vào giá các suất sắp
-                                chiếu của loại phòng đó tại chi nhánh mình.</p>
+                            <p class="note">Phụ thu chung do Admin đặt. Bạn có thể lưu
+                                một mức phụ thu cố định riêng cho chi nhánh (áp dụng
+                                cho suất sắp chiếu và suất mới). Bằng phụ thu chung
+                                nghĩa là dùng lại giá chung.</p>
                             <table class="cfg-table">
                                 <thead>
                                     <tr>
                                         <th>Loại phòng</th>
                                         <th>Phụ thu chung</th>
-                                        <th>Điều chỉnh cho
-                                            <c:out value="${branchPill}" /> (đồng)
+                                        <th>Phụ thu tại
+                                            <c:out value="${branchPill}" />
                                         </th>
-                                        <th>Ghi chú</th>
+                                        <th>Trạng thái</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -480,42 +481,73 @@
                                             <td class="cell-strong">
                                                 <c:out value="${t.name}" />
                                             </td>
-                                            <td>
-                                                <fmt:formatNumber
-                                                    value="${t.surcharge}"
-                                                    pattern="#,##0" /> ₫
+                                            <td class="cfg-value">
+                                                <fmt:formatNumber value="${t.surcharge}"
+                                                                  pattern="#,##0" /> ₫
                                             </td>
                                             <td>
-                                                <form method="post"
-                                                      action="${pageUrl}"
-                                                      class="inline-form"
-                                                      onsubmit="return confirm('Cộng/trừ khoản này vào giá các suất sắp chiếu của loại phòng này tại chi nhánh bạn?');">
-                                                    <input type="hidden"
-                                                           name="action"
-                                                           value="roomTypeAdjust">
+                                                <form method="post" action="${pageUrl}"
+                                                      style="display: inline-flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                                                    <input type="hidden" name="action"
+                                                           value="roomTypeBranch">
                                                     <input type="hidden" name="id"
                                                            value="${t.id}">
                                                     <%@ include
                                                         file="/WEB-INF/view/promotion-pricing/fragments/filter-hidden-tuyet.jsp"
                                                         %>
                                                         <input class="price-input"
-                                                               type="text" name="delta"
+                                                               type="text"
+                                                               inputmode="numeric"
+                                                               name="price"
                                                                autocomplete="off"
-                                                               placeholder="+10000 hoặc -5000"
-                                                               aria-label="Điều chỉnh giá loại phòng ${t.name}">
+                                                               value="<fmt:formatNumber value='${t.effectiveSurcharge}' maxFractionDigits='0' groupingUsed='false'/>"
+                                                               aria-label="Phụ thu ${t.name} tại chi nhánh">
                                                         <button type="submit"
-                                                                class="btn-save">Áp
-                                                            dụng</button>
+                                                                class="btn-save">Lưu</button>
+                                                </form>
+                                                <c:if test="${t.branchSurcharge != null}">
+                                                    <form method="post" action="${pageUrl}"
+                                                          class="inline-form ms-1"
+                                                          style="display: inline-block; margin-left: 6px;"
+                                                          onsubmit="return confirm('Bỏ phụ thu riêng và dùng lại phụ thu chung của loại phòng này?');">
+                                                        <input type="hidden" name="action"
+                                                               value="roomTypeBranchReset">
+                                                        <input type="hidden" name="id"
+                                                               value="${t.id}">
+                                                        <%@ include
+                                                            file="/WEB-INF/view/promotion-pricing/fragments/filter-hidden-tuyet.jsp"
+                                                            %>
+                                                            <button type="submit"
+                                                                    class="btn-reset"
+                                                                    style="padding: 4px 8px; font-size: 0.85rem;">Dùng
+                                                                giá chung</button>
                                                     </form>
-                                                </td>
-                                                <td class="cfg-hint">Cộng/trừ trực tiếp
-                                                    vào giá các suất sắp chiếu của phòng
-                                                    này tại chi nhánh bạn</td>
-                                            </tr>
+                                                </c:if>
+                                            </td>
+                                            <td class="cfg-hint">
+                                                <c:choose>
+                                                    <c:when test="${t.branchSurcharge != null}">
+                                                        <span class="branch-badge">
+                                                            <i class="fa-solid fa-circle-exclamation"></i>
+                                                            Đang dùng phụ thu riêng
+                                                            (Chung:
+                                                            <fmt:formatNumber
+                                                                value="${t.surcharge}"
+                                                                pattern="#,##0" /> ₫)
+                                                        </span>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <span style="color: #64748b;">Đang
+                                                            áp dụng phụ thu chung toàn
+                                                            chuỗi</span>
+                                                    </c:otherwise>
+                                                </c:choose>
+                                            </td>
+                                        </tr>
                                     </c:forEach>
                                 </tbody>
                             </table>
-                        </c:if>
+                        </c:if>   
                     </div>
                 </div>
             </main>
