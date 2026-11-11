@@ -201,4 +201,14 @@ public class PromotionService {
             return p;
         });
     }
+
+    // Lấy danh sách voucher công khai cho khách hàng xem ở mục "Tin mới & Ưu đãi"
+    public List<Promotion> publicList() throws SQLException {
+        try (Connection c = DBContext.getConnection()) {
+            java.sql.Date today = promos.today(c);
+            return promos.list(c, null).stream()
+                    .filter(p -> !today.after(p.getEndDate()) && p.getUsedCount() < p.getUsageLimit())
+                    .toList();
+        }
+    }
 }

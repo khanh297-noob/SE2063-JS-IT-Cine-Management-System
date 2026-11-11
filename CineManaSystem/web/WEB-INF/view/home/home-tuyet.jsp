@@ -203,6 +203,46 @@
             </c:otherwise>
         </c:choose>
 
+
+        <!-- TIN MỚI & ƯU ĐÃI (VOUCHER KHUYẾN MÃI) -->
+        <section id="news" style="margin-top: 48px; padding-top: 24px; border-top: 1px solid #eee;">
+            <h2 style="font-size: 22px; font-weight: 700; color: #111; margin-bottom: 20px;">
+                <i class="fa-solid fa-ticket" style="color: #e50914; margin-right: 8px;"></i>
+                TIN MỚI &amp; ƯU ĐÃI VOUCHER
+            </h2>
+
+            <c:choose>
+                <c:when test="${empty promotions}">
+                    <div class="movie-empty">Hiện chưa có chương trình ưu đãi nào đang diễn ra.</div>
+                </c:when>
+                <c:otherwise>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
+                        <c:forEach var="p" items="${promotions}">
+                            <div style="background: #fff; border: 1px dashed #e50914; border-radius: 14px; padding: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                    <span style="background: #ffe5e7; color: #e50914; font-weight: 700; padding: 4px 12px; border-radius: 999px; font-size: 14px;">
+                                        <c:out value="${p.promoCode}"/>
+                                    </span>
+                                    <span style="font-size: 12px; color: #666;">
+                                        Còn <strong>${p.usageLimit - p.usedCount}</strong> lượt
+                                    </span>
+                                </div>
+                                <div style="font-size: 20px; font-weight: 800; color: #e50914; margin-bottom: 6px;">
+                                    Giảm <fmt:formatNumber value="${p.discountAmount}" type="number" maxFractionDigits="0"/> đ
+                                </div>
+                                <div style="font-size: 13px; color: #444; margin-bottom: 4px;">
+                                    Đơn tối thiểu: <strong><fmt:formatNumber value="${p.minSpend}" type="number" maxFractionDigits="0"/> đ</strong>
+                                </div>
+                                <div style="font-size: 12px; color: #777;">
+                                    Áp dụng: <fmt:formatDate value="${p.startDate}" pattern="dd/MM/yyyy"/>
+                                    - <fmt:formatDate value="${p.endDate}" pattern="dd/MM/yyyy"/>
+                                </div>
+                            </div>
+                        </c:forEach>
+                    </div>
+                </c:otherwise>
+            </c:choose>
+        </section>
     </main>
 
     <!-- 5. FOOTER -->
