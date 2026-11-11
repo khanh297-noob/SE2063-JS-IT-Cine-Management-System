@@ -25,21 +25,23 @@ import util.ParamUtil;
 import util.PermissionUtil;
 
 /**
- * Quản lý giá vé (Admin, Quản lý chi nhánh).
- * GET : phần cấu hình giá hệ thống (giá cơ bản theo loại ngày, phụ thu loại ghế, loại phòng)
- *       và các ô điều chỉnh của quản lý chi nhánh (cộng/trừ phụ thu loại phòng, phụ thu loại ghế riêng của chi nhánh).
- *       Trang không còn danh sách suất chiếu; hai action updatePrice / bulkPrice bên dưới giữ lại nhưng chưa có giao diện.
+ * Quản lý giá vé (Admin, Quản lý chi nhánh). GET : phần cấu hình giá hệ thống
+ * (giá cơ bản theo loại ngày, phụ thu loại ghế, loại phòng) và các ô điều chỉnh
+ * của quản lý chi nhánh (cộng/trừ phụ thu loại phòng, phụ thu loại ghế riêng
+ * của chi nhánh). Trang không còn danh sách suất chiếu; hai action updatePrice
+ * / bulkPrice bên dưới giữ lại nhưng chưa có giao diện.
  *
  * Công thức: Showtime.BasePrice = giá cơ bản theo ngày + phụ thu loại phòng.
  *
- * POST: action = saveConfig (chỉ Admin, áp dụng cả chuỗi)
- *              | updatePrice (một suất) | bulkPrice (nhiều suất theo bộ lọc)
- *              | roomTypeSurcharge | seatTypeSurcharge (đổi riêng từng loại, chỉ Admin; trang hiện dùng saveConfig)
- *              | seatTypeBranch | seatTypeBranchReset (Quản lý chi nhánh: đặt / bỏ phụ thu loại ghế riêng của chi nhánh mình)
- *              | roomTypeAdjust (Quản lý chi nhánh: cộng/trừ phụ thu loại phòng vào giá các suất của chi nhánh mình).
+ * POST: action = saveConfig (chỉ Admin, áp dụng cả chuỗi) | updatePrice (một
+ * suất) | bulkPrice (nhiều suất theo bộ lọc) | roomTypeSurcharge |
+ * seatTypeSurcharge (đổi riêng từng loại, chỉ Admin; trang hiện dùng
+ * saveConfig) | seatTypeBranch | seatTypeBranchReset (Quản lý chi nhánh: đặt /
+ * bỏ phụ thu loại ghế riêng của chi nhánh mình) | roomTypeAdjust (Quản lý chi
+ * nhánh: cộng/trừ phụ thu loại phòng vào giá các suất của chi nhánh mình).
  *
- * Quản lý chỉ thao tác trên chi nhánh của mình ([User].BranchID). Giá vé đã bán (Ticket.FinalPrice)
- * không đổi khi đổi giá, chỉ ảnh hưởng vé bán sau đó.
+ * Quản lý chỉ thao tác trên chi nhánh của mình ([User].BranchID). Giá vé đã bán
+ * (Ticket.FinalPrice) không đổi khi đổi giá, chỉ ảnh hưởng vé bán sau đó.
  */
 @WebServlet(name = "ticketPricing", urlPatterns = {"/promotion-price-manage/ticket-pricing"})
 public class TicketPricingServlet extends HttpServlet {
@@ -112,20 +114,7 @@ public class TicketPricingServlet extends HttpServlet {
             Integer branchId = ParamUtil.parseIntOrNull(request.getParameter("branchId"));
             Integer movieId = ParamUtil.parseIntOrNull(request.getParameter("movieId"));
             String price = request.getParameter("price");
-
-            if ("updatePrice".equals(action)) {
-                Integer showtimeId = requireId(request.getParameter("showtimeId"));
-                service.updateShowtimePrice(BranchScope.allowed(user, isAdmin), showtimeId, price);
-                Flash.success(request, "Đã cập nhật giá cơ bản của suất chiếu #" + showtimeId + " (đã cộng phụ thu loại phòng).");
-
-            } else if ("bulkPrice".equals(action)) {
-                List<Integer> scope = BranchScope.resolve(user, isAdmin, branchId);
-                int updated = service.updateShowtimePricesInBulk(scope, movieId,
-                        DateRange.parseDate(request.getParameter("fromDate")),
-                        DateRange.parseDate(request.getParameter("toDate")), price);
-                Flash.success(request, "Đã cập nhật giá cơ bản của " + updated + " suất chiếu (đã cộng phụ thu loại phòng).");
-
-            } else if ("saveConfig".equals(action)) {
+            if ("saveConfig".equals(action)) {
                 String section = request.getParameter("section");
                 if ("day".equals(section) && (!isAdmin || branchId != null)) {
                     int shifted = service.saveDayBasePricesForBranch(user, isAdmin, branchId,
@@ -140,7 +129,7 @@ public class TicketPricingServlet extends HttpServlet {
                             room ? Collections.<Integer, String>emptyMap() : idMap(request, "seat_"));
                     Flash.success(request, room
                             ? "Đã lưu phụ thu định dạng phòng cho chi nhánh này. "
-                                + (shifted > 0 ? ("Giá " + shifted + " suất chiếu sắp tới của chi nhánh đã được cập nhật theo.") : "")
+                            + (shifted > 0 ? ("Giá " + shifted + " suất chiếu sắp tới của chi nhánh đã được cập nhật theo.") : "")
                             : "Đã lưu phụ thu loại ghế cho chi nhánh này. Chi nhánh khác không bị ảnh hưởng.");
                 } else {
                     service.saveConfig(isAdmin,
@@ -148,8 +137,6 @@ public class TicketPricingServlet extends HttpServlet {
                             idMap(request, "room_"), idMap(request, "seat_"));
                     Flash.success(request, configSavedMessage(section));
                 }
-
-
 
             } else if ("roomTypeSurcharge".equals(action)) {
                 service.updateRoomTypeSurcharge(isAdmin, requireId(request.getParameter("id")), price);
@@ -205,7 +192,10 @@ public class TicketPricingServlet extends HttpServlet {
         response.sendRedirect(request.getContextPath() + PAGE + queryString(request));
     }
 
-    /** Thông báo sau khi lưu một mục của phần cấu hình giá (mục nào thì nói mục đó). */
+    /**
+     * Thông báo sau khi lưu một mục của phần cấu hình giá (mục nào thì nói mục
+     * đó).
+     */
     private String configSavedMessage(String section) {
         String effect = " Giá các suất chiếu sắp tới bị ảnh hưởng đã được cập nhật theo.";
         if ("day".equals(section)) {
@@ -219,8 +209,8 @@ public class TicketPricingServlet extends HttpServlet {
     }
 
     /**
-     * Gom các ô nhập có tên dạng "prefix + id" (ví dụ room_3, seat_2) thành bản đồ id -> giá trị.
-     * Tên ô không đúng dạng thì bỏ qua.
+     * Gom các ô nhập có tên dạng "prefix + id" (ví dụ room_3, seat_2) thành bản
+     * đồ id -> giá trị. Tên ô không đúng dạng thì bỏ qua.
      */
     private Map<Integer, String> idMap(HttpServletRequest request, String prefix) {
         Map<Integer, String> result = new LinkedHashMap<>();
@@ -244,7 +234,9 @@ public class TicketPricingServlet extends HttpServlet {
         return id;
     }
 
-    /** Giữ lại bộ lọc đang chọn khi quay về trang danh sách. */
+    /**
+     * Giữ lại bộ lọc đang chọn khi quay về trang danh sách.
+     */
     private String queryString(HttpServletRequest request) {
         StringBuilder query = new StringBuilder();
         for (String name : new String[]{"branchId", "movieId", "fromDate", "toDate"}) {

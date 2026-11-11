@@ -104,7 +104,7 @@
                                                                         <input class="price-input" type="text" inputmode="numeric" name="price" autocomplete="off"
                                                                                value="<fmt:formatNumber value='${item.basePrice}' maxFractionDigits='0' groupingUsed='false'/>"
                                                                                aria-label="Giá gốc của ${item.name}">
-                                                                        <button type="submit" class="btn-save btn-save-alt">Lưu giá gốc</button>
+                                                                        <button type="submit" class="btn-save btn-save-alt">Lưu giá</button>
                                                                     </form>
                                                                 </td>
                                                             </tr>
