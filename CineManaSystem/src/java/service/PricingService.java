@@ -351,6 +351,11 @@ public class PricingService implements AutoCloseable {
         return dao.findBranchMenu(branchId);
     }
 
+    /** Danh mục F&B toàn chuỗi (giá gốc) — Admin chỉnh khi chọn Tất cả chi nhánh. */
+    public List<MenuItem> listCatalogMenu() {
+        return dao.findCatalogItems();
+    }
+
     /**
      * Lưu giá và trạng thái của một món tại chi nhánh.
      *

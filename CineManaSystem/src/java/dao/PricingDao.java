@@ -763,6 +763,30 @@ public class PricingDao extends DBContext {
     // ==================== GIÁ F&B ====================
 
     /** Toàn bộ món/combo của chuỗi, kèm giá và trạng thái tại chi nhánh (chưa bán thì branchPrice, status = null). */
+    /**
+     * Danh mục F&amp;B toàn chuỗi (chỉ giá gốc), dùng khi Admin chọn "Tất cả chi nhánh"
+     * để chỉnh giá chung mà không cần vào từng chi nhánh.
+     */
+    public List<MenuItem> findCatalogItems() {
+        List<MenuItem> list = new ArrayList<>();
+        String sql = "SELECT f.ItemID, f.ItemName, f.Category, f.Price AS BasePrice "
+                + "FROM F_B f ORDER BY f.Category, f.ItemName";
+        try (PreparedStatement st = connection.prepareStatement(sql);
+             ResultSet rs = st.executeQuery()) {
+            while (rs.next()) {
+                MenuItem item = new MenuItem();
+                item.itemId = rs.getInt("ItemID");
+                item.name = rs.getString("ItemName");
+                item.category = rs.getString("Category");
+                item.basePrice = rs.getBigDecimal("BasePrice");
+                list.add(item);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     public List<MenuItem> findBranchMenu(int branchId) {
         List<MenuItem> list = new ArrayList<>();
         String sql = "SELECT f.ItemID, f.ItemName, f.Category, f.Price AS BasePrice, "

@@ -53,7 +53,18 @@ public class FnbPricingServlet extends HttpServlet {
             // Bước 3: lấy thực đơn
             Flash.moveToRequest(request);
             request.setAttribute("branch", branch);
-            request.setAttribute("menu", branch == null ? null : service.listBranchMenu(branch.getBranchID()));
+            // Admin + "Tất cả chi nhánh": danh mục giá gốc toàn chuỗi để chỉnh
+            // Có chi nhánh: thực đơn + giá riêng chi nhánh (giá chung chỉ xem)
+            if (branch == null && isAdmin) {
+                request.setAttribute("menu", service.listCatalogMenu());
+                request.setAttribute("catalogMode", true);
+            } else if (branch != null) {
+                request.setAttribute("menu", service.listBranchMenu(branch.getBranchID()));
+                request.setAttribute("catalogMode", false);
+            } else {
+                request.setAttribute("menu", null);
+                request.setAttribute("catalogMode", false);
+            }
             request.setAttribute("statuses", PricingService.MENU_STATUSES);
             request.setAttribute("isAdminUser", isAdmin);
 

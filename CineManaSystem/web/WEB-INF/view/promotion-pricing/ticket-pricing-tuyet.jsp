@@ -481,9 +481,11 @@
                                             <td class="cell-strong">
                                                 <c:out value="${t.name}" />
                                             </td>
-                                            <td class="cfg-value">
-                                                <fmt:formatNumber value="${t.surcharge}"
-                                                                  pattern="#,##0" /> ₫
+                                            <td>
+                                                
+                                                        <fmt:formatNumber value="${t.surcharge}"
+                                                                          pattern="#,##0" /> ₫
+                                                   
                                             </td>
                                             <td>
                                                 <form method="post" action="${pageUrl}"
@@ -504,46 +506,46 @@
                                                                aria-label="Phụ thu ${t.name} tại chi nhánh">
                                                         <button type="submit"
                                                                 class="btn-save">Lưu</button>
-                                                </form>
-                                                <c:if test="${t.branchSurcharge != null}">
-                                                    <form method="post" action="${pageUrl}"
-                                                          class="inline-form ms-1"
-                                                          style="display: inline-block; margin-left: 6px;"
-                                                          onsubmit="return confirm('Bỏ phụ thu riêng và dùng lại phụ thu chung của loại phòng này?');">
-                                                        <input type="hidden" name="action"
-                                                               value="roomTypeBranchReset">
-                                                        <input type="hidden" name="id"
-                                                               value="${t.id}">
-                                                        <%@ include
-                                                            file="/WEB-INF/view/promotion-pricing/fragments/filter-hidden-tuyet.jsp"
-                                                            %>
-                                                            <button type="submit"
-                                                                    class="btn-reset"
-                                                                    style="padding: 4px 8px; font-size: 0.85rem;">Dùng
-                                                                giá chung</button>
                                                     </form>
-                                                </c:if>
-                                            </td>
-                                            <td class="cfg-hint">
-                                                <c:choose>
-                                                    <c:when test="${t.branchSurcharge != null}">
-                                                        <span class="branch-badge">
-                                                            <i class="fa-solid fa-circle-exclamation"></i>
-                                                            Đang dùng phụ thu riêng
-                                                            (Chung:
-                                                            <fmt:formatNumber
-                                                                value="${t.surcharge}"
-                                                                pattern="#,##0" /> ₫)
-                                                        </span>
-                                                    </c:when>
-                                                    <c:otherwise>
-                                                        <span style="color: #64748b;">Đang
-                                                            áp dụng phụ thu chung toàn
-                                                            chuỗi</span>
-                                                    </c:otherwise>
-                                                </c:choose>
-                                            </td>
-                                        </tr>
+                                                    <c:if test="${t.branchSurcharge != null}">
+                                                        <form method="post" action="${pageUrl}"
+                                                              class="inline-form ms-1"
+                                                              style="display: inline-block; margin-left: 6px;"
+                                                              onsubmit="return confirm('Bỏ phụ thu riêng và dùng lại phụ thu chung của loại phòng này?');">
+                                                            <input type="hidden" name="action"
+                                                                   value="roomTypeBranchReset">
+                                                            <input type="hidden" name="id"
+                                                                   value="${t.id}">
+                                                            <%@ include
+                                                                file="/WEB-INF/view/promotion-pricing/fragments/filter-hidden-tuyet.jsp"
+                                                                %>
+                                                                <button type="submit"
+                                                                        class="btn-reset"
+                                                                        style="padding: 4px 8px; font-size: 0.85rem;">Dùng
+                                                                    giá chung</button>
+                                                            </form>
+                                                    </c:if>
+                                                </td>
+                                                <td class="cfg-hint">
+                                                    <c:choose>
+                                                        <c:when test="${t.branchSurcharge != null}">
+                                                            <span class="branch-badge">
+                                                                <i class="fa-solid fa-circle-exclamation"></i>
+                                                                Đang dùng phụ thu riêng
+                                                                (Chung:
+                                                                <fmt:formatNumber
+                                                                    value="${t.surcharge}"
+                                                                    pattern="#,##0" /> ₫)
+                                                            </span>
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            <span style="color: #64748b;">Đang
+                                                                áp dụng phụ thu chung toàn
+                                                                chuỗi</span>
+                                                            </c:otherwise>
+                                                        </c:choose>
+                                                </td>
+                                            </tr>
                                     </c:forEach>
                                 </tbody>
                             </table>
