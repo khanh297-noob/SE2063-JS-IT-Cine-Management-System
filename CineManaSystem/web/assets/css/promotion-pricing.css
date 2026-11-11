@@ -1,17 +1,29 @@
-/* promotion-pricing.css: giao diện các trang Promotion & Pricing
-   (trang tổng hợp, quản lý giá vé, quản lý giá F&B, kiểm tra mã khuyến mãi).
-   Các trang dùng khung chung của phân hệ (Bootstrap + admin-style.css + sidebar-khanh/header-khanh).
-   Mọi luật ở đây nằm trong .pp-page (thẻ <main> của trang) để không đè lên Bootstrap hay khung chung. */
+/* ==========================================================================
+   PROMOTION & PRICING MANAGEMENT SYSTEM (CineGo Management)
+   File: promotion-pricing.css
+   Giao diện quản lý Giá vé, F&B, Kiểm tra Mã khuyến mãi
+   ========================================================================== */
 
-/* Bố cục trang & Khoảng cách với Sidebar/Header */
+/* ---------- 1. BỐ CỤC TRANG & CHỮ NỀN CƠ SỞ ---------- */
+.main-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin-left: var(--sidebar-width, 250px);
+  margin-top: 0;
+}
+
 .pp-page {
   flex: 1;
   min-width: 0;
-  padding: 24px 32px 32px 32px; /* Tăng padding trái/phải để tạo khoảng cách thoáng với Sidebar */
+  padding: 28px 32px 40px 32px;
   background-color: #f8fafc;
   color: #334155;
-  font-size: 13px;
+  font-size: 14px; /* Tăng cỡ chữ cơ sở lên 14px */
+  line-height: 1.5;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  overflow-y: auto;
 }
 
 .pp-page *,
@@ -20,20 +32,20 @@
   box-sizing: border-box;
 }
 
-/* Bootstrap để margin/padding riêng cho các thẻ này; trang này tự đặt khoảng cách nên bỏ đi
-   (:where giữ độ ưu tiên thấp, các luật bên dưới vẫn đè lên được). */
+/* Reset khoảng cách cho các thẻ khối chuẩn */
 .pp-page :where(h1, h2, h3, p, dl, dd, dt, ul, ol, form, table, th, td) {
   margin: 0;
   padding: 0;
 }
 
-/* ---------- Thanh chọn Rạp quản lý (Thiết kế mới tinh tế & sạch hơn) ---------- */
+/* ---------- 2. THANH CHỌN RẠP QUẢN LÝ (BRANCH BAR) ---------- */
 .pp-page .branch-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   padding: 12px 20px;
+  margin-top: 0;
   margin-bottom: 24px;
   background: #ffffff;
   border: 1px solid #e2e8f0;
@@ -42,8 +54,8 @@
 }
 
 .pp-page .branch-bar-icon {
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -51,7 +63,7 @@
   border-radius: 10px;
   background: #fff1f2;
   color: #e11d48;
-  font-size: 16px;
+  font-size: 18px;
 }
 
 .pp-page .branch-bar-body {
@@ -71,7 +83,7 @@
 }
 
 .pp-page .branch-bar-name {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 800;
   color: #0f172a;
 }
@@ -80,17 +92,17 @@
   margin: 0;
 }
 
-/* Component Pill chọn rạp dạng Dropdown/Badge đồng bộ */
+/* Pill / Badge chọn rạp */
 .pp-page .branch-pill {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 14px;
+  padding: 8px 16px;
   background: #f8fafc;
   border: 1px solid #cbd5e1;
   border-radius: 8px;
   color: #475569;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   transition: all 0.2s ease;
 }
@@ -103,7 +115,7 @@
 
 .pp-page .branch-pill i {
   color: #e11d48;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .pp-page .branch-pill b {
@@ -116,7 +128,7 @@
   border: 0;
   color: #0f172a;
   font-weight: 700;
-  font-size: 12px;
+  font-size: 13px;
   outline: none;
   cursor: pointer;
   padding-right: 4px;
@@ -128,43 +140,14 @@
   padding: 6px;
 }
 
-.pp-page .branch-select {
-  appearance: none;
-  -webkit-appearance: none;
-  width: 100%;
-  max-width: 380px;
-  padding: 8px 36px 8px 14px;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  background-color: #ffffff;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%2364748b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 14px center;
-  color: #0f172a;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  outline: none;
-  transition: border-color 0.15s, box-shadow 0.15s;
-}
-
-.pp-page .branch-select:hover {
-  border-color: #94a3b8;
-}
-
-.pp-page .branch-select:focus {
-  border-color: #e11d48;
-  box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.12);
-}
-
-/* ---------- Tiêu đề trang ---------- */
+/* ---------- 3. TIÊU ĐỀ TRANG ---------- */
 .pp-page .back-link {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   margin-bottom: 12px;
   color: #64748b;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   text-decoration: none;
 }
@@ -177,18 +160,18 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 12px;
+  margin-bottom: 22px;
+  padding-bottom: 14px;
   border-bottom: 1px solid #e2e8f0;
 }
 
 .pp-page .page-title {
-  font-size: 20px;
+  font-size: 22px; /* Tăng tiêu đề chính lên 22px */
   font-weight: 800;
   color: #0f172a;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .pp-page .page-title i {
@@ -196,21 +179,21 @@
 }
 
 .pp-page .page-subtitle {
-  font-size: 12px;
+  font-size: 13px;
   color: #64748b;
-  margin-top: 2px;
+  margin-top: 4px;
 }
 
-/* ---------- Thông báo ---------- */
+/* ---------- 4. THÔNG BÁO (ALERTS) ---------- */
 .pp-page .alert {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
-  margin-bottom: 16px;
+  gap: 10px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
   border-radius: 8px;
   border: 1px solid;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
 }
 
@@ -232,112 +215,38 @@
   color: #92400e;
 }
 
-/* ---------- Khung nội dung, bộ lọc ---------- */
+/* ---------- 5. CARD KHUNG NỘI DUNG ---------- */
 .pp-page .card {
+  display: block;
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 16px 20px;
-  margin-bottom: 20px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .pp-page .card.narrow {
-  max-width: 560px;
+  max-width: 580px;
 }
 
 .pp-page .card-title {
-  font-size: 14px;
+  font-size: 16px; /* Tăng tiêu đề Card lên 16px */
   font-weight: 800;
   color: #0f172a;
-  margin-bottom: 10px;
-}
-
-.pp-page .filter-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: 16px;
-  width: 100%;
-}
-
-.pp-page .filter-group {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  flex: 1;
-  min-width: 150px;
-}
-
-.pp-page .filter-label {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: #64748b;
-}
-
-.pp-page .filter-input,
-.pp-page .filter-select {
-  padding: 8px 12px;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  font-size: 12px;
-  outline: none;
-  background-color: #ffffff;
-  width: 100%;
-}
-
-.pp-page .filter-input:focus,
-.pp-page .filter-select:focus,
-.pp-page .price-input:focus,
-.pp-page .status-select:focus {
-  border-color: #e11d48;
-}
-
-.pp-page .filter-actions {
+  margin-bottom: 12px;
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-shrink: 0;
 }
 
-.pp-page .btn-filter {
-  background-color: #e11d48;
-  color: #ffffff;
-  border: none;
-  padding: 8px 18px;
-  border-radius: 6px;
+.pp-page .cfg-title {
+  font-size: 15px;
   font-weight: 700;
-  cursor: pointer;
-  font-size: 12px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 33px;
+  color: #0f172a;
 }
 
-.pp-page .btn-filter:hover {
-  background-color: #be123c;
-}
-
-.pp-page .btn-reset {
-  background-color: #f1f5f9;
-  color: #475569;
-  padding: 8px 12px;
-  border-radius: 6px;
-  text-decoration: none;
-  font-weight: 700;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 33px;
-}
-
-.pp-page .btn-reset:hover {
-  background-color: #e2e8f0;
-}
-
-/* ---------- Bảng ---------- */
+/* ---------- 6. BẢNG DỮ LIỆU CỠ CHỮ TO DỄ NHÌN ---------- */
 .pp-page .table-container {
   overflow-x: auto;
 }
@@ -346,23 +255,23 @@
   width: 100%;
   border-collapse: collapse;
   text-align: left;
-  font-size: 12px;
+  font-size: 14px; /* Tăng toàn bộ chữ trong bảng lên 14px */
 }
 
 .pp-page th {
   background-color: #f8fafc;
   color: #475569;
   font-weight: 700;
-  padding: 10px 12px;
+  padding: 12px 14px;
   border-bottom: 2px solid #e2e8f0;
   text-transform: uppercase;
-  font-size: 10px;
-  letter-spacing: 0.5px;
+  font-size: 11px; /* Tiêu đề cột chuẩn 11px Uppercase */
+  letter-spacing: 0.6px;
   white-space: nowrap;
 }
 
 .pp-page td {
-  padding: 8px 12px;
+  padding: 12px 14px; /* Tăng khoảng cách dòng giúp thoáng bảng */
   border-bottom: 1px solid #f1f5f9;
   color: #334155;
   white-space: nowrap;
@@ -380,99 +289,158 @@
 .pp-page .cell-strong {
   font-weight: 700;
   color: #0f172a;
+  font-size: 14px;
+}
+
+.pp-page .cfg-table {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.pp-page .cfg-table td {
+  padding: 12px;
+}
+
+.pp-page .cfg-value {
+  font-size: 15px; /* Giá tiền hiển thị to rõ 15px */
+}
+
+.pp-page .cfg-hint {
+  font-size: 12px;
+  color: #64748b;
 }
 
 .pp-page .empty-cell {
   text-align: center;
-  padding: 32px;
+  padding: 40px;
   color: #94a3b8;
+  font-size: 14px;
 }
 
 .pp-page .empty-icon {
-  font-size: 28px;
-  margin-bottom: 8px;
+  font-size: 32px;
+  margin-bottom: 10px;
   display: block;
 }
 
-.pp-page .tag {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: #f1f5f9;
-  color: #475569;
-  font-size: 10px;
-  font-weight: 700;
-}
-
-.pp-page .badge {
-  display: inline-block;
-  padding: 3px 9px;
-  border-radius: 999px;
-  font-size: 10px;
-  font-weight: 700;
-}
-
-.pp-page .badge-green {
-  background: #d1fae5;
-  color: #047857;
-}
-
-.pp-page .badge-gray {
-  background: #f1f5f9;
-  color: #64748b;
-}
-
-.pp-page .note {
-  margin-top: 10px;
-  font-size: 11px;
-  color: #64748b;
-}
-
-.pp-page .two-col {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 20px;
-}
-
-.pp-page .two-col .card {
-  margin-bottom: 0;
-}
-
-/* ---------- Ô nhập giá và nút lưu trên từng dòng ---------- */
-.pp-page .inline-form {
+/* ---------- 7. BỘ LỌC (FILTERS) & FORM NHẬP DỮ LIỆU ---------- */
+.pp-page .filter-row {
   display: flex;
-  align-items: center;
-  gap: 6px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 16px;
+  width: 100%;
 }
 
+.pp-page .filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 160px;
+}
+
+.pp-page .filter-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #64748b;
+  letter-spacing: 0.4px;
+}
+
+.pp-page .filter-input,
+.pp-page .filter-select,
 .pp-page .price-input,
 .pp-page .status-select {
-  padding: 6px 10px;
+  padding: 8px 12px;
   border: 1px solid #cbd5e1;
   border-radius: 6px;
-  font-size: 12px;
+  font-size: 13px;
   outline: none;
-  background: #ffffff;
+  background-color: #ffffff;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.pp-page .filter-input {
+  width: 100%;
 }
 
 .pp-page .price-input {
-  width: 120px;
+  width: 140px; /* Chiều rộng rộng rãi cho số tiền */
   text-align: right;
+  font-weight: 700;
 }
 
 .pp-page .status-select {
-  min-width: 110px;
+  min-width: 120px;
+}
+
+.pp-page .filter-input:focus,
+.pp-page .filter-select:focus,
+.pp-page .price-input:focus,
+.pp-page .status-select:focus {
+  border-color: #e11d48;
+  box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.1);
+}
+
+.pp-page .inline-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pp-page .filter-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* ---------- 8. NÚT BẤM (BUTTONS) ---------- */
+.pp-page .btn-filter,
+.pp-page .btn-reset,
+.pp-page .btn-save {
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+  height: 36px;
+}
+
+.pp-page .btn-filter {
+  background-color: #e11d48;
+  color: #ffffff;
+  border: none;
+  padding: 8px 20px;
+}
+
+.pp-page .btn-filter:hover {
+  background-color: #be123c;
+}
+
+.pp-page .btn-reset {
+  background-color: #f1f5f9;
+  color: #475569;
+  padding: 8px 14px;
+  text-decoration: none;
+  border: 1px solid #e2e8f0;
+}
+
+.pp-page .btn-reset:hover {
+  background-color: #e2e8f0;
+  color: #0f172a;
 }
 
 .pp-page .btn-save {
   background-color: #0f172a;
   color: #ffffff;
   border: none;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 700;
-  cursor: pointer;
+  padding: 7px 14px;
   white-space: nowrap;
 }
 
@@ -484,78 +452,111 @@
   background-color: #475569;
 }
 
-/* ---------- Trang tổng hợp: các ô chức năng ---------- */
-.pp-page .func-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 20px;
+.pp-page .btn-save-alt:hover {
+  background-color: #334155;
 }
 
-.pp-page .func-card {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 22px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  text-decoration: none;
-  color: #334155;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
-}
-
-.pp-page .func-card:hover {
-  border-color: #e11d48;
-  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
-  transform: translateY(-2px);
-}
-
-.pp-page .func-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 10px;
-  background: #fff1f2;
-  color: #e11d48;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-}
-
-.pp-page .func-card h2 {
-  font-size: 16px;
-  font-weight: 800;
-  color: #0f172a;
-}
-
-.pp-page .func-card p {
+.pp-page .btn-edit {
+  background: transparent;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  padding: 4px 10px;
+  border-radius: 6px;
   font-size: 12px;
-  line-height: 1.6;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pp-page .btn-edit:hover {
+  border-color: #e11d48;
+  color: #e11d48;
+}
+
+/* ---------- 9. TAG, BADGE & CHIP ---------- */
+.pp-page .tag {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.pp-page .badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.pp-page .badge-green,
+.pp-page .badge.promo-active {
+  background: #d1fae5;
+  color: #047857;
+}
+
+.pp-page .badge-gray,
+.pp-page .badge.promo-expired {
+  background: #f1f5f9;
   color: #64748b;
 }
 
-.pp-page .func-roles {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  color: #94a3b8;
+.pp-page .badge.promo-upcoming {
+  background: #fef3c7;
+  color: #b45309;
 }
 
-.pp-page .func-cta {
-  margin-top: auto;
-  padding-top: 10px;
-  border-top: 1px dashed #e2e8f0;
-  font-weight: 700;
-  color: #e11d48;
+.pp-page .badge.promo-exhausted {
+  background: #fee2e2;
+  color: #b91c1c;
 }
 
-/* ---------- Kiểm tra mã khuyến mãi ---------- */
+.pp-page .branch-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fde68a;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.pp-page .code-chip {
+  background: #fff1f2;
+  color: #be123c;
+  border: 1px dashed #fda4af;
+  border-radius: 6px;
+  padding: 4px 12px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.pp-page .code-chip:hover {
+  background: #e11d48;
+  border-color: #e11d48;
+  color: #ffffff;
+}
+
+.pp-page .note {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+/* ---------- 10. TRANG KIỂM TRA MÃ KHUYẾN MÃI (VALIDATION) ---------- */
 .pp-page .stack-form {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
 }
 
 .pp-page .stack-form .filter-group {
@@ -563,11 +564,12 @@
 }
 
 .pp-page .static-value {
-  padding: 8px 12px;
+  padding: 10px 14px;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   border-radius: 6px;
   font-weight: 700;
+  font-size: 14px;
   color: #0f172a;
 }
 
@@ -591,11 +593,11 @@
 .pp-page .result-head {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 16px;
 }
 
 .pp-page .result-head i {
-  font-size: 34px;
+  font-size: 36px;
 }
 
 .pp-page .result-ok .result-head i {
@@ -607,27 +609,28 @@
 }
 
 .pp-page .result-head h2 {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 800;
   color: #0f172a;
 }
 
 .pp-page .result-head p {
-  font-size: 12px;
+  font-size: 13px;
   color: #475569;
-  margin-top: 2px;
+  margin-top: 3px;
 }
 
 .pp-page .result-lines {
-  margin-top: 14px;
+  margin-top: 16px;
   border-top: 1px solid #e2e8f0;
 }
 
 .pp-page .result-lines div {
   display: flex;
   justify-content: space-between;
-  padding: 9px 0;
+  padding: 10px 0;
   border-bottom: 1px solid #f1f5f9;
+  font-size: 14px;
 }
 
 .pp-page .result-lines dt {
@@ -645,11 +648,25 @@
 
 .pp-page .result-lines .total dt,
 .pp-page .result-lines .total dd {
-  font-size: 14px;
+  font-size: 15px;
   color: #0f172a;
   font-weight: 800;
 }
 
+/* Lựa chọn chi nhánh cho F&B */
+.pp-page .branch-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.pp-page .branch-choices .btn-reset {
+  gap: 6px;
+  padding: 8px 16px;
+}
+
+/* ---------- 11. ADAPTIVE RESPONSIVE (MÀN HÌNH NHỎ) ---------- */
 @media (max-width: 760px) {
   .pp-page {
     padding: 16px;
@@ -657,7 +674,7 @@
   .pp-page .branch-bar {
     flex-direction: column;
     align-items: stretch;
-    gap: 10px;
+    gap: 12px;
   }
   .pp-page .inline-form {
     flex-wrap: wrap;
@@ -665,159 +682,98 @@
   .pp-page .page-header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 8px;
+    gap: 10px;
   }
 }
-
-/* Bootstrap cho .card hiển thị flex dọc; ở đây dùng khối bình thường như trước */
-.pp-page .card {
-  display: block;
+/* ==========================================================================
+   12. TRANG DÀNH CHO DASHBOARD CHỌN CHỨC NĂNG (FUNC-GRID & FUNC-CARD)
+   ========================================================================== */
+.pp-page .func-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
 }
 
-/* ---------- Danh sách suất chiếu theo phim: mỗi phim là một thanh đóng/mở ---------- */
-.pp-page .group-tools {
+.pp-page .func-card {
   display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-bottom: 10px;
+  flex-direction: column;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px;
+  text-decoration: none;
+  color: #334155;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  transition: all 0.2s ease-in-out;
+  position: relative;
 }
 
-.pp-page .btn-tool {
-  background-color: #ffffff;
-  color: #475569;
-  border: 1px solid #cbd5e1;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 11px;
+.pp-page .func-card:hover {
+  transform: translateY(-3px);
+  border-color: #e11d48;
+  box-shadow: 0 10px 25px -5px rgba(225, 29, 72, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+}
+
+.pp-page .func-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  background: #fff1f2;
+  color: #e11d48;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  margin-bottom: 16px;
+  transition: all 0.2s ease;
+}
+
+.pp-page .func-card:hover .func-icon {
+  background: #e11d48;
+  color: #ffffff;
+}
+
+.pp-page .func-card h2 {
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 8px;
+}
+
+.pp-page .func-card p {
+  font-size: 13.5px;
+  color: #64748b;
+  line-height: 1.5;
+  margin-bottom: 20px;
+  flex: 1;
+}
+
+.pp-page .func-roles {
+  display: inline-block;
+  font-size: 11.5px;
   font-weight: 700;
-  cursor: pointer;
-  display: inline-flex;
+  color: #475569;
+  background: #f1f5f9;
+  padding: 4px 10px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  width: fit-content;
+}
+
+.pp-page .func-cta {
+  font-size: 13px;
+  font-weight: 700;
+  color: #e11d48;
+  display: flex;
   align-items: center;
   gap: 6px;
 }
 
-.pp-page .btn-tool:hover {
-  border-color: #e11d48;
-  color: #e11d48;
+.pp-page .func-cta i {
+  transition: transform 0.2s ease;
 }
 
-.pp-page .movie-group {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  margin-bottom: 10px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+.pp-page .func-card:hover .func-cta i {
+  transform: translateX(4px);
 }
-
-.pp-page .movie-group > summary {
-  list-style: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  border-radius: 10px;
-}
-
-.pp-page .movie-group > summary::-webkit-details-marker {
-  display: none;
-}
-
-.pp-page .movie-group > summary:hover {
-  background-color: #f8fafc;
-}
-
-.pp-page .movie-name {
-  flex: 1;
-  min-width: 0;
-  font-size: 14px;
-  font-weight: 800;
-  color: #0f172a;
-}
-
-.pp-page .movie-name i {
-  color: #e11d48;
-  margin-right: 6px;
-}
-
-.pp-page .movie-meta {
-  font-size: 11px;
-  color: #64748b;
-  white-space: nowrap;
-}
-
-.pp-page .movie-chevron {
-  color: #94a3b8;
-  transition: transform 0.15s;
-}
-
-.pp-page .movie-group[open] .movie-chevron {
-  transform: rotate(180deg);
-}
-
-.pp-page .movie-group[open] > summary {
-  border-bottom: 1px solid #e2e8f0;
-  border-radius: 10px 10px 0 0;
-}
-
-.pp-page .movie-group .table-container {
-  padding: 4px 10px 10px;
-}
-
-/* Main wrapper: dung dung sidebar-width tu admin-style.css (250px), khong override them */
-.main-wrapper {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-    margin-left: var(--sidebar-width, 250px);
-    margin-top: 0;
-}
-
-/* Khu vuc noi dung: padding du thoang, scroll rieng khi noi dung dai */
-.pp-page {
-    flex: 1;
-    min-width: 0;
-    padding: 28px 32px 40px 32px;
-    background-color: #f8fafc;
-    color: #334155;
-    font-size: 13px;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    overflow-y: auto;
-}
-
-/* Branch bar: thoang, cach top 0, cach noi dung ben duoi 20px */
-.pp-page .branch-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 18px;
-    margin-top: 0;
-    margin-bottom: 20px;
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
-}
-
-/* ---------- Danh sách khuyến mãi (trang kiểm tra mã) ---------- */
-.pp-page .badge.promo-active    { background: #d1fae5; color: #047857; }
-.pp-page .badge.promo-upcoming  { background: #fef3c7; color: #b45309; }
-.pp-page .badge.promo-exhausted { background: #fee2e2; color: #b91c1c; }
-.pp-page .badge.promo-expired   { background: #f1f5f9; color: #64748b; }
-.pp-page .code-chip {
-    background: #fff1f2;
-    color: #be123c;
-    border: 1px dashed #fda4af;
-    border-radius: 6px;
-    padding: 3px 10px;
-    font-size: 12px;
-    font-weight: 800;
-    letter-spacing: 0.4px;
-    cursor: pointer;
-}
-.pp-page .code-chip:hover { background: #e11d48; border-color: #e11d48; color: #ffffff; }
-
-/* Danh sách chi nhánh để chọn (trang giá F&B khi Admin chưa chọn chi nhánh) */
-.pp-page .branch-choices { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-.pp-page .branch-choices .btn-reset { gap: 6px; }

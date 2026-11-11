@@ -1,4 +1,8 @@
-// Lọc bảng giá vé ở trang chủ (#pricing) theo chi nhánh.
+// ==========================================================================
+// CÁC TÍNH NĂNG XỬ LÝ TRANG GIÁ VÉ & CẤU HÌNH HỆ THỐNG
+// ==========================================================================
+
+// 1. Lọc bảng giá vé ở trang chủ (#pricing) theo chi nhánh.
 // Mỗi nút có data-branch (id chi nhánh hoặc "all"), mỗi bảng giá (.price-board) có data-branch tương ứng.
 (function () {
     'use strict';
@@ -36,4 +40,37 @@
             apply(chip.getAttribute('data-branch'));
         }
     });
+
+    // Tự động kích hoạt chip ban đầu
+    var activeChip = filter.querySelector('.branch-chip.active') || chips[0];
+    if (activeChip) {
+        apply(activeChip.getAttribute('data-branch'));
+    }
 })();
+
+// 2. Xử lý Chế độ Xem / Sửa các mục cấu hình giá vé (Trang ticket-pricing)
+document.addEventListener('DOMContentLoaded', function () {
+    'use strict';
+
+    // Bắt sự kiện click nút "Sửa"
+    document.querySelectorAll('.pp-page [data-edit]').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            var section = btn.closest('.cfg-section');
+            if (section) {
+                section.classList.add('is-editing');
+            }
+        });
+    });
+
+    // Bắt sự kiện click nút "Hủy"
+    document.querySelectorAll('.pp-page [data-cancel]').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            var section = btn.closest('.cfg-section');
+            if (section) {
+                section.classList.remove('is-editing');
+            }
+        });
+    });
+});

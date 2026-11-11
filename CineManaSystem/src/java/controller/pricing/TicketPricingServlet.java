@@ -1,6 +1,5 @@
 package controller.pricing;
 
-import dao.PricingDao;
 import dao.ReportDao;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -10,10 +9,11 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import model.Branch;
-import model.Movie;
 import model.User;
 import service.BranchReportService;
 import service.PricingService;
@@ -26,9 +26,15 @@ import util.PermissionUtil;
 
 /**
  * Quản lý giá vé (Admin, Quản lý chi nhánh).
- * GET : danh sách suất chiếu sắp tới kèm giá gốc (cố định) và giá cơ bản (sửa được), và bảng phụ thu loại phòng, loại ghế.
- * POST: action = updatePrice (một suất) | bulkPrice (nhiều suất theo bộ lọc)
- *              | roomTypeSurcharge | seatTypeSurcharge (hai loại này chỉ Admin, áp dụng cả chuỗi)
+ * GET : phần cấu hình giá hệ thống (giá cơ bản theo loại ngày, phụ thu loại ghế, loại phòng)
+ *       và các ô điều chỉnh của quản lý chi nhánh (cộng/trừ phụ thu loại phòng, phụ thu loại ghế riêng của chi nhánh).
+ *       Trang không còn danh sách suất chiếu; hai action updatePrice / bulkPrice bên dưới giữ lại nhưng chưa có giao diện.
+ *
+ * Công thức: Showtime.BasePrice = giá cơ bản theo ngày + phụ thu loại phòng.
+ *
+ * POST: action = saveConfig (chỉ Admin, áp dụng cả chuỗi)
+ *              | updatePrice (một suất) | bulkPrice (nhiều suất theo bộ lọc)
+ *              | roomTypeSurcharge | seatTypeSurcharge (đổi riêng từng loại, chỉ Admin; trang hiện dùng saveConfig)
  *              | seatTypeBranch | seatTypeBranchReset (Quản lý chi nhánh: đặt / bỏ phụ thu loại ghế riêng của chi nhánh mình)
  *              | roomTypeAdjust (Quản lý chi nhánh: cộng/trừ phụ thu loại phòng vào giá các suất của chi nhánh mình).
  *
@@ -51,10 +57,7 @@ public class TicketPricingServlet extends HttpServlet {
         User user = PermissionUtil.getCurrentUser(request);
         boolean isAdmin = PermissionUtil.isAdmin(request);
 
-        // Bước 2: đọc bộ lọc (mặc định 14 ngày tới) và xác định chi nhánh được xem
-        LocalDate today = LocalDate.now();
-        DateRange range = DateRange.fromRequest(request, today, today.plusDays(13));
-        Integer movieId = ParamUtil.parseIntOrNull(request.getParameter("movieId"));
+        // Bước 2: xác định chi nhánh được xem (Quản lý chỉ chi nhánh của mình)
         Integer branchId = ParamUtil.parseIntOrNull(request.getParameter("branchId"));
         List<Integer> scope;
         try {
@@ -68,25 +71,21 @@ public class TicketPricingServlet extends HttpServlet {
         ReportDao reportDao = new ReportDao();
         try (PricingService service = new PricingService()) {
             List<Branch> branches = reportDao.getBranches(BranchScope.allowed(user, isAdmin));
-            List<Movie> movies = reportDao.getMovies(scope);
-            List<PricingDao.ShowtimePrice> rows = service.listShowtimePrices(scope, movieId, range.getFrom(), range.getTo());
-            long editableCount = rows.stream().filter(PricingDao.ShowtimePrice::isEditable).count();
 
             Flash.moveToRequest(request);
-            request.setAttribute("rows", rows);
-            request.setAttribute("editableCount", editableCount);
-            request.setAttribute("truncated", rows.size() >= PricingDao.MAX_ROWS);
-            request.setAttribute("maxRows", PricingDao.MAX_ROWS);
-            request.setAttribute("movies", movies);
-            request.setAttribute("roomTypes", service.listRoomTypes());
-            // Quản lý chi nhánh xem thêm phụ thu loại ghế riêng của chi nhánh mình
-            request.setAttribute("seatTypes", (isAdmin || user.getBranchID() == null)
-                    ? service.listSeatTypes() : service.listSeatTypesForBranch(user.getBranchID()));
+            // Lấy phụ thu loại ghế / loại phòng: nếu chọn chi nhánh cụ thể thì lấy của chi nhánh đó, ngược lại lấy phụ thu chung
+            Integer targetBranchId = (!isAdmin && user.getBranchID() != null) ? user.getBranchID() : branchId;
+            request.setAttribute("targetBranchId", targetBranchId);
+            request.setAttribute("roomTypes", targetBranchId != null
+                    ? service.listRoomTypesForBranch(targetBranchId) : service.listRoomTypes());
+            request.setAttribute("seatTypes", targetBranchId != null
+                    ? service.listSeatTypesForBranch(targetBranchId) : service.listSeatTypes());
+            // Cấu hình giá hệ thống: nếu xem chi nhánh thì lấy giá ngày của chi nhánh, không thì lấy giá chung
+            request.setAttribute("dayPrices", targetBranchId != null
+                    ? service.getDayBasePricesForBranch(targetBranchId) : service.getDayBasePrices());
+            boolean canEditDayPrices = isAdmin || (!isAdmin && user.getBranchID() != null);
+            request.setAttribute("canEditDayPrices", canEditDayPrices);
             request.setAttribute("isAdminUser", isAdmin);
-            request.setAttribute("selectedMovieId", movieId);
-            request.setAttribute("fromDate", range.getFrom().toString());
-            request.setAttribute("toDate", range.getTo().toString());
-            request.setAttribute("filterError", range.getError());
 
             String pill = new BranchReportService(reportDao).scopePill(scope);
             ManagerShell.apply(request, user, isAdmin, pill, branches, branchId, "ticket-pricing", PAGE);
@@ -126,6 +125,32 @@ public class TicketPricingServlet extends HttpServlet {
                         DateRange.parseDate(request.getParameter("toDate")), price);
                 Flash.success(request, "Đã cập nhật giá cơ bản của " + updated + " suất chiếu (đã cộng phụ thu loại phòng).");
 
+            } else if ("saveConfig".equals(action)) {
+                String section = request.getParameter("section");
+                if ("day".equals(section) && (!isAdmin || branchId != null)) {
+                    int shifted = service.saveDayBasePricesForBranch(user, isAdmin, branchId,
+                            request.getParameter("weekdayPrice"), request.getParameter("weekendPrice"));
+                    Flash.success(request, "Đã cập nhật giá cơ bản theo loại ngày cho chi nhánh. "
+                            + (shifted > 0 ? ("Giá " + shifted + " suất chiếu sắp tới đã được cập nhật theo.") : ""));
+                } else if (isAdmin && branchId != null && ("seat".equals(section) || "room".equals(section))) {
+                    // Admin đang chọn một chi nhánh: chỉ đổi phụ thu của chi nhánh đó, không đụng phụ thu chung
+                    boolean room = "room".equals(section);
+                    int shifted = service.saveBranchConfig(isAdmin, branchId, user.getUserID(), request.getRemoteAddr(),
+                            room ? idMap(request, "room_") : Collections.<Integer, String>emptyMap(),
+                            room ? Collections.<Integer, String>emptyMap() : idMap(request, "seat_"));
+                    Flash.success(request, room
+                            ? "Đã lưu phụ thu định dạng phòng cho chi nhánh này. "
+                                + (shifted > 0 ? ("Giá " + shifted + " suất chiếu sắp tới của chi nhánh đã được cập nhật theo.") : "")
+                            : "Đã lưu phụ thu loại ghế cho chi nhánh này. Chi nhánh khác không bị ảnh hưởng.");
+                } else {
+                    service.saveConfig(isAdmin,
+                            request.getParameter("weekdayPrice"), request.getParameter("weekendPrice"),
+                            idMap(request, "room_"), idMap(request, "seat_"));
+                    Flash.success(request, configSavedMessage(section));
+                }
+
+
+
             } else if ("roomTypeSurcharge".equals(action)) {
                 service.updateRoomTypeSurcharge(isAdmin, requireId(request.getParameter("id")), price);
                 Flash.success(request, "Đã cập nhật phụ thu loại phòng. Giá cơ bản các suất sắp chiếu giữ nguyên, giá bán đổi theo phụ thu mới.");
@@ -160,6 +185,37 @@ public class TicketPricingServlet extends HttpServlet {
         }
 
         response.sendRedirect(request.getContextPath() + PAGE + queryString(request));
+    }
+
+    /** Thông báo sau khi lưu một mục của phần cấu hình giá (mục nào thì nói mục đó). */
+    private String configSavedMessage(String section) {
+        String effect = " Giá các suất chiếu sắp tới bị ảnh hưởng đã được cập nhật theo.";
+        if ("day".equals(section)) {
+            return "Đã lưu giá cơ bản theo loại ngày." + effect;
+        } else if ("seat".equals(section)) {
+            return "Đã lưu phụ thu loại ghế. Giá vé áp dụng cho khách đặt vé từ bây giờ.";
+        } else if ("room".equals(section)) {
+            return "Đã lưu phụ thu định dạng phòng." + effect;
+        }
+        return "Đã lưu cấu hình giá." + effect;
+    }
+
+    /**
+     * Gom các ô nhập có tên dạng "prefix + id" (ví dụ room_3, seat_2) thành bản đồ id -> giá trị.
+     * Tên ô không đúng dạng thì bỏ qua.
+     */
+    private Map<Integer, String> idMap(HttpServletRequest request, String prefix) {
+        Map<Integer, String> result = new LinkedHashMap<>();
+        for (Map.Entry<String, String[]> e : request.getParameterMap().entrySet()) {
+            String name = e.getKey();
+            if (name.startsWith(prefix)) {
+                Integer id = ParamUtil.parseIntOrNull(name.substring(prefix.length()));
+                if (id != null && e.getValue().length > 0) {
+                    result.put(id, e.getValue()[0]);
+                }
+            }
+        }
+        return result;
     }
 
     private Integer requireId(String text) {

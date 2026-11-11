@@ -6,23 +6,32 @@ import java.time.LocalDate;
 
 public final class ShowtimePriceCalculator {
 
-    public static final BigDecimal STANDARD_PRICE = new BigDecimal("75000");
-    public static final BigDecimal WEEKEND_SURCHARGE = new BigDecimal("20000");
-
     private ShowtimePriceCalculator() {
     }
 
+    /** Ngày áp dụng giá cuối tuần: Thứ 6, Thứ 7, Chủ nhật. Còn lại (Thứ 2 - Thứ 5) là ngày thường. */
     public static boolean isWeekend(LocalDate date) {
         DayOfWeek d = date.getDayOfWeek();
-        return d == DayOfWeek.SATURDAY || d == DayOfWeek.SUNDAY;
+        return d == DayOfWeek.FRIDAY || d == DayOfWeek.SATURDAY || d == DayOfWeek.SUNDAY;
     }
 
-    public static BigDecimal basePrice(BigDecimal roomSurcharge, LocalDate date) {
-        BigDecimal price = STANDARD_PRICE.add(nz(roomSurcharge));
-        if (date != null && isWeekend(date)) {
-            price = price.add(WEEKEND_SURCHARGE);
-        }
-        return price;
+    /** Giá cơ bản theo loại ngày: cuối tuần dùng giá cuối tuần, ngày thường dùng giá ngày thường. */
+    public static BigDecimal dayBasePrice(LocalDate date, BigDecimal weekdayPrice, BigDecimal weekendPrice) {
+        return date != null && isWeekend(date) ? nz(weekendPrice) : nz(weekdayPrice);
+    }
+
+    /**
+     * Giá lưu ở Showtime.BasePrice khi tạo suất chiếu:
+     * giá cơ bản theo ngày + phụ thu loại phòng.
+     */
+    public static BigDecimal basePrice(BigDecimal dayBasePrice, BigDecimal roomSurcharge) {
+        return nz(dayBasePrice).add(nz(roomSurcharge));
+    }
+
+    /** @deprecated Dùng {@link #basePrice(BigDecimal, BigDecimal)} — phụ thu phim đã bỏ. */
+    @Deprecated
+    public static BigDecimal basePrice(BigDecimal dayBasePrice, BigDecimal movieSurcharge, BigDecimal roomSurcharge) {
+        return basePrice(dayBasePrice, roomSurcharge);
     }
 
     public static BigDecimal ticketPrice(BigDecimal showtimeBasePrice, BigDecimal seatSurcharge) {

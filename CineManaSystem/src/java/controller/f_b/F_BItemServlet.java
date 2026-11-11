@@ -2,6 +2,7 @@ package controller.f_b;
 
 import service.f_b.F_BItemService;
 import model.User;
+import util.SessionUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
@@ -22,13 +23,13 @@ public class F_BItemServlet extends HttpServlet {
             HttpServletResponse response)
             throws ServletException, IOException {
 
-        HttpSession session = request.getSession(false);
-
-        if (session == null || !(session.getAttribute("User") instanceof User actor)) {
-
+        User actor = SessionUtil.getLoggedInUser(request);
+        if (actor == null) {
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
+
+        HttpSession session = request.getSession(false);
 
         try {
             request.setAttribute("itemList", service.getAllItems(actor));
@@ -39,7 +40,7 @@ public class F_BItemServlet extends HttpServlet {
 
             response.setHeader("Cache-Control", "no-store");
 
-            request.getRequestDispatcher("/WEB-INF/view/fnb/" + "f_b-item-management-khanh.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/view/fnb/f_b-item-management-khanh.jsp").forward(request, response);
 
         } catch (SecurityException exception) {
             response.sendError(403);
@@ -54,16 +55,14 @@ public class F_BItemServlet extends HttpServlet {
 
         request.setCharacterEncoding("UTF-8");
 
-        HttpSession session = request.getSession(false);
-
-        if (session == null || !(session.getAttribute("User") instanceof User actor)) {
-
+        User actor = SessionUtil.getLoggedInUser(request);
+        if (actor == null) {
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
 
-        String expected =
-                (String) session.getAttribute("csrfToken");
+        HttpSession session = request.getSession(false);
+        String expected = session != null ? (String) session.getAttribute("csrfToken") : null;
         String submitted = request.getParameter("csrfToken");
 
         if (expected == null || !expected.equals(submitted)) {
@@ -76,15 +75,11 @@ public class F_BItemServlet extends HttpServlet {
 
             if ("save".equals(action)) {
                 int itemId = Integer.parseInt(request.getParameter("itemId"));
-
                 BigDecimal price = new BigDecimal(request.getParameter("price"));
-
                 service.save(actor, itemId, request.getParameter("itemName"), request.getParameter("category"), price);
 
             } else if ("activate".equals(action) || "deactivate".equals(action)) {
-
                 int itemId = Integer.parseInt(request.getParameter("itemId"));
-
                 service.changeActive(actor, itemId, "activate".equals(action));
 
             } else {
@@ -105,7 +100,6 @@ public class F_BItemServlet extends HttpServlet {
 
         } catch (SQLException exception) {
             getServletContext().log("Không cập nhật được F&B.", exception);
-
             session.setAttribute("toastError", "Không lưu được dữ liệu. Hãy thử lại.");
         }
 

@@ -1,5 +1,6 @@
 package dao.booking;
 
+import dao.PricingConfigDao;
 import dao.SeatSurchargeDao;
 import model.booking.Seat;
 import model.booking.Showtime;
@@ -24,7 +25,7 @@ public class PosShowtimeDAO extends DBContext {
     // Phụ thu loại phòng lấy từ bảng RoomType (Room.RoomType = RoomType.Name)
     private static final String SELECT_SHOWTIME
             = "SELECT st.ShowtimeID, st.MovieID, m.Title, m.AgeRating, m.Duration, "
-            + "       r.RoomID, r.RoomName, r.RoomType, ISNULL(rt.Surcharge, 0) AS RoomSurcharge, "
+            + "       r.RoomID, r.RoomName, r.RoomType, " + PricingConfigDao.BRANCH_ROOM_SURCHARGE_SQL + " AS RoomSurcharge, "
             + "       br.BranchID, br.Name AS BranchName, "
             + "       st.ShowDate, st.StartTime, st.EndTime, st.BasePrice, st.Status "
             + "FROM Showtime st "

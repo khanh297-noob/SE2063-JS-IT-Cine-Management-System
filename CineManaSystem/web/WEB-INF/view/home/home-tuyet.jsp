@@ -237,48 +237,43 @@
                                 <div class="price-board-type"><span><c:out value="${bd.roomType}"/></span></div>
                                 <div class="price-board-body">
                                     <h3 class="price-board-title">
-                                        BẢNG GIÁ VÉ <c:out value="${bd.roomType}"/> - <c:out value="${bd.branchName}"/>
+                                        BẢNG GIÁ VÉ <c:out value="${bd.roomType}"/> (Giá vé thường) - <c:out value="${bd.branchName}"/>
                                     </h3>
                                     <table class="price-table">
                                         <thead>
                                             <tr>
                                                 <th>Ngày chiếu</th>
-                                                <th class="price-col">Trước 18h</th>
-                                                <th class="price-col">Từ 18h</th>
+                                                <th class="price-col">Giá vé</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <tr>
                                                 <td>Thứ 2 - Thứ 6</td>
-                                                <td class="price-col">${bd.weekdayBefore.text}</td>
-                                                <td class="price-col">${bd.weekdayAfter.text}</td>
+                                                <td class="price-col">${bd.weekday.text}</td>
                                             </tr>
                                             <tr>
                                                 <td>Thứ 7, Chủ nhật</td>
-                                                <td class="price-col">${bd.weekendBefore.text}</td>
-                                                <td class="price-col">${bd.weekendAfter.text}</td>
+                                                <td class="price-col">${bd.weekend.text}</td>
                                             </tr>
                                         </tbody>
                                     </table>
-                                    <ul class="price-board-notes">
-                                        <li>Giá vé ghế thường, áp dụng cho ${bd.showtimeCount} suất chiếu sắp tới.</li>
-                                        <c:if test="${not empty bd.seatExtras}">
+                                    <c:if test="${not empty bd.seatExtras}">
+                                        <ul class="price-board-notes">
                                             <li>Phụ thu loại ghế:
                                                 <c:forEach var="x" items="${bd.seatExtras}" varStatus="st">
                                                     <c:out value="${x.text}"/><c:if test="${!st.last}">; </c:if>
                                                 </c:forEach>
                                             </li>
-                                        </c:if>
-                                    </ul>
+                                        </ul>
+                                    </c:if>
                                 </div>
                             </article>
                         </c:forEach>
                     </div>
-                    <p class="price-empty" id="priceEmpty" hidden>Chi nhánh này chưa có bảng giá (chưa có suất chiếu sắp tới).</p>
+                    <p class="price-empty" id="priceEmpty" hidden>Chi nhánh này hiện chưa có bảng giá vé.</p>
 
                     <p class="price-note">
-                        Giá lấy từ giá hiện tại do từng chi nhánh thiết lập cho các suất chiếu trong 30 ngày tới; hiển thị khoảng giá nếu
-                        các suất trong cùng khung có giá khác nhau, dấu — là chưa có suất chiếu ở khung đó.
+                        Bảng giá vé ghế tiêu chuẩn theo từng loại phòng và chi nhánh, lấy theo giá cấu hình hiện tại của chi nhánh.
                     </p>
                 </c:otherwise>
             </c:choose>

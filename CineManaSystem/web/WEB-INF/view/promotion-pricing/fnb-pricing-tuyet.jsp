@@ -103,12 +103,11 @@
                                     <thead>
                                         <tr>
                                             <th>Danh mục</th><th>Món</th>
-                                            <th class="align-right">Giá gốc</th>
-                                            <th class="align-right">Đang áp dụng</th>
+                                            <th class="align-right">Giá bán tại chi nhánh</th>
                                             <th>Giá riêng của chi nhánh (đồng)</th>
                                             <th>Trạng thái</th>
                                             <th></th>
-                                            <c:if test="${isAdminUser}"><th>Giá gốc toàn chuỗi (đồng)</th></c:if>
+                                            <c:if test="${isAdminUser}"><th>Giá chung toàn chuỗi (đồng)</th></c:if>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -119,7 +118,6 @@
                                                     <tr>
                                                         <td><span class="tag"><c:out value="${item.category}"/></span></td>
                                                         <td class="cell-strong"><c:out value="${item.name}"/></td>
-                                                        <td class="align-right"><fmt:formatNumber value="${item.basePrice}" pattern="#,##0"/> ₫</td>
                                                         <td class="align-right">
                                                             <c:choose>
                                                                 <c:when test="${item.inMenu}"><b><fmt:formatNumber value="${item.effectivePrice}" pattern="#,##0"/> ₫</b></c:when>
@@ -160,7 +158,7 @@
                                                 </c:forEach>
                                             </c:when>
                                             <c:otherwise>
-                                                <tr><td colspan="8" class="empty-cell"><i class="fa-solid fa-folder-open empty-icon"></i>Chưa có món nào trong danh mục F&amp;B của chuỗi.</td></tr>
+                                                <tr><td colspan="${isAdminUser ? 7 : 6}" class="empty-cell"><i class="fa-solid fa-folder-open empty-icon"></i>Chưa có món nào trong danh mục F&amp;B của chuỗi.</td></tr>
                                             </c:otherwise>
                                         </c:choose>
                                     </tbody>

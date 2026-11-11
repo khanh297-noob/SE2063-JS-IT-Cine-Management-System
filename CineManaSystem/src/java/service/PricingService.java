@@ -1,6 +1,8 @@
 package service;
 
+import dao.PricingConfigDao;
 import dao.PricingDao;
+import dao.PricingDao.ConfigInput;
 import dao.PricingDao.MenuItem;
 import dao.PricingDao.ShowtimePrice;
 import dao.PricingDao.RoomTypePriceBoard;
@@ -9,6 +11,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import model.User;
 import service.movie.ShowtimePriceCalculator;
 import util.MoneyUtil;
 
@@ -40,26 +44,128 @@ public class PricingService implements AutoCloseable {
 
     /**
      * Bảng giá vé cho khách xem ở trang chủ: mỗi chi nhánh một bảng cho từng loại phòng (2D, 3D, ...).
-     * Giá lấy từ Showtime.BasePrice các suất sắp chiếu nên luôn trùng với giá quản lý đã đặt ở trang
-     * Quản lý giá vé (đổi từng suất hay đổi hàng loạt theo phim đều hiện ra).
+     * Giá lấy từ cấu hình hiện tại của chi nhánh (giá cơ bản theo ngày + phụ thu loại phòng),
+     * mỗi ô chỉ hiện một mức giá, không gom khoảng từ nhiều suất chiếu.
      */
     public List<RoomTypePriceBoard> listPublicPriceBoards() {
         return dao.findPriceBoards(PUBLIC_DAYS, PUBLIC_MAX_ROWS);
+    }
+
+    // ==================== CẤU HÌNH GIÁ HỆ THỐNG (ADMIN) ====================
+
+    /** Giá cơ bản theo loại ngày: ngày thường (Thứ 2 - Thứ 5) và cuối tuần (Thứ 6, Thứ 7, Chủ nhật). */
+    public PricingConfigDao.DayPrices getDayBasePrices() {
+        return dao.findDayBasePrices();
+    }
+
+    /** Giá cơ bản theo loại ngày của một chi nhánh (nếu có giá riêng, không thì lấy giá chung). */
+    public PricingConfigDao.DayPrices getDayBasePricesForBranch(int branchId) {
+        return dao.findDayBasePricesForBranch(branchId);
+    }
+
+    /** Quản lý chi nhánh đổi giá cơ bản theo ngày cho chi nhánh mình. */
+    public int saveDayBasePricesForBranch(User user, boolean isAdmin, Integer branchId, String weekdayText, String weekendText) {
+        int branch = (!isAdmin && user != null && user.getBranchID() != null) ? user.getBranchID() : (branchId != null ? branchId : 0);
+        if (branch <= 0) {
+            throw new IllegalArgumentException("Vui lòng chọn chi nhánh cần đổi giá!");
+        }
+        BigDecimal weekday = MoneyUtil.parse(weekdayText, "Giá ngày thường", false);
+        BigDecimal weekend = MoneyUtil.parse(weekendText, "Giá cuối tuần", false);
+        return dao.saveDayBasePricesForBranch(branch, weekday, weekend);
+    }
+
+
+    /**
+     * Lưu cấu hình giá hệ thống (cả cấu hình hoặc chỉ một mục, phần không gửi lên thì giữ nguyên). Chỉ Admin.
+     * Kiểm tra toàn bộ dữ liệu trước, có một giá trị sai thì không lưu gì.
+     * Giá của các suất sắp chiếu bị ảnh hưởng được cộng phần chênh lệch (xem PricingDao.saveConfig).
+     *
+     * @param roomTexts   id loại phòng -> phụ thu nhập vào
+     * @param seatTexts   id loại ghế -> phụ thu nhập vào
+     * @return số lượt cập nhật giá suất chiếu sắp tới
+     */
+    public int saveConfig(boolean isAdmin, String weekdayText, String weekendText,
+            Map<Integer, String> roomTexts, Map<Integer, String> seatTexts) throws IllegalArgumentException {
+        requireAdmin(isAdmin);
+        ConfigInput in = new ConfigInput();
+        // Mỗi mục của trang được lưu riêng nên chỉ phần có gửi lên mới được xử lý; hai giá cơ bản theo ngày đi cùng nhau
+        if (weekdayText != null || weekendText != null) {
+            in.weekdayPrice = MoneyUtil.parse(weekdayText, "Giá cơ bản ngày thường", false);
+            in.weekendPrice = MoneyUtil.parse(weekendText, "Giá cơ bản cuối tuần", false);
+        }
+        for (Map.Entry<Integer, String> e : roomTexts.entrySet()) {
+            in.roomSurcharges.put(e.getKey(), MoneyUtil.parse(e.getValue(), "Phụ thu loại phòng", true));
+        }
+        for (Map.Entry<Integer, String> e : seatTexts.entrySet()) {
+            in.seatSurcharges.put(e.getKey(), MoneyUtil.parse(e.getValue(), "Phụ thu loại ghế", true));
+        }
+        return dao.saveConfig(in);
+    }
+
+    /**
+     * Admin lưu phụ thu loại ghế / loại phòng RIÊNG cho một chi nhánh: chỉ chi nhánh đó đổi, phụ thu chung
+     * và các chi nhánh khác giữ nguyên. Kiểm tra toàn bộ dữ liệu trước, có giá trị sai thì không lưu gì.
+     * Giá trị bằng phụ thu chung nghĩa là chi nhánh dùng lại phụ thu chung (bỏ phụ thu riêng).
+     *
+     * @return số suất chiếu sắp tới được cập nhật giá (do đổi phụ thu loại phòng)
+     */
+    public int saveBranchConfig(boolean isAdmin, int branchId, int userId, String ip,
+            Map<Integer, String> roomTexts, Map<Integer, String> seatTexts) throws IllegalArgumentException {
+        requireAdmin(isAdmin);
+        if (branchId <= 0) {
+            throw new IllegalArgumentException("Vui lòng chọn chi nhánh cần đổi giá!");
+        }
+        // Bước 1: đọc và kiểm tra hết dữ liệu nhập
+        Map<Integer, BigDecimal> rooms = new java.util.LinkedHashMap<>();
+        for (Map.Entry<Integer, String> e : roomTexts.entrySet()) {
+            rooms.put(e.getKey(), MoneyUtil.parse(e.getValue(), "Phụ thu loại phòng", true));
+        }
+        Map<Integer, BigDecimal> seats = new java.util.LinkedHashMap<>();
+        for (Map.Entry<Integer, String> e : seatTexts.entrySet()) {
+            seats.put(e.getKey(), MoneyUtil.parse(e.getValue(), "Phụ thu loại ghế", true));
+        }
+        // Bước 2: phụ thu loại ghế riêng của chi nhánh
+        for (Surcharge t : dao.findSeatTypesForBranch(branchId)) {
+            BigDecimal target = seats.get(t.getId());
+            if (target == null || target.compareTo(t.getEffectiveSurcharge()) == 0) {
+                continue;
+            }
+            boolean backToCommon = target.compareTo(t.getSurcharge()) == 0;
+            boolean ok = backToCommon
+                    ? dao.resetBranchSeatTypeSurcharge(userId, ip, branchId, t.getId(), t.getName())
+                    : dao.saveBranchSeatTypeSurcharge(userId, ip, branchId, t.getId(), t.getName(), target);
+            if (!ok) {
+                throw new IllegalArgumentException("Không lưu được phụ thu loại ghế " + t.getName() + ", vui lòng thử lại!");
+            }
+        }
+        // Bước 3: phụ thu loại phòng riêng của chi nhánh (cộng chênh lệch vào các suất sắp chiếu của chi nhánh)
+        return rooms.isEmpty() ? 0 : dao.saveBranchRoomSurcharges(branchId, rooms);
+    }
+
+    /** Loại phòng kèm phụ thu riêng của một chi nhánh (branchSurcharge null = dùng phụ thu chung). */
+    public List<Surcharge> listRoomTypesForBranch(int branchId) {
+        return dao.findRoomTypesForBranch(branchId);
     }
 
     // ==================== GIÁ VÉ: SUẤT CHIẾU ====================
 
     /**
      * Suất chiếu sắp tới trong phạm vi chi nhánh và bộ lọc, kèm giá gốc và giá hiện tại.
-     * Giá gốc không lưu trong database mà tính lại bằng đúng công thức lúc tạo suất
-     * (giá chuẩn + phụ thu loại phòng + phụ thu cuối tuần), nên không ai sửa được.
+     * Giá gốc không lưu trong database mà tính lại bằng đúng công thức lúc tạo suất:
+     * giá cơ bản theo ngày + phụ thu loại phòng, theo cấu hình hiện hành.
      * Giá cơ bản = Showtime.BasePrice trừ phụ thu loại phòng, quản lý được đổi. Khi lưu, BasePrice = giá cơ bản + phụ thu loại phòng.
      */
     public List<ShowtimePrice> listShowtimePrices(List<Integer> branchScope, Integer movieId,
             LocalDate from, LocalDate to) {
         List<ShowtimePrice> rows = dao.findShowtimePrices(branchScope, movieId, from.toString(), to.toString());
+        Map<Integer, PricingConfigDao.DayPrices> branchDayPricesCache = new java.util.HashMap<>();
         for (ShowtimePrice row : rows) {
-            row.setOriginalPrice(ShowtimePriceCalculator.basePrice(row.getRoomSurcharge(), row.getShowDate().toLocalDate()));
+            LocalDate date = row.getShowDate().toLocalDate();
+            PricingConfigDao.DayPrices dayPrices = branchDayPricesCache.computeIfAbsent(row.getBranchId(),
+                    id -> dao.findDayBasePricesForBranch(id));
+            row.setOriginalPrice(ShowtimePriceCalculator.basePrice(
+                    ShowtimePriceCalculator.dayBasePrice(date, dayPrices.getWeekday(), dayPrices.getWeekend()),
+                    row.getRoomSurcharge()));
             // Giá cơ bản = BasePrice đã lưu trừ phụ thu loại phòng (không âm)
             BigDecimal base = row.getCurrentPrice().subtract(row.getRoomSurcharge());
             row.setBasePrice(base.signum() < 0 ? BigDecimal.ZERO : base);
