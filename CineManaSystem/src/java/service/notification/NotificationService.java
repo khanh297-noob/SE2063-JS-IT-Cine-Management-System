@@ -25,7 +25,9 @@ import java.util.logging.Logger;
  * Sự kiện đang gửi:
  *   - Phim chuyển sang "Now Showing" (MovieStatusService.changeStatus) -> mọi khách hàng Active.
  *   - Phim đổi trạng thái, kể cả do đối soát (MovieStatusService) -> Quản lý các chi nhánh có phim đó.
- *   - Phim bị đối soát chuyển về "Coming Soon" (MovieStatusService.enforceStatusRules) -> mọi Admin Active.
+ *   - Đối soát phim (MovieStatusService.enforceStatusRules) -> mọi Admin Active: phim bị chuyển về "Coming Soon"
+ *     hoặc sang "End of Screening" vì hết khung chiếu; phim "Coming Soon" đã đủ điều kiện bắt đầu chiếu
+ *     (1 lần mỗi đợt chiếu); phim đang chiếu thiếu điều kiện nhưng còn suất chiếu (tối đa 1 lần / ngày).
  *   - Phim được thêm / gỡ / đổi ngày chiếu ở chi nhánh (MovieBranchService.save) -> Quản lý chi nhánh đó.
  *   - Chi nhánh / phòng chiếu / giờ mở cửa / sơ đồ ghế bị sửa (các servlet quản lý chi nhánh) -> Quản lý chi nhánh đó.
  *   - Đặt vé (OnlineBookingService.createPendingBooking), khách tự huỷ đơn (OnlineBookingService.cancel) -> khách đặt đơn.
@@ -60,6 +62,20 @@ public class NotificationService {
 
     public void notifyAdmins(String type, String title, String content, String link) {
         notifyRoles(ADMIN_ROLES, type, title, content, link);
+    }
+
+    /**
+     * Gửi mọi Admin, trừ người đã nhận thông báo cùng loại, tiêu đề và link từ thời điểm since
+     * (cho các lần đối soát chạy lặp lại). link phải là đường dẫn trong ứng dụng.
+     */
+    public void notifyAdminsOnce(String type, String title, String content, String link, LocalDateTime since) {
+        String safe = safeLink(link);
+        if (safe == null) return;
+        try {
+            JdbcContext.transaction(con -> dao.insertForRolesOnce(con, ADMIN_ROLES, type, title, content, safe, since));
+        } catch (Exception e) {
+            LOG.log(Level.WARNING, "Không gửi được thông báo cho Admin: " + title, e);
+        }
     }
 
     /** Quản lý của chi nhánh branchId, trừ exceptUserId (người vừa thao tác, null = không trừ ai). */

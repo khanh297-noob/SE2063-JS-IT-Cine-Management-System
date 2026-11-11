@@ -106,7 +106,11 @@
                                         <c:otherwise><span class="mcard-noposter"><c:out value="${m.title}"/></span></c:otherwise>
                                     </c:choose>
                                     <span class="mcard-rating">${m.ageRating}</span>
-                                    <span class="mcard-release">Khởi chiếu ${m.releaseDateText}</span>
+                                    <%-- Ngày khởi chiếu giữ nguyên khi chiếu lại; ngày đợt chiếu lấy từ khung chiếu của chi nhánh --%>
+                                    <c:set var="comingText" value="${ms.comingSoonText}"/>
+                                    <c:if test="${ms.rerun or not empty comingText}">
+                                        <span class="mcard-release">${ms.rerun ? 'Chiếu lại' : ''}${ms.rerun and not empty comingText ? ' · ' : ''}${comingText}</span>
+                                    </c:if>
                                 </a>
                                 <a class="mcard-title" href="${ctx}/movies/detail?id=${m.movieId}"><c:out value="${m.title}"/></a>
                             </article>

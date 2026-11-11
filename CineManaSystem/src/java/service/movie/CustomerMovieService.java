@@ -19,6 +19,7 @@ import util.TextUtil;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -35,7 +36,9 @@ import java.util.TreeSet;
  * BR-CU-02  Lọc theo thể loại, năm phát hành (năm của ngày khởi chiếu), ngôn ngữ.
  * BR-CU-03  Đề cử tháng: tối đa 10 phim có lượt yêu thích cao nhất (BR-CU-06).
  * BR-CU-04  Đánh giá: tên người đánh giá bắt buộc (tối đa 50 ký tự), rating 1-5 sao, nội dung bắt buộc, tối đa 1000 ký tự.
- * BR-CU-05  Hiển thị thêm phim sắp chiếu ("Coming Soon"), xem được chi tiết nhưng chưa được đánh giá.
+ * BR-CU-05  Hiển thị thêm phim sắp chiếu ("Coming Soon"), xem được chi tiết nhưng chưa được đánh giá. Chỉ hiện phim
+ *           chưa tới ngày khởi chiếu hoặc có chi nhánh với khung ngày chiếu chưa kết thúc; thẻ phim ghi "Chiếu từ"
+ *           ngày bắt đầu khung chiếu hoặc "Khởi chiếu", kèm nhãn "Chiếu lại" nếu phim từng có suất chiếu.
  * BR-CU-06  Lượt yêu thích lưu trong MovieReviews (liked = 1, không có rating / content). Mỗi người xem
  *           1 lượt / phim trong một phiên (controller nhớ trong HttpSession); tổng lượt = số dòng liked = 1.
  * BR-CU-07  Tìm kiếm theo tên phim, đạo diễn, diễn viên; không phân biệt dấu và hoa thường, từ khoá tối đa
@@ -91,9 +94,9 @@ public class CustomerMovieService {
     public List<MovieSummaryDTO> listComingSoon(Integer genreId, Integer year, String language, String keyword)
             throws SQLException, BusinessException {
         return JdbcContext.query(con -> {
-            List<MovieSummaryDTO> list = filter(load(con, Movie.STATUS_COMING_SOON, genreId), year, language, keyword);
-            list.sort(Comparator.comparing((MovieSummaryDTO ms) -> ms.getMovie().getReleaseDate(),
-                    Comparator.nullsLast(Comparator.naturalOrder())));
+            List<MovieSummaryDTO> list = filter(loadComingSoon(con, genreId), year, language, keyword);
+            list.sort(Comparator.comparing(CustomerMovieService::comingDate, Comparator.nullsLast(Comparator.naturalOrder()))
+                    .thenComparing(ms -> ms.getMovie().getTitle(), String.CASE_INSENSITIVE_ORDER));
             return list;
         });
     }
@@ -101,7 +104,7 @@ public class CustomerMovieService {
     public Menu getMenu() throws SQLException, BusinessException {
         return JdbcContext.query(con -> {
             List<MovieSummaryDTO> visible = load(con, Movie.STATUS_NOW_SHOWING, null);
-            visible.addAll(load(con, Movie.STATUS_COMING_SOON, null));
+            visible.addAll(loadComingSoon(con, null));
             Set<String> genreNames = new HashSet<>();
             Set<Integer> years = new TreeSet<>(Comparator.reverseOrder());
             Set<String> languageKeys = new HashSet<>();
@@ -236,6 +239,36 @@ public class CustomerMovieService {
             result.add(ms);
         }
         return result;
+    }
+
+    /**
+     * BR-CU-05: phim "Coming Soon" khách thấy được: chưa tới ngày khởi chiếu, hoặc có chi nhánh đang hoạt động với
+     * khung ngày chiếu chưa kết thúc (phim chiếu lại giữ nguyên ngày khởi chiếu cũ). Phim cũ chưa có kế hoạch chiếu bị ẩn.
+     */
+    private List<MovieSummaryDTO> loadComingSoon(Connection con, Integer genreId) throws SQLException {
+        LocalDate today = LocalDate.now();
+        Map<Integer, LocalDate> nextStart = movieBranchDAO.findNextScreeningStart(con, today);
+        Set<Integer> screened = movieDAO.findIdsScreenedBefore(con, today);
+        List<MovieSummaryDTO> visible = new ArrayList<>();
+        for (MovieSummaryDTO ms : load(con, Movie.STATUS_COMING_SOON, genreId)) {
+            Movie m = ms.getMovie();
+            boolean unreleased = m.getReleaseDate() != null && m.getReleaseDate().isAfter(today);
+            LocalDate start = nextStart.get(m.getMovieId());
+            if (!unreleased && start == null) continue;
+            if (start != null && start.isAfter(today)) ms.setScreeningFrom(start);
+            ms.setRerun(!unreleased && screened.contains(m.getMovieId()));
+            visible.add(ms);
+        }
+        return visible;
+    }
+
+    /** Ngày phim dự kiến có mặt ở rạp, để sắp mục Sắp chiếu: gần nhất trước. */
+    private static LocalDate comingDate(MovieSummaryDTO ms) {
+        LocalDate release = ms.getMovie().getReleaseDate();
+        LocalDate from = ms.getScreeningFrom();
+        if (from != null && (release == null || from.isAfter(release))) return from;
+        if (release != null && release.isAfter(LocalDate.now())) return release;
+        return LocalDate.now();
     }
 
     private List<MovieSummaryDTO> load(Connection con, String status, Integer genreId) throws SQLException {
