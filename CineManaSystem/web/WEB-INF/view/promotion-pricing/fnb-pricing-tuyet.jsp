@@ -35,10 +35,6 @@
         <c:choose>
             <c:when test="${branches.size() > 1}">
                 <form method="get" action="${pageContext.request.contextPath}${shellAction}" class="branch-bar-form">
-                    <c:if test="${not empty param.fromDate}"><input type="hidden" name="fromDate" value="<c:out value='${param.fromDate}'/>"></c:if>
-                    <c:if test="${not empty param.toDate}"><input type="hidden" name="toDate" value="<c:out value='${param.toDate}'/>"></c:if>
-                    <c:if test="${not empty param.type}"><input type="hidden" name="type" value="<c:out value='${param.type}'/>"></c:if>
-                    <c:if test="${not empty param.movieId}"><input type="hidden" name="movieId" value="<c:out value='${param.movieId}'/>"></c:if>
                     <div class="branch-pill">
                         <i class="fa-solid fa-location-dot"></i> Rạp:
                         <select name="branchId" onchange="this.form.submit()">
