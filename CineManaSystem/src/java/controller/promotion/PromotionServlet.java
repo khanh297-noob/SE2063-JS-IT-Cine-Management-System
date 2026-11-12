@@ -47,12 +47,13 @@ public class PromotionServlet extends HttpServlet {
                         request.setAttribute("showtimes", pricing.showtimes(actor, branch));
                     else request.setAttribute("stockList", stocks.list(actor, branch));
                 } else if (path.endsWith("/fnb-prices") && "Administrator".equals(actor.getRole())) {
-                    request.setAttribute("itemList", items.getAllItems(actor));
+                    request.setAttribute("itemList", items.getAllItems(actor, null));
                 }
                 page = path.endsWith("/ticket-prices") ? "ticket-prices" : "f_b-prices";
             } else {
                 request.setAttribute("promotionList", service.list(actor));
                 request.setAttribute("branchList", stocks.allowedBranches(actor));
+                //nut sua manage promotion
                 Integer edit = optionalInt(request, "edit");
                 if (edit != null) request.setAttribute("editPromotion", service.editable(actor, edit));
                 page = path.endsWith("/discounts") ? "discount" : path.endsWith("/limits") ? "limits" : "manage";
@@ -78,6 +79,7 @@ public class PromotionServlet extends HttpServlet {
             User actor = SessionUtil.getLoggedInUser(request);
             String action = request.getParameter("action");
             switch (action == null ? "" : action) {
+                //lưu
                 case "save":
                     Promotion p = new Promotion();
                     p.setPromoId(FormUtil.integer(request, "promoId"));
@@ -92,12 +94,16 @@ public class PromotionServlet extends HttpServlet {
                     Set<Integer> selected = new TreeSet<>();
                     String[] values = request.getParameterValues("branchIds");
                     if (values != null) for (String value : values) selected.add(Integer.parseInt(value));
+                    //doc thong tin va goi
                     int id = service.save(actor, p, "ALL".equals(scope), selected);
                     request.getSession().setAttribute("toastSuccess", "Đã lưu voucher #" + id);
                     break;
+                    //giam gia
                 case "discount":
                     service.discount(actor, FormUtil.integer(request, "promoId"), FormUtil.money(request, "discountAmount"));
                     break;
+
+                //gioi han
                 case "limit":
                     service.limit(actor, FormUtil.integer(request, "promoId"), FormUtil.integer(request, "usageLimit"));
                     break;

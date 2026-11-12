@@ -71,6 +71,7 @@ public class F_BStockService {
         });
     }
 
+    //logic dieu chinh ton kho
     public void adjust(User actor, int branch, int item, int delta, String ip) throws SQLException {
         AccessService.configureBranch(actor, branch);
         if (item <= 0 || delta == 0) throw new IllegalArgumentException("Số điều chỉnh phải khác 0.");

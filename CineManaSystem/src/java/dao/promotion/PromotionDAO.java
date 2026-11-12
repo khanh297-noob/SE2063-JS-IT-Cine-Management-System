@@ -104,9 +104,12 @@ public class PromotionDAO {
             ps.executeBatch();
         }
     }
+
+    //database luu promotion discount
     public int setDiscount(Connection c, int id, BigDecimal amount) throws SQLException {
         return update(c, "UPDATE dbo.Promotion SET DiscountAmount = ? WHERE PromoID = ?", amount, id);
     }
+    //database gioi han, luu promotion.Usagelimit
     public int setLimit(Connection c, int id, int limit) throws SQLException {
         return update(c, "UPDATE dbo.Promotion SET UsageLimit = ? WHERE PromoID = ?", limit, id);
     }

@@ -38,6 +38,7 @@ public class HomeServlet extends HttpServlet {
             request.setAttribute("movies", "coming".equals(tab)
                     ? movieService.listComingSoon(null, null, null)
                     : movieService.listShowing(null, null, null));
+            request.setAttribute("promotions", new service.promotion.PromotionService().publicList());
         } catch (SQLException | BusinessException e) {
             throw new ServletException("Không tải được danh sách phim: " + e.getMessage(), e);
         }

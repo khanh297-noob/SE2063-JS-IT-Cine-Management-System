@@ -18,13 +18,10 @@ public class F_BItemServlet extends HttpServlet {
     private final F_BItemService service = new F_BItemService();
 
     @Override
-    protected void doGet(
-            HttpServletRequest request,
-            HttpServletResponse response)
-            throws ServletException, IOException {
-
-        User actor = SessionUtil.getLoggedInUser(request);
-        if (actor == null) {
+    //luong chay chuc nang manager f&b item
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+            User actor = SessionUtil.getLoggedInUser(request);
+            if (actor == null) {
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
@@ -32,8 +29,11 @@ public class F_BItemServlet extends HttpServlet {
         HttpSession session = request.getSession(false);
 
         try {
-            request.setAttribute("itemList", service.getAllItems(actor));
 
+            String status = request.getParameter("status");
+            request.setAttribute("status", status);
+            request.setAttribute("itemList", service.getAllItems(actor, status));
+            //sinh ma chong gia mao
             if (session.getAttribute("csrfToken") == null) {
                 session.setAttribute("csrfToken", UUID.randomUUID().toString());
             }

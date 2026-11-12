@@ -43,8 +43,10 @@ public class PromotionService {
         if (!"Administrator".equals(actor.getRole())
                 && (actor.getBranchID() == null || scope.size() != 1 || !scope.contains(actor.getBranchID())))
             throw new SecurityException("Chỉ tạo voucher cho chi nhánh của mình.");
+
         boolean creating = p.getPromoId() == 0;
         for (int attempt = 0; attempt < 3; attempt++) {
+
             if (creating) p.setPromoCode(newCode());
             try {
                 return DBContext.transaction(c -> {
@@ -72,6 +74,7 @@ public class PromotionService {
         throw new SQLException("Không sinh được mã voucher.");
     }
 
+    //kiem tra quuyen va so tien hop le
     public void discount(User actor, int id, BigDecimal amount) throws SQLException {
         configureRole(actor);
         BigDecimal checked = FormUtil.amount(amount, false);
@@ -83,6 +86,7 @@ public class PromotionService {
     }
     public void limit(User actor, int id, int limit) throws SQLException {
         configureRole(actor);
+        //kiem tra dieu kien gioi han
         if (limit < 1) throw new IllegalArgumentException("Giới hạn phải >= 1.");
         DBContext.transaction(c -> {
             requireExistingForEdit(actor, c, id);
@@ -179,6 +183,8 @@ public class PromotionService {
         if (!Set.of("Administrator", "Branch Management").contains(actor.getRole()))
             throw new SecurityException("Chỉ quản lý được cấu hình khuyến mãi.");
     }
+
+    //sinh ma tu dong
     private String newCode() {
         StringBuilder code = new StringBuilder("CINE-");
         for (int i = 0; i < 12; i++) code.append(LETTERS[RANDOM.nextInt(LETTERS.length)]);
@@ -194,5 +200,15 @@ public class PromotionService {
             p.setUsedCount(promos.usedCount(c, id));
             return p;
         });
+    }
+
+    // Lấy danh sách voucher công khai cho khách hàng xem ở mục "Tin mới & Ưu đãi"
+    public List<Promotion> publicList() throws SQLException {
+        try (Connection c = DBContext.getConnection()) {
+            java.sql.Date today = promos.today(c);
+            return promos.list(c, null).stream()
+                    .filter(p -> !today.after(p.getEndDate()) && p.getUsedCount() < p.getUsageLimit())
+                    .toList();
+        }
     }
 }

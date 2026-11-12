@@ -16,17 +16,23 @@ public class F_BItemService {
 
     private static final Set<String> CATEGORIES = Set.of("Popcorn", "Drink", "Combo");
 
-    public List<F_BItem> getAllItems(User actor) throws SQLException {
-
+    public List<F_BItem> getAllItems(User actor, String status) throws SQLException {
         requireAdministrator(actor);
-
         try (Connection connection = openConnection()) {
-            return itemDAO.findAll(connection);
+            List<F_BItem> items = itemDAO.findAll(connection);
+            if ("active".equals(status)) {
+                return items.stream().filter(F_BItem::isActive).toList();
+            }
+            if ("inactive".equals(status)) {
+                return items.stream().filter(item -> !item.isActive()).toList();
+            }
+            return items;
         }
     }
 
     public void save(User actor, int itemId, String name, String category, BigDecimal price) throws SQLException {
 
+        //check quyen
         requireAdministrator(actor);
 
         if (itemId < 0) {
@@ -58,7 +64,7 @@ public class F_BItemService {
                 throw new IllegalArgumentException("Sản phẩm không tồn tại hoặc đã thay đổi.");
             }
         } catch (SQLException exception) {
-
+            //bat trung san pham thi khong tao duoc
             if (exception.getErrorCode() == 2601 || exception.getErrorCode() == 2627) {
                 throw new IllegalArgumentException("Tên sản phẩm đã tồn tại.", exception);
             }
@@ -103,6 +109,7 @@ public class F_BItemService {
             throw new IllegalArgumentException("Giá chỉ được có tối đa 2 chữ số thập phân.");
         }
     }
+
 
     private void requireAdministrator(User actor) {
         if (actor == null || !"Active".equals(actor.getStatus()) || !"Administrator".equals(actor.getRole())) {

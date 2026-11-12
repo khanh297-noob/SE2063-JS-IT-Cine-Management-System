@@ -16,18 +16,20 @@ public class F_bStockServlet extends HttpServlet {
     private final F_BStockService service = new F_BStockService();
 
     @Override
+
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
             User actor = SessionUtil.getLoggedInUser(request);
-            request.setAttribute("branchList", service.allowedBranches(actor));
+            request.setAttribute("branchList", service.allowedBranches(actor)); // lay danh sach chi nhanh ma user duoc phep xem
             boolean configure = service.canConfigure(actor);
             request.setAttribute("canConfigure", configure);
             String raw = request.getParameter("branchId");
             if (raw != null && !raw.isBlank()) {
                 int branch = FormUtil.integer(request, "branchId");
                 request.setAttribute("selectedBranchId", branch);
-                request.setAttribute("stockList", service.list(actor, branch));
+                request.setAttribute("stockList", service.list(actor, branch)); //lay danh sach ton kho hien tai cua rap
+
                 if (configure) request.setAttribute("catalog", service.catalog(actor, branch));
             }
             FormUtil.csrf(request);
@@ -56,6 +58,7 @@ public class F_bStockServlet extends HttpServlet {
                 String raw = request.getParameter("overridePrice");
                 BigDecimal price = raw == null || raw.isBlank() ? null : FormUtil.money(request, "overridePrice");
                 service.configure(actor, branch, item, price, request.getParameter("status"));
+                //dieu chinh ton kho
             } else if ("adjust-stock".equals(action)) {
                 service.adjust(actor, branch, item, FormUtil.integer(request, "delta"), request.getRemoteAddr());
             } else throw new IllegalArgumentException("Thao tác không hợp lệ.");
