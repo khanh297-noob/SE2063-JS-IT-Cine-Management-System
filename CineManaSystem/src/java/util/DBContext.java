@@ -10,15 +10,23 @@ import java.util.Properties;
 /**
  * Kết nối SQL Server cho phần thanh toán + POS. Các DAO kế thừa class này và gọi getConnection().
  * Mỗi hàm DAO mở 1 connection và tự đóng bằng try-with-resources.
- * Đọc chung file WEB-INF/ConnectDB.properties với dao.DBContext của nhóm (url, userID, password).
+ * Đọc file cấu hình (url, userID, password) theo thứ tự:
+ *  1. WEB-INF/ConnectDB.properties  : cấu hình riêng từng máy (không commit), nếu có
+ *  2. src/java/ConnectDB.properties : file chung dao.DBContext của nhóm đang dùng
+ * Máy mới clone về chưa tạo file (1) thì vẫn kết nối được bằng file (2).
  */
 public class DBContext {
 
     protected Connection getConnection() throws SQLException {
         Properties properties = new Properties();
-        try (InputStream in = getClass().getClassLoader().getResourceAsStream("../ConnectDB.properties")) {
+        ClassLoader loader = getClass().getClassLoader();
+        InputStream found = loader.getResourceAsStream("../ConnectDB.properties");
+        if (found == null) {
+            found = loader.getResourceAsStream("ConnectDB.properties");
+        }
+        try (InputStream in = found) {
             if (in == null) {
-                throw new SQLException("Không tìm thấy file WEB-INF/ConnectDB.properties");
+                throw new SQLException("Không tìm thấy ConnectDB.properties (WEB-INF hoặc src/java)");
             }
             properties.load(in);
         } catch (IOException e) {

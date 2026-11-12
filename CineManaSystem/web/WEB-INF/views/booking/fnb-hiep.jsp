@@ -94,6 +94,18 @@
     });
     recalc();
 
+    // Chặn bấm "Thanh toán" nhiều lần (lần 2 sẽ báo lỗi hết giờ giữ ghế vì lần 1 đã tạo đơn).
+    var form = document.getElementById('fnbForm'), sending = false;
+    form.addEventListener('submit', function (ev) {
+        if (sending) { ev.preventDefault(); return; }
+        sending = true;
+        // Đợi trình duyệt lấy xong dữ liệu form (kể cả nút đã bấm) rồi mới khóa nút.
+        setTimeout(function () {
+            form.querySelectorAll('button[type=submit]').forEach(function (b) { b.disabled = true; });
+            btn.textContent = 'Đang tạo đơn...';
+        }, 0);
+    });
+
     var left = ${hold.remainingSeconds};
     var el = document.getElementById('timer'), box = document.getElementById('timerBox'), btn = document.getElementById('nextBtn');
     (function tick() {

@@ -35,10 +35,6 @@
         <c:choose>
             <c:when test="${branches.size() > 1}">
                 <form method="get" action="${pageContext.request.contextPath}${shellAction}" class="branch-bar-form">
-                    <c:if test="${not empty param.fromDate}"><input type="hidden" name="fromDate" value="<c:out value='${param.fromDate}'/>"></c:if>
-                    <c:if test="${not empty param.toDate}"><input type="hidden" name="toDate" value="<c:out value='${param.toDate}'/>"></c:if>
-                    <c:if test="${not empty param.type}"><input type="hidden" name="type" value="<c:out value='${param.type}'/>"></c:if>
-                    <c:if test="${not empty param.movieId}"><input type="hidden" name="movieId" value="<c:out value='${param.movieId}'/>"></c:if>
                     <div class="branch-pill">
                         <i class="fa-solid fa-location-dot"></i> Rạp:
                         <select name="branchId" onchange="this.form.submit()">
@@ -79,16 +75,49 @@
                 <c:choose>
                     <c:when test="${empty branch}">
                         <c:choose>
-                            <%-- Admin đang chọn "Tất cả chi nhánh": thực đơn là của từng chi nhánh nên phải chọn một chi nhánh --%>
+                            <%-- Admin + "Tất cả chi nhánh": chỉnh giá chung toàn chuỗi --%>
                             <c:when test="${isAdminUser}">
                                 <div class="card">
-                                    <h2 class="card-title"><i class="fa-solid fa-store"></i> Chọn một chi nhánh để quản lý thực đơn</h2>
-                                    <p class="note">Giá và trạng thái bán F&amp;B được đặt riêng cho từng chi nhánh nên chưa hiển thị khi chọn "Tất cả chi nhánh". Chọn một chi nhánh bên dưới, hoặc ở ô Rạp quản lý phía trên.</p>
-                                    <div class="branch-choices">
-                                        <c:forEach var="b" items="${branches}">
-                                            <a class="btn-reset" href="${pageContext.request.contextPath}${shellAction}?branchId=${b.branchID}"><i class="fa-solid fa-location-dot"></i> <c:out value="${b.name}"/></a>
-                                        </c:forEach>
+                                    <h2 class="card-title"><i class="fa-solid fa-tags"></i> Giá chung toàn chuỗi F&amp;B</h2>
+                                    <p class="note">Chỉnh giá gốc áp dụng cho mọi chi nhánh chưa đặt giá riêng.
+                                        Để quản lý giá/trạng thái bán tại từng rạp, chọn chi nhánh ở ô <b>Rạp quản lý</b> phía trên.</p>
+                                    <div class="table-container">
+                                        <table>
+                                            <thead>
+                                                <tr>
+                                                    <th>Danh mục</th>
+                                                    <th>Món</th>
+                                                    <th>Giá chung toàn chuỗi (đồng)</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <c:choose>
+                                                    <c:when test="${not empty menu}">
+                                                        <c:forEach var="item" items="${menu}">
+                                                            <tr>
+                                                                <td><span class="tag"><c:out value="${item.category}"/></span></td>
+                                                                <td class="cell-strong"><c:out value="${item.name}"/></td>
+                                                                <td>
+                                                                    <form method="post" action="${pageUrl}" class="inline-form">
+                                                                        <input type="hidden" name="action" value="basePrice">
+                                                                        <input type="hidden" name="itemId" value="${item.itemId}">
+                                                                        <input class="price-input" type="text" inputmode="numeric" name="price" autocomplete="off"
+                                                                               value="<fmt:formatNumber value='${item.basePrice}' maxFractionDigits='0' groupingUsed='false'/>"
+                                                                               aria-label="Giá gốc của ${item.name}">
+                                                                        <button type="submit" class="btn-save btn-save-alt">Lưu giá</button>
+                                                                    </form>
+                                                                </td>
+                                                            </tr>
+                                                        </c:forEach>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <tr><td colspan="3" class="empty-cell"><i class="fa-solid fa-folder-open empty-icon"></i>Chưa có món nào trong danh mục F&amp;B của chuỗi.</td></tr>
+                                                    </c:otherwise>
+                                                </c:choose>
+                                            </tbody>
+                                        </table>
                                     </div>
+                                    <p class="note">Giá gốc áp dụng cho mọi chi nhánh chưa đặt giá riêng. Sang từng chi nhánh để xem/sửa giá bán riêng và trạng thái.</p>
                                 </div>
                             </c:when>
                             <c:otherwise>
@@ -103,12 +132,11 @@
                                     <thead>
                                         <tr>
                                             <th>Danh mục</th><th>Món</th>
-                                            <th class="align-right">Giá gốc</th>
-                                            <th class="align-right">Đang áp dụng</th>
+                                            <th class="align-right">Giá bán tại chi nhánh</th>
                                             <th>Giá riêng của chi nhánh (đồng)</th>
                                             <th>Trạng thái</th>
                                             <th></th>
-                                            <c:if test="${isAdminUser}"><th>Giá gốc toàn chuỗi (đồng)</th></c:if>
+                                            <th>Giá chung toàn chuỗi (đồng)</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -119,10 +147,14 @@
                                                     <tr>
                                                         <td><span class="tag"><c:out value="${item.category}"/></span></td>
                                                         <td class="cell-strong"><c:out value="${item.name}"/></td>
-                                                        <td class="align-right"><fmt:formatNumber value="${item.basePrice}" pattern="#,##0"/> ₫</td>
                                                         <td class="align-right">
                                                             <c:choose>
-                                                                <c:when test="${item.inMenu}"><b><fmt:formatNumber value="${item.effectivePrice}" pattern="#,##0"/> ₫</b></c:when>
+                                                                <c:when test="${item.inMenu}">
+                                                                    <c:if test="${item.branchPrice != null and item.branchPrice != item.basePrice}">
+                                                                        <span class="badge badge-gray" title="Chi nhánh đang dùng giá riêng, không đổi theo giá chung">Đang dùng giá riêng</span>
+                                                                    </c:if>
+                                                                    <b><fmt:formatNumber value="${item.effectivePrice}" pattern="#,##0"/> ₫</b>
+                                                                </c:when>
                                                                 <c:otherwise><span class="badge badge-gray">Chưa bán</span></c:otherwise>
                                                             </c:choose>
                                                         </td>
@@ -143,32 +175,23 @@
                                                                 <button type="submit" class="btn-save">${item.inMenu ? 'Lưu' : 'Thêm vào thực đơn'}</button>
                                                             </form>
                                                         </td>
-                                                        <c:if test="${isAdminUser}">
-                                                            <td>
-                                                                <form method="post" action="${pageUrl}" class="inline-form">
-                                                                    <input type="hidden" name="action" value="basePrice">
-                                                                    <input type="hidden" name="branchId" value="${branch.branchID}">
-                                                                    <input type="hidden" name="itemId" value="${item.itemId}">
-                                                                    <input class="price-input" type="text" inputmode="numeric" name="price" autocomplete="off"
-                                                                           value="<fmt:formatNumber value='${item.basePrice}' maxFractionDigits='0' groupingUsed='false'/>"
-                                                                           aria-label="Giá gốc của ${item.name}">
-                                                                    <button type="submit" class="btn-save btn-save-alt">Lưu giá gốc</button>
-                                                                </form>
+                                                        <td>
+                                                                <fmt:formatNumber value="${item.basePrice}" pattern="#,##0"/> ₫
+                                                                
                                                             </td>
-                                                        </c:if>
                                                     </tr>
                                                 </c:forEach>
                                             </c:when>
                                             <c:otherwise>
-                                                <tr><td colspan="8" class="empty-cell"><i class="fa-solid fa-folder-open empty-icon"></i>Chưa có món nào trong danh mục F&amp;B của chuỗi.</td></tr>
+                                                <tr><td colspan="7" class="empty-cell"><i class="fa-solid fa-folder-open empty-icon"></i>Chưa có món nào trong danh mục F&amp;B của chuỗi.</td></tr>
                                             </c:otherwise>
                                         </c:choose>
                                     </tbody>
                                 </table>
                             </div>
                             <p class="note">Món hiện &quot;Chưa bán&quot; sẽ xuất hiện trong thực đơn chi nhánh sau khi bấm &quot;Thêm vào thực đơn&quot;.
-                                <c:if test="${isAdminUser}">Giá gốc áp dụng cho mọi chi nhánh chưa đặt giá riêng.</c:if>
-                                <c:if test="${not isAdminUser}">Giá gốc do Admin quản lý.</c:if>
+                                <c:if test="${isAdminUser}">Giá chung toàn chuỗi chỉ chỉnh khi lọc <b>Tất cả chi nhánh</b>; tại đây chỉ xem.</c:if>
+                                <c:if test="${not isAdminUser}">Giá chung toàn chuỗi do Admin quản lý, chi nhánh chưa đặt giá riêng sẽ dùng giá này.</c:if>
                             </p>
                         </div>
                     </c:otherwise>

@@ -7,6 +7,7 @@ import dao.branch.BranchOperatingHourDAO;
 import dao.movie.MovieBranchDAO;
 import dao.movie.MovieDAO;
 import dao.movie.ShowtimeDAO;
+import dao.PricingConfigDao;
 import dao.pos.AuditLogDAO;
 import model.User;
 import model.branch.Branch;
@@ -100,10 +101,39 @@ public class ShowtimeService {
         return r == null ? 0 : r.getBranchId();
     }
 
-    public BigDecimal previewPrice(int roomId, LocalDate date) throws SQLException, BusinessException {
-        ShowtimeRoom room = JdbcContext.query(con -> showtimeDAO.findRoom(con, roomId, false));
-        if (room == null) throw new BusinessException("Phòng chiếu không tồn tại.");
-        return ShowtimePriceCalculator.basePrice(room.getRoomSurcharge(), date);
+    /**
+     * Giá vé dự kiến của suất chưa tạo = giá cơ bản theo ngày + phụ thu phim + phụ thu loại phòng
+     * (movieId null thì chưa tính phụ thu phim).
+     */
+    public BigDecimal previewPrice(int roomId, Integer movieId, LocalDate date) throws SQLException, BusinessException {
+        return JdbcContext.query(con -> {
+            ShowtimeRoom room = showtimeDAO.findRoom(con, roomId, false);
+            if (room == null) throw new BusinessException("Phòng chiếu không tồn tại.");
+            return calculateBasePrice(con, movieId, room, date);
+        });
+    }
+
+    /** Hai mức giá cơ bản theo loại ngày đang cấu hình (để hiện ở quy tắc của form suất chiếu). */
+    public PricingConfigDao.DayPrices getDayBasePrices() throws SQLException, BusinessException {
+        return JdbcContext.query(con -> PricingConfigDao.findDayBasePrices(con));
+    }
+
+    /** Hai mức giá cơ bản theo loại ngày của một chi nhánh (ưu tiên giá riêng, fallback giá chung). */
+    public PricingConfigDao.DayPrices getDayBasePrices(int branchId) throws SQLException, BusinessException {
+        return JdbcContext.query(con -> branchId > 0
+                ? PricingConfigDao.findDayBasePricesForBranch(con, branchId)
+                : PricingConfigDao.findDayBasePrices(con));
+    }
+
+    /** Showtime.BasePrice = giá cơ bản theo ngày + phụ thu loại phòng. */
+    private BigDecimal calculateBasePrice(Connection con, Integer movieId, ShowtimeRoom room, LocalDate date) {
+        int branchId = room != null ? room.getBranchId() : 0;
+        PricingConfigDao.DayPrices prices = branchId > 0
+                ? PricingConfigDao.findDayBasePricesForBranch(con, branchId)
+                : PricingConfigDao.findDayBasePrices(con);
+        return ShowtimePriceCalculator.basePrice(
+                ShowtimePriceCalculator.dayBasePrice(date, prices.getWeekday(), prices.getWeekend()),
+                room != null ? room.getRoomSurcharge() : BigDecimal.ZERO);
     }
 
     public OverlapResult checkOverlap(int roomId, int movieId, LocalDate date, LocalTime start, Integer excludeId)
@@ -148,7 +178,7 @@ public class ShowtimeService {
             validateBranchRules(con, in, movie, room);
             OverlapResult ov = checkOverlap(con, room.getRoomId(), duration(movie), in.date, in.start, null);
             if (!ov.isOk()) throw new BusinessException(ov.describe());
-            return showtimeDAO.insert(con, toShowtime(in, ov, room));
+            return showtimeDAO.insert(con, toShowtime(con, in, ov, room));
         });
         auditLogDAO.insert(actor.getUserId(), "SHOWTIME_CREATE|showtime=" + id + "|room=" + in.roomId, ip);
         return id;
@@ -175,7 +205,7 @@ public class ShowtimeService {
                 validateBranchRules(con, in, movie, room);
                 OverlapResult ov = checkOverlap(con, room.getRoomId(), duration(movie), in.date, in.start, id);
                 if (!ov.isOk()) throw new BusinessException(ov.describe());
-                s = toShowtime(in, ov, room);
+                s = toShowtime(con, in, ov, room);
             } else {
                 // Không đổi lịch chiếu: giữ nguyên giá đang bán (có thể quản lý đã chỉnh ở trang Quản lý giá vé)
                 s = cur;
@@ -336,14 +366,14 @@ public class ShowtimeService {
         }
     }
 
-    private Showtime toShowtime(ShowtimeInput in, OverlapResult ov, ShowtimeRoom room) {
+    private Showtime toShowtime(Connection con, ShowtimeInput in, OverlapResult ov, ShowtimeRoom room) {
         Showtime s = new Showtime();
         s.setMovieId(in.movieId);
         s.setRoomId(in.roomId);
         s.setShowDate(in.date);
         s.setStartTime(in.start);
         s.setEndTime(ov.getEndAt().toLocalTime());
-        s.setBasePrice(ShowtimePriceCalculator.basePrice(room.getRoomSurcharge(), in.date));
+        s.setBasePrice(calculateBasePrice(con, in.movieId, room, in.date));
         s.setStatus(EDITABLE_STATUSES.contains(in.status) ? in.status : "Open");
         return s;
     }

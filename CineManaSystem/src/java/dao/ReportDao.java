@@ -38,14 +38,19 @@ public class ReportDao extends DBContext {
      * CTE các vé đủ điều kiện tính doanh thu (cùng REVENUE_FILTER), kèm số vé của booking
      * để phân bổ doanh thu F&B của booking đó đều cho từng vé.
      * F&B chỉ được tính khi booking đã Confirmed và thanh toán thành công.
-     * Lưu ý: Booking_F_B không lưu đơn giá lúc đặt nên dùng giá hiện tại F_B.Price.
+     * Tiền F&B tính theo giá khách đã mua trong đơn: Booking_F_B.UnitPrice (lưu lúc đặt).
+     * Dòng cũ chưa có UnitPrice (NULL) thì tạm dùng giá hiện tại của chi nhánh, không thì giá gốc F_B.Price.
+     * Dòng F&B đã hủy (OrderStatus = 'Cancelled') không tính.
      */
     private static final String ELIGIBLE_CTE =
             "WITH Elig AS (SELECT t.TicketID, t.BookingID, t.ShowtimeID, t.SeatID, t.FinalPrice, "
           + "       COUNT(*) OVER (PARTITION BY t.BookingID) AS BkTickets "
           + "FROM Ticket t WHERE 1=1 " + REVENUE_FILTER + "), "
-          + "Fnb AS (SELECT bf.BookingID, SUM(bf.Quantity * f.Price) AS FnbTotal "
+          + "Fnb AS (SELECT bf.BookingID, SUM(bf.Quantity * COALESCE(bf.UnitPrice, brf.Price, f.Price)) AS FnbTotal "
           + "        FROM Booking_F_B bf INNER JOIN F_B f ON f.ItemID = bf.ItemID "
+          + "        INNER JOIN Booking bk ON bk.BookingID = bf.BookingID "
+          + "        LEFT JOIN Branch_F_B brf ON brf.ItemID = bf.ItemID AND brf.BranchID = bk.BranchID "
+          + "        WHERE ISNULL(bf.OrderStatus, '') <> 'Cancelled' "
           + "        GROUP BY bf.BookingID) ";
 
     private static final String FNB_SHARE =

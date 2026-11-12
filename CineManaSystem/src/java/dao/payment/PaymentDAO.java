@@ -20,7 +20,7 @@ public class PaymentDAO extends DBContext {
 
     private static final String SELECT_PAYMENT
             = "SELECT p.PaymentID, p.BookingID, p.Amount, p.PaymentMethod, p.PaymentTime, "
-            + "       p.TransactionCode, p.GatewayStatus, b.Status AS BookingStatus, b.BookingDate, "
+            + "       p.TransactionCode, p.GatewayStatus, b.Status AS BookingStatus, b.BookingDate, b.Channel, "
             + "       u.FullName, u.Email, u.Role, "
             + "       (SELECT TOP 1 m.Title FROM Ticket t JOIN Showtime st ON st.ShowtimeID = t.ShowtimeID "
             + "          JOIN Movie m ON m.MovieID = st.MovieID WHERE t.BookingID = b.BookingID) AS MovieTitle, "
@@ -124,9 +124,16 @@ public class PaymentDAO extends DBContext {
             params.add("%" + keyword + "%");
             params.add("%" + keyword + "%");
         }
+        // method: Cash | VNPay (mọi kênh) | VNPay-Counter (VNPay QR tại quầy) | VNPay-Online (khách đặt trên web)
         if (!method.isEmpty()) {
+            String[] parts = method.split("-", 2);
             where += "AND p.PaymentMethod = ? ";
-            params.add(method);
+            params.add(parts[0]);
+            if (parts.length == 2 && "Counter".equals(parts[1])) {
+                where += "AND b.Channel = 'Counter' ";
+            } else if (parts.length == 2 && "Online".equals(parts[1])) {
+                where += "AND (b.Channel IS NULL OR b.Channel <> 'Counter') ";
+            }
         }
         if (!status.isEmpty()) {
             where += "AND p.GatewayStatus = ? ";
@@ -275,6 +282,7 @@ public class PaymentDAO extends DBContext {
         p.setMovieTitle(rs.getString("MovieTitle"));
         p.setBranchName(rs.getString("BranchName"));
         p.setTicketCount(rs.getInt("TicketCount"));
+        p.setChannel(rs.getString("Channel"));
         return p;
     }
 }

@@ -1,0 +1,313 @@
+/* Quản lý giá vé: khung cấu hình giá hệ thống, chế độ xem/sửa từng mục và hộp thoại thêm phụ thu phim.
+   Chỉ có tác dụng trong .pp-page của trang ticket-pricing. */
+/* ---------- Quản lý giá vé: cấu hình giá hệ thống (chỉ nằm trong phần main của trang) ---------- */
+
+.pp-page .cfg-title {
+    margin: 24px 0 10px;
+    font-size: 17px; /* Tăng tiêu đề mục 1, 2, 3 lên 17px */
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.pp-page .cfg-title i {
+    margin-right: 6px;
+    color: #e11d48;
+}
+
+/* BẢNG CẤU HÌNH GIÁ VÉ: TĂNG KÍCH THƯỚC TO RÕ NÉT */
+.pp-page .cfg-table {
+    width: 100%;
+    max-width: 100%; /* Bỏ giới hạn 840px để bảng mở rộng thoáng mắt */
+    table-layout: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+    font-size: 15px; /* Font nền của bảng tăng lên 15px */
+    margin-bottom: 12px;
+}
+
+.pp-page .cfg-table td {
+    padding: 14px 18px; /* Tăng padding dòng giúp hàng thoáng, không dính sát nhau */
+    vertical-align: middle;
+}
+
+.pp-page .cfg-table td:first-child,
+.pp-page .cfg-table td.cell-strong {
+    width: 240px;
+    font-size: 15px; /* Tên Ngày thường, Cuối tuần, loại ghế... */
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.pp-page .cfg-table .cfg-value {
+    white-space: nowrap;
+    width: 200px;
+    font-size: 16px; /* Cột giá tiền */
+}
+
+.pp-page .cfg-table .cfg-value b,
+.pp-page .cfg-table .cfg-view b {
+    font-size: 16px; /* Số tiền 40.000 ₫, 50.000 ₫ hiển thị to đậm */
+    color: #0f172a;
+    font-weight: 800;
+}
+
+.pp-page .cfg-table .cfg-hint {
+    color: #64748b;
+    font-size: 13.5px; /* Ghi chú bên phải tăng lên 13.5px */
+    white-space: normal;
+    line-height: 1.5;
+}
+
+/* Badge & Tag thông báo */
+.pp-page .branch-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    font-size: 12.5px;
+    font-weight: 600;
+    border-radius: 6px;
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fde68a;
+    line-height: 1.4;
+}
+
+.pp-page .branch-badge i {
+    font-size: 12px;
+    color: #d97706;
+}
+
+.pp-page .common-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    font-size: 12.5px;
+    font-weight: 600;
+    border-radius: 6px;
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+}
+
+.pp-page .cfg-plus {
+    display: inline-block;
+    width: 16px;
+    color: #64748b;
+}
+
+/* Ô nhập liệu giá khi bấm "Sửa" */
+.pp-page .cfg-table .price-input {
+    width: 140px;
+    padding: 8px 12px;
+    font-size: 15px;
+    font-weight: 700;
+    text-align: right;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+}
+
+.pp-page .reason-input {
+    width: 100%;
+    min-width: 220px;
+    padding: 8px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.pp-page .reason-input:focus {
+    outline: none;
+    border-color: #e11d48;
+    box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.1);
+}
+
+.pp-page .cfg-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 20px;
+    padding-top: 18px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.pp-page .btn-save-lg {
+    padding: 10px 24px;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.pp-page .btn-danger {
+    padding: 8px 14px;
+    border: 1px solid #fecaca;
+    border-radius: 6px;
+    background: #fff1f2;
+    color: #be123c;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.pp-page .btn-danger:hover {
+    background: #ffe4e6;
+}
+
+/* Hộp thoại (modal) thêm phim cần phụ thu */
+.pp-page .pp-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: rgba(15, 23, 42, 0.55);
+}
+
+.pp-page .pp-modal[hidden] {
+    display: none;
+}
+
+.pp-page .pp-modal-box {
+    width: 100%;
+    max-width: 540px;
+    max-height: 92vh;
+    overflow-y: auto;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 20px 50px rgba(15, 23, 42, 0.35);
+}
+
+.pp-page .pp-modal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 22px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.pp-page .pp-modal-head h3 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.pp-page .pp-modal-close {
+    border: none;
+    background: transparent;
+    font-size: 26px;
+    line-height: 1;
+    color: #64748b;
+    cursor: pointer;
+}
+
+.pp-page .pp-modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 20px 22px 8px;
+    font-size: 14px;
+}
+
+.pp-page .pp-modal-body .filter-label:not(:first-child) {
+    margin-top: 14px;
+}
+
+.pp-page .pp-modal-body .filter-select,
+.pp-page .pp-modal-body .filter-input {
+    width: 100%;
+    font-size: 14px;
+    padding: 9px 12px;
+}
+
+.pp-page .pp-modal-foot {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 22px 20px;
+}
+
+/* Chế độ xem / sửa từng mục: bình thường chỉ hiện giá trị, bấm "Sửa" mới hiện ô nhập (class is-editing) */
+.pp-page .cfg-section {
+    margin-bottom: 8px;
+}
+
+.pp-page .cfg-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.pp-page .btn-edit {
+    padding: 7px 16px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #334155;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.pp-page .btn-edit:hover {
+    border-color: #e11d48;
+    color: #e11d48;
+}
+
+.pp-page .cfg-section .cfg-edit {
+    display: none;
+}
+
+.pp-page .cfg-section.is-editing .cfg-view {
+    display: none;
+}
+
+.pp-page .cfg-section.is-editing span.cfg-edit {
+    display: inline-block;
+}
+
+.pp-page .cfg-section.is-editing input.cfg-edit {
+    display: block;
+}
+
+.pp-page .cfg-section.is-editing th.cfg-edit,
+.pp-page .cfg-section.is-editing td.cfg-edit {
+    display: table-cell;
+}
+
+.pp-page .cfg-section.is-editing .cfg-form-actions {
+    display: flex;
+}
+
+.pp-page .cfg-form-actions {
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.pp-page .cfg-form-actions-split {
+    justify-content: space-between;
+}
+
+.pp-page .cfg-form-actions-right {
+    display: inline-flex;
+    gap: 12px;
+}
+
+.pp-page .cfg-section + .cfg-section,
+.pp-page .cfg-section + .cfg-card-gap {
+    margin-top: 10px;
+}
+
+/* Nút "Thêm phụ thu phim" luôn hiện cạnh nút Sửa ở đầu mục 4 */
+.pp-page .cfg-head-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+}

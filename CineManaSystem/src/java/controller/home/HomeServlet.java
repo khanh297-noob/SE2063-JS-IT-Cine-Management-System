@@ -7,6 +7,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import dao.PricingDao.RoomTypePriceBoard;
+import service.PricingService;
 import service.movie.CustomerMovieService;
 import util.BusinessException;
 import util.SessionUtil;
@@ -15,6 +19,11 @@ import util.SessionUtil;
  * Trang chủ khách hàng: danh sách phim lấy qua CustomerMovieService (dùng chung với trang /movies),
  * nên cùng quy tắc hiển thị: "Sắp chiếu" chỉ gồm phim có ngày khởi chiếu sau hôm nay (BR-MS-03).
  * GET /home?tab=showing|coming   phim đang chiếu (mặc định) hoặc sắp chiếu
+ *
+ * Mục "Giá vé" (#pricing) lấy từ PricingService.listPublicPriceBoards():
+ *   priceBoards      bảng giá vé của từng loại phòng tại từng chi nhánh (gộp từ Showtime.BasePrice các suất sắp chiếu)
+ *   pricingBranches  các chi nhánh có bảng giá (branchId -> tên) dùng cho bộ lọc chi nhánh
+ * Lỗi khi tải bảng giá không làm hỏng trang chủ, mục giá vé chỉ hiển thị thông báo.
  */
 @WebServlet(name = "home", urlPatterns = {"/home"})
 public class HomeServlet extends HttpServlet {
@@ -34,8 +43,24 @@ public class HomeServlet extends HttpServlet {
             throw new ServletException("Không tải được danh sách phim: " + e.getMessage(), e);
         }
 
+        loadTicketPrices(request);
+
         request.setAttribute("tab", tab);
         request.setAttribute("currentUser", SessionUtil.getLoggedInUser(request));
         request.getRequestDispatcher("/WEB-INF/view/home/home-tuyet.jsp").forward(request, response);
+    }
+
+    private void loadTicketPrices(HttpServletRequest request) {
+        Map<Integer, String> branches = new LinkedHashMap<>();
+        try (PricingService pricingService = new PricingService()) {
+            java.util.List<RoomTypePriceBoard> rows = pricingService.listPublicPriceBoards();
+            for (RoomTypePriceBoard row : rows) {
+                branches.putIfAbsent(row.getBranchId(), row.getBranchName());
+            }
+            request.setAttribute("priceBoards", rows);
+        } catch (RuntimeException e) {
+            request.setAttribute("pricingError", true);
+        }
+        request.setAttribute("pricingBranches", branches);
     }
 }

@@ -114,7 +114,8 @@ public class BookingDAO extends DBContext {
             b.setRoomType(t.getRoomType());
             b.setShowDate(t.getShowDate());
             b.setStartTime(t.getStartTime());
-            b.setBranchAddress(new BranchDAO().getById(t.getBranchId()).getAddress());
+            model.Branch branch = new BranchDAO().getById(t.getBranchId());
+            b.setBranchAddress(branch == null ? null : branch.getAddress());
         }
         return b;
     }

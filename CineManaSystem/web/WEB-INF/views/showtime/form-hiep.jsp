@@ -99,8 +99,9 @@
     <aside class="bk-panel">
         <h3>Quy tắc xếp lịch</h3>
         <ul class="bk-rules">
-            <li><b>Giá vé</b> = <fmt:formatNumber value="${standardPrice}" pattern="#,##0"/> ₫ + phụ thu loại phòng
-                + <fmt:formatNumber value="${weekendSurcharge}" pattern="#,##0"/> ₫ nếu chiếu Thứ 7 / Chủ nhật. Ghế VIP / Sweetbox cộng thêm phụ thu loại ghế khi bán.</li>
+            <li><b>Giá vé</b> = giá cơ bản theo ngày (Thứ 2 - Thứ 5: <fmt:formatNumber value="${dayPrices.weekday}" pattern="#,##0"/> ₫;
+                Thứ 6, Thứ 7, Chủ nhật: <fmt:formatNumber value="${dayPrices.weekend}" pattern="#,##0"/> ₫) + phụ thu của phim (nếu có) + phụ thu loại phòng.
+                Ghế VIP / Sweetbox cộng thêm phụ thu loại ghế khi bán. Admin cấu hình ở Quản lý giá vé.</li>
             <li><b>BR-01</b> Phòng đang bảo trì không được xếp suất mới.</li>
             <li><b>BR-02</b> Hai suất liên tiếp cùng phòng cách nhau tối thiểu 15 phút dọn phòng.</li>
             <li><b>GB-01</b> Chỉ phim đang / sắp chiếu, ngày chiếu từ ngày khởi chiếu và trong thời gian phim được chiếu tại chi nhánh.</li>
@@ -131,7 +132,7 @@
             .then(function (d) {
                 if (d.price !== undefined) {
                     priceEl.textContent = fmt.format(d.price) + ' ₫';
-                    noteEl.textContent = d.weekend ? 'Đã cộng phụ thu cuối tuần.' : 'Ngày thường.';
+                    noteEl.textContent = d.weekend ? 'Giá cuối tuần (Thứ 6, Thứ 7, Chủ nhật).' : 'Giá ngày thường (Thứ 2 - Thứ 5).';
                 }
                 if (!d.ready) {
                     box.hidden = !d.error;

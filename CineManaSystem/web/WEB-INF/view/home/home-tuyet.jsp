@@ -1,10 +1,12 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%--
   Trang chủ khách hàng. HomeServlet (/home) đặt sẵn:
     movies       danh sách phim của tab đang chọn (model.movie.MovieSummaryDTO: movie, posterUrl, genreText)
     tab          showing | coming
+    priceBoards, pricingBranches   bảng giá vé theo loại phòng của từng chi nhánh cho mục #pricing (pricingError nếu tải lỗi)
     currentUser  người đang đăng nhập, null nếu là khách
 --%>
 <c:set var="ctx" value="${pageContext.request.contextPath}"/>
@@ -18,7 +20,7 @@
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <link rel="stylesheet" href="${ctx}/assets/css/home.css?v=3">
+    <link rel="stylesheet" href="${ctx}/assets/css/home.css?v=4">
 </head>
 <body>
 
@@ -243,9 +245,81 @@
                 </c:otherwise>
             </c:choose>
         </section>
+        <!-- 5. BẢNG GIÁ VÉ THEO CHI NHÁNH (#pricing) -->
+        <section class="pricing-section" id="pricing">
+            <div class="film-toolbar">
+                <ul class="tab-list">
+                    <li><span class="tab-item active">GIÁ VÉ</span></li>
+                </ul>
+            </div>
+
+            <c:choose>
+                <c:when test="${pricingError}">
+                    <div class="movie-empty">Hiện chưa tải được bảng giá vé. Vui lòng thử lại sau.</div>
+                </c:when>
+                <c:when test="${empty priceBoards}">
+                    <div class="movie-empty">Hiện chưa có suất chiếu sắp tới nên chưa có giá vé.</div>
+                </c:when>
+                <c:otherwise>
+                    <%-- Bộ lọc chi nhánh: assets/js/pricing-tuyet.js ẩn/hiện các bảng giá theo data-branch.
+                         Khi chưa có JS, tất cả bảng vẫn hiển thị. --%>
+                    <div class="branch-filter" id="branchFilter" role="group" aria-label="Lọc giá vé theo chi nhánh">
+                        <button type="button" class="branch-chip active" data-branch="all">Tất cả chi nhánh</button>
+                        <c:forEach var="b" items="${pricingBranches}">
+                            <button type="button" class="branch-chip" data-branch="${b.key}"><c:out value="${b.value}"/></button>
+                        </c:forEach>
+                    </div>
+
+                    <div class="price-boards" id="priceBoards">
+                        <c:forEach var="bd" items="${priceBoards}">
+                            <article class="price-board" data-branch="${bd.branchId}">
+                                <div class="price-board-type"><span><c:out value="${bd.roomType}"/></span></div>
+                                <div class="price-board-body">
+                                    <h3 class="price-board-title">
+                                        BẢNG GIÁ VÉ <c:out value="${bd.roomType}"/> (Giá vé thường) - <c:out value="${bd.branchName}"/>
+                                    </h3>
+                                    <table class="price-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Ngày chiếu</th>
+                                                <th class="price-col">Giá vé</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>Thứ 2 - Thứ 6</td>
+                                                <td class="price-col">${bd.weekday.text}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Thứ 7, Chủ nhật</td>
+                                                <td class="price-col">${bd.weekend.text}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <c:if test="${not empty bd.seatExtras}">
+                                        <ul class="price-board-notes">
+                                            <li>Phụ thu loại ghế:
+                                                <c:forEach var="x" items="${bd.seatExtras}" varStatus="st">
+                                                    <c:out value="${x.text}"/><c:if test="${!st.last}">; </c:if>
+                                                </c:forEach>
+                                            </li>
+                                        </ul>
+                                    </c:if>
+                                </div>
+                            </article>
+                        </c:forEach>
+                    </div>
+                    <p class="price-empty" id="priceEmpty" hidden>Chi nhánh này hiện chưa có bảng giá vé.</p>
+
+                    <p class="price-note">
+                        Bảng giá vé ghế tiêu chuẩn theo từng loại phòng và chi nhánh, lấy theo giá cấu hình hiện tại của chi nhánh.
+                    </p>
+                </c:otherwise>
+            </c:choose>
+        </section>
     </main>
 
-    <!-- 5. FOOTER -->
+    <!-- 6. FOOTER -->
     <footer class="footer">
         <div>
             <strong class="footer-brand">CineGo CMS Website</strong>
@@ -258,5 +332,6 @@
     </footer>
 
     <script src="${ctx}/assets/js/carousel-hoang.js?v=2"></script>
+    <script src="${ctx}/assets/js/pricing-tuyet.js?v=1"></script>
 </body>
 </html>

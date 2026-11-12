@@ -1,5 +1,6 @@
 package dao.movie;
 
+import dao.PricingConfigDao;
 import model.movie.Movie;
 import model.movie.Showtime;
 import model.movie.ShowtimeRoom;
@@ -87,7 +88,7 @@ public class ShowtimeDAO {
 
     private static final String SELECT =
             "SELECT s.ShowtimeID, s.MovieID, s.RoomID, s.ShowDate, s.StartTime, s.EndTime, s.BasePrice, s.Status, "
-            + "m.Title, m.Duration, m.AgeRating, m.PosterURL, r.RoomName, r.RoomType, rt.Surcharge AS RoomSurcharge, "
+            + "m.Title, m.Duration, m.AgeRating, m.PosterURL, r.RoomName, r.RoomType, " + PricingConfigDao.BRANCH_ROOM_SURCHARGE_SQL + " AS RoomSurcharge, "
             + "r.BranchID, b.Name AS BranchName, "
             + "(SELECT COUNT(*) FROM Ticket t WHERE t.ShowtimeID = s.ShowtimeID AND t.Status <> 'Cancelled') AS SoldCount, "
             + "(SELECT COUNT(*) FROM Seat se WHERE se.RoomID = s.RoomID AND se.Status = 'Active') AS SeatCount "
@@ -200,7 +201,7 @@ public class ShowtimeDAO {
 
     private static final String SELECT_ROOM =
             "SELECT r.RoomID, r.BranchID, b.Name AS BranchName, r.RoomName, r.RoomType, r.Status, "
-            + "ISNULL(rt.Surcharge, 0) AS RoomSurcharge, "
+            + PricingConfigDao.BRANCH_ROOM_SURCHARGE_SQL + " AS RoomSurcharge, "
             + "(SELECT COUNT(*) FROM Seat se WHERE se.RoomID = r.RoomID AND se.Status = 'Active') AS SeatCount "
             + "FROM Room r JOIN Branch b ON b.BranchID = r.BranchID LEFT JOIN RoomType rt ON rt.Name = r.RoomType ";
 

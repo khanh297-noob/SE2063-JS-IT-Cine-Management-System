@@ -19,15 +19,15 @@
             <!-- Nhom 1: Tong quan he thong -->
             <div class="menu-title">Tổng quan</div>
             <ul class="menu">
-                <li><a class="${activeMenu == 'dashboard' ? 'active' : ''}" href="${pageContext.request.contextPath}/report/branch-dashboard"><i class="fa-solid fa-gauge-high"></i> Dashboard Tổng Quan</a></li>
+                <li><a class="${activeMenu == 'dashboard' ? 'active' : ''}" href="${pageContext.request.contextPath}/report/branch-dashboard"><i class="fa-solid fa-gauge-high"></i> Trang Tổng Quan</a></li>
             </ul>
 
 
             <!-- Nhom 3: Bao cao doanh thu va suat chieu -->
             <div class="menu-title">Báo cáo </div>
             <ul class="menu">
-                <li><a class="${activeMenu == 'branch-report' ? 'active' : ''}" href="${pageContext.request.contextPath}/report/branch-report"><i class="fa-solid fa-chart-line"></i> Branch Report Dashboard</a></li>
-                <li><a class="${activeMenu == 'revenue' ? 'active' : ''}" href="${pageContext.request.contextPath}/report/revenue-dashboard"><i class="fa-solid fa-chart-column"></i> Revenue Dashboard</a></li>
+                <li><a class="${activeMenu == 'branch-report' ? 'active' : ''}" href="${pageContext.request.contextPath}/report/branch-report"><i class="fa-solid fa-chart-line"></i> Báo Cáo Rạp </a></li>
+                <li><a class="${activeMenu == 'revenue' ? 'active' : ''}" href="${pageContext.request.contextPath}/report/revenue-dashboard"><i class="fa-solid fa-chart-column"></i> Báo Cáo Doanh Thu Chi Tiết</a></li>
                 <li><a class="${activeMenu == 'tickets' ? 'active' : ''}" href="${pageContext.request.contextPath}/report/ticket-sales"><i class="fa-solid fa-ticket"></i> Báo Cáo Vé Chi Tiết</a></li>
 
             </ul>

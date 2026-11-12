@@ -147,8 +147,7 @@ public class ShowtimeController extends BaseServlet {
         req.setAttribute("rooms", showtimeService.getRooms(branchId));
         req.setAttribute("movies", showtimeService.getSchedulableMovies(branchId));
         req.setAttribute("statuses", ShowtimeService.EDITABLE_STATUSES);
-        req.setAttribute("standardPrice", ShowtimePriceCalculator.STANDARD_PRICE);
-        req.setAttribute("weekendSurcharge", ShowtimePriceCalculator.WEEKEND_SURCHARGE);
+        req.setAttribute("dayPrices", showtimeService.getDayBasePrices(branchId));
         if (showtime == null && str(req, "date") != null && str(req, "startTime") == null) {
             req.setAttribute("defaultDate", str(req, "date"));
         }
@@ -164,7 +163,7 @@ public class ShowtimeController extends BaseServlet {
         try {
             StringBuilder sb = new StringBuilder("{");
             if (roomId != null && date != null) {
-                BigDecimal price = showtimeService.previewPrice(roomId, date);
+                BigDecimal price = showtimeService.previewPrice(roomId, movieId, date);
                 sb.append("\"price\":").append(price.toBigInteger())
                   .append(",\"weekend\":").append(ShowtimePriceCalculator.isWeekend(date)).append(',');
             }

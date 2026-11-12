@@ -145,6 +145,10 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--r
 .st-Failed, .st-Cancelled { background: #fee2e2; color: #991b1b; }
 .st-Refunded { background: #ede9fe; color: #5b21b6; }
 .st-Checked-In { background: #dbeafe; color: #1e40af; }
+/* Hình thức thanh toán ở trang Manage Payment */
+.src { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.src-counter { background: #fef3c7; color: #92400e; }
+.src-online { background: #dbeafe; color: #1e40af; }
 .age { display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; background: var(--red); color: #fff; }
 
 /* ---------- Table ---------- */
@@ -182,7 +186,9 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
     font-size: 11px; cursor: pointer; font-weight: 600;
 }
 .seat.VIP { border-color: #f59e0b; }
-.seat.Sweetbox { border-color: #ec4899; width: 66px; }
+.seat.Sweetbox, .seat.couple { border-color: #ec4899; }
+/* Ghế đôi: 1 ô rộng bằng 2 ghế thường + khoảng cách giữa chúng */
+.seat.couple { width: 70px; border-radius: 12px 12px 6px 6px; }
 .seat.selected { background: var(--red); border-color: var(--red); color: #fff; }
 .seat.BOOKED, .seat.HELD { background: #cbd5e1; border-color: #cbd5e1; color: #64748b; cursor: not-allowed; }
 .seat.BROKEN { background: #fff; border-style: dashed; color: #cbd5e1; text-decoration: line-through; cursor: not-allowed; }

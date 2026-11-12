@@ -66,6 +66,17 @@ public class PosService {
         for (Seat s : seats) {
             s.setPrice(getTicketPrice(st.getBasePrice(), s.getSurcharge()));
         }
+        // Ghế đôi: nối 2 ô liền nhau của cùng một ghế (SeatNumber = số cột trong sơ đồ)
+        Map<Integer, Integer> pairs = service.booking.CoupleSeats.pairs(seats, Seat::getSeatId, Seat::getRowLabel,
+                Seat::getSeatNumber, Seat::getSeatType);
+        if (!pairs.isEmpty()) {
+            Map<Integer, Seat> byId = new java.util.HashMap<>();
+            for (Seat s : seats) byId.put(s.getSeatId(), s);
+            for (Seat s : seats) {
+                Integer other = pairs.get(s.getSeatId());
+                if (other != null) s.setPair(byId.get(other));
+            }
+        }
         return seats;
     }
 
@@ -112,6 +123,9 @@ public class PosService {
         for (Seat s : seats) {
             if (!"AVAILABLE".equals(s.getState())) {
                 throw new IllegalArgumentException("The selected seat is not available. (" + s.getLabel() + ")");
+            }
+            if (s.getPair() != null && !seats.contains(s.getPair())) {
+                throw new IllegalArgumentException("Ghế đôi " + s.getLabel() + " gồm 2 chỗ liền nhau, phải bán cả 2 chỗ.");
             }
         }
         if (!"Cash".equals(method) && !"VNPay".equals(method)) {

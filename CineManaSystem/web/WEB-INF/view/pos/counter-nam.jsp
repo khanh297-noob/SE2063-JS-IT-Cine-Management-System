@@ -77,7 +77,7 @@
                         <span><i style="background:#cbd5e1;border-color:#cbd5e1"></i>Đã bán</span>
                         <span><i style="background:#fde68a;border-color:#fde68a"></i>Đang giữ</span>
                         <span><i style="border-color:#f59e0b"></i>VIP</span>
-                        <span><i style="border-color:#ec4899"></i>Sweetbox</span>
+                        <span><i style="border-color:#ec4899;width:26px"></i>Ghế đôi (2 chỗ)</span>
                         <span><i style="border-style:dashed"></i>Ghế hỏng</span>
                     </div>
                 </div>
@@ -88,13 +88,16 @@
                         <div class="seat-row">
                             <span class="rl">${row.key}</span>
                             <c:forEach var="s" items="${row.value}">
-                                <%-- form="saleForm": checkbox nằm ngoài form nhưng vẫn gửi cùng form bán vé --%>
-                                <label class="seat ${s.seatType} ${s.state == 'AVAILABLE' ? '' : s.state}"
-                                       title="${s.seatType} - <fmt:formatNumber value='${s.price}' pattern='#,##0'/> ₫">
+                                <%-- form="saleForm": checkbox nằm ngoài form nhưng vẫn gửi cùng form bán vé.
+                                     Ghế đôi: 1 ô rộng gồm 2 chỗ liền nhau, tick 1 lần là bán cả 2 chỗ (2 vé). --%>
+                                <c:if test="${not s.coupleRight}">
+                                <label class="seat ${s.seatType} ${s.coupleLeft ? 'couple' : ''} ${s.unitState == 'AVAILABLE' ? '' : s.unitState}"
+                                       title="${s.coupleLeft ? 'Ghế đôi 2 chỗ - ' : ''}${s.seatType} - <fmt:formatNumber value='${s.unitPrice}' pattern='#,##0'/> ₫">
                                     <input type="checkbox" name="seatId" value="${s.seatId}" form="saleForm"
-                                           ${s.selected ? 'checked' : ''} ${s.state == 'AVAILABLE' ? '' : 'disabled'}>
-                                    ${s.seatNumber}
+                                           ${s.selected ? 'checked' : ''} ${s.unitState == 'AVAILABLE' ? '' : 'disabled'}>
+                                    ${s.seatNumber}${s.coupleLeft ? '-' : ''}${s.coupleLeft ? s.pair.seatNumber : ''}
                                 </label>
+                                </c:if>
                             </c:forEach>
                         </div>
                     </c:forEach>

@@ -34,7 +34,7 @@
                                     <div class="head-row">
                                         <div>
                                             <h1 class="page-title"><i class="fa-solid fa-chart-column"></i> Phân Tích
-                                                Doanh Thu Chi Tiết (Revenue Dashboard)</h1>
+                                                Doanh Thu Chi Tiết</h1>
                                             <p class="page-subtitle">Biểu đồ và bảng doanh thu của chi nhánh, phân rã
                                                 theo Phim, Loại ghế và Phương thức thanh toán (gồm F&amp;B đi kèm).</p>
                                         </div>

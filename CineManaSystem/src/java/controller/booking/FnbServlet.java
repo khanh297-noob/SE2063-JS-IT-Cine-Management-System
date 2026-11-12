@@ -40,6 +40,13 @@ public class FnbServlet extends CustomerBaseServlet {
         }
         HoldSummary hold = bookingService.getHold(user, showtimeId);
         if (hold == null) {
+            // Đơn đã được tạo (ghế giữ đã chuyển thành vé Pending), vd khách bấm "Quay lại" từ trang thanh toán
+            // -> đưa về đúng trang thanh toán của đơn đó thay vì báo hết giờ giữ ghế.
+            Integer pendingId = bookingService.pendingBookingId(user, showtimeId);
+            if (pendingId != null) {
+                redirect(req, resp, "/payment/checkout?bookingId=" + pendingId);
+                return;
+            }
             flashError(req, "Thời gian giữ ghế đã hết hoặc bạn chưa chọn ghế. Vui lòng chọn lại.");
             redirect(req, resp, "/booking/seats?showtimeId=" + showtimeId);
             return;
@@ -86,7 +93,22 @@ public class FnbServlet extends CustomerBaseServlet {
             int bookingId = bookingService.createPendingBooking(user, showtimeId, requested, WebUtil.clientIp(req));
             session.removeAttribute(cartKey(showtimeId));
             redirect(req, resp, "/payment/checkout?bookingId=" + bookingId);
+        } catch (SQLException e) {
+            // Trước đây lỗi DB (vd bảng Booking_F_B thiếu cột UnitPrice/OrderStatus) bị ném thẳng ra trang 500.
+            // Giờ ghi log đầy đủ, giữ lại giỏ đồ ăn và quay về trang F&B kèm thông báo.
+            log("Không tạo được đơn online (showtime=" + showtimeId + ", user=" + user.getUserId() + ")", e);
+            session.setAttribute(cartKey(showtimeId), requested);
+            flashError(req, "Không tạo được đơn thanh toán do lỗi cơ sở dữ liệu: " + e.getMessage());
+            redirect(req, resp, "/booking/fnb?showtimeId=" + showtimeId);
         } catch (BusinessException e) {
+            // Bấm "Thanh toán" 2 lần: lần 1 đã tạo đơn và xóa ghế giữ, lần 2 báo hết giờ giữ ghế
+            // và trình duyệt hiện kết quả của lần 2 -> khách thấy lỗi dù đơn đã tạo. Đưa về đơn đã tạo.
+            Integer pendingId = bookingService.pendingBookingId(user, showtimeId);
+            if (pendingId != null && bookingService.getHold(user, showtimeId) == null) {
+                session.removeAttribute(cartKey(showtimeId));
+                redirect(req, resp, "/payment/checkout?bookingId=" + pendingId);
+                return;
+            }
             session.setAttribute(cartKey(showtimeId), requested);
             flashError(req, e.getMessage());
             if (bookingService.getHold(user, showtimeId) == null) {

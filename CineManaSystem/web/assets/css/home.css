@@ -636,3 +636,127 @@ a {
     color: #e11d48;
     font-weight: 700;
 }
+
+/* === 5. BẢNG GIÁ VÉ THEO CHI NHÁNH (#pricing) === */
+.pricing-section {
+    margin-top: 16px;
+    margin-bottom: 48px;
+    scroll-margin-top: 90px; /* chừa chỗ cho navbar khi bấm "Giá vé" */
+}
+
+.pricing-section [hidden] { display: none !important; }
+
+.branch-filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.branch-chip {
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #475569;
+    background-color: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.branch-chip:hover { color: #e11d48; border-color: #e11d48; }
+
+.branch-chip.active {
+    color: #ffffff;
+    background-color: #e11d48;
+    border-color: #e11d48;
+}
+
+/* Mỗi bảng giá: khối loại phòng (2D, 3D...) bên trái, bảng giá bên phải */
+.price-boards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(460px, 1fr));
+    gap: 20px;
+}
+
+.price-board {
+    display: flex;
+    overflow: hidden;
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+}
+
+.price-board-type {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 96px;
+    padding: 12px;
+    color: #ffffff;
+    background: linear-gradient(160deg, #e11d48, #9f1239);
+}
+
+.price-board-type span {
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-align: center;
+    word-break: break-word;
+}
+
+.price-board-body { flex: 1; min-width: 0; padding: 16px 18px; }
+
+.price-board-title {
+    margin: 0 0 12px;
+    font-size: 16px;
+    font-weight: 800;
+    color: #9f1239;
+    text-transform: uppercase;
+}
+
+.price-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+
+.price-table th,
+.price-table td {
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.price-table th {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #ffffff;
+    text-transform: uppercase;
+    background-color: #f59e0b;
+}
+
+.price-table tbody tr:last-child td { border-bottom: none; }
+
+.price-table .price-col {
+    text-align: center;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.price-table td.price-col { color: #e11d48; font-size: 15px; }
+
+.price-board-notes {
+    margin: 12px 0 0;
+    padding-left: 18px;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: #64748b;
+}
+
+.price-empty { padding: 24px 16px; text-align: center; color: #64748b; }
+
+.price-note { margin-top: 14px; font-size: 13px; color: #64748b; line-height: 1.5; }
+
+@media (max-width: 560px) {
+    .price-boards { grid-template-columns: 1fr; }
+    .price-board-type { flex-basis: 64px; }
+    .price-board-type span { font-size: 22px; }
+}
