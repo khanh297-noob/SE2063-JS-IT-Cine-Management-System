@@ -52,6 +52,24 @@ public class MovieDAO {
     }
 
     /**
+     * Phim khác (trừ excludeId) cùng tên và cùng năm khởi chiếu; null nếu không có.
+     * So tên không phân biệt hoa thường nhưng phân biệt dấu ("Mai" khác "Mãi"), bất kể collation của cột.
+     * Giữ khoá phạm vi tới hết giao dịch để hai người thêm cùng một phim cùng lúc không lọt cả hai.
+     */
+    public Movie findSameTitleAndYear(Connection con, String title, int year, int excludeId) throws SQLException {
+        String sql = "SELECT TOP 1 " + COLUMNS + " FROM Movie m WITH (UPDLOCK, HOLDLOCK) "
+                + "WHERE m.title COLLATE Vietnamese_CI_AS = ? COLLATE Vietnamese_CI_AS "
+                + "AND YEAR(m.ReleaseDate) = ? AND m.MovieID <> ?";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, title);
+            ps.setInt(2, year);
+            ps.setInt(3, excludeId);
+            List<Movie> list = mapList(ps);
+            return list.isEmpty() ? null : list.get(0);
+        }
+    }
+
+    /**
      * Như findById nhưng giữ khoá cập nhật trên dòng phim tới hết giao dịch: hai thao tác đổi trạng thái /
      * xếp suất chiếu cùng phim phải chờ nhau, không cùng kiểm tra trên dữ liệu cũ.
      */

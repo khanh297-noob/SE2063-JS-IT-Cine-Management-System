@@ -29,6 +29,8 @@ import java.util.Set;
  * BR-MV-01  Tên phim bắt buộc (tối đa 200 ký tự); thời lượng 1-600 phút; ngày khởi chiếu bắt buộc.
  * BR-MV-02  Phân loại tuổi thuộc P, K, T13, T16, T18.
  * BR-MV-03  Phim phải có ít nhất một thể loại.
+ * BR-MV-06  Không có hai phim trùng tên và cùng năm khởi chiếu (tên so không phân biệt hoa thường, khoảng trắng
+ *           thừa, nhưng phân biệt dấu). Phim làm lại cùng tên ở năm khác vẫn được thêm.
  * BR-MV-04  Phim mới luôn ở trạng thái "Coming Soon"; đổi trạng thái qua màn Movie Status.
  * BR-MV-05  Không xoá phim khỏi database. Muốn ẩn phim khỏi khách thì chuyển sang "End of Screening"
  *           (Coming Soon -> End of Screening là huỷ chiếu) để giữ lịch sử suất chiếu, vé, doanh thu.
@@ -119,6 +121,14 @@ public class MovieService {
             if (m.getMovieId() != 0) {
                 existing = movieDAO.findById(con, m.getMovieId());
                 if (existing == null) throw new NotFoundException("Không tìm thấy phim #" + m.getMovieId());
+            }
+            // BR-MV-06: chỉ kiểm tra khi tên và ngày khởi chiếu đã hợp lệ
+            if (errors.isEmpty()) {
+                int year = m.getReleaseDate().getYear();
+                Movie dup = movieDAO.findSameTitleAndYear(con, m.getTitle(), year, m.getMovieId());
+                if (dup != null)
+                    errors.add("Phim \"" + dup.getTitle() + "\" khởi chiếu năm " + year + " đã có trong hệ thống (#"
+                            + dup.getMovieId() + "). Nếu là phim khác cùng tên, kiểm tra lại năm khởi chiếu.");
             }
             if (!errors.isEmpty()) throw new BusinessException(errors);
 
