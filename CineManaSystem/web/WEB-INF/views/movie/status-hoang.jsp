@@ -43,6 +43,16 @@
                 <c:set var="ready" value="${info.readyToShow}"/>
                 <c:set var="buttonText" value="${movie.status == 'End of Screening' ? 'Chiếu lại' : 'Bắt đầu chiếu'}"/>
             </c:when>
+            <c:when test="${target == 'Coming Soon'}">
+                <h2>Lên lịch chiếu lại</h2>
+                <p class="meta">
+                    Đưa phim về Sắp chiếu để mở lại cấu hình chi nhánh, rồi đặt khung ngày chiếu mới ở tab Chi nhánh chiếu.
+                    Ngày khởi chiếu (${movie.releaseDateText}) giữ nguyên. Khách chỉ thấy phim ở mục Sắp chiếu khi chưa tới
+                    ngày khởi chiếu hoặc có chi nhánh với khung ngày chiếu chưa kết thúc.
+                </p>
+                <c:set var="ready" value="${true}"/>
+                <c:set var="buttonText" value="Chuyển về Sắp chiếu"/>
+            </c:when>
             <c:otherwise>
                 <h2>${movie.status == 'Coming Soon' ? 'Huỷ chiếu' : 'Ngưng chiếu'}</h2>
                 <p class="meta">Phim không còn hiển thị cho khách. Cấu hình chi nhánh bị khoá cho tới khi chiếu lại.</p>
@@ -55,8 +65,9 @@
         </c:choose>
         <form method="post" action="${ctx}/manage/movie/status">
             <input type="hidden" name="movieId" value="${movie.movieId}">
+            <input type="hidden" name="from" value="${movie.status}">
             <input type="hidden" name="status" value="${target}">
-            <button type="submit" class="btn ${target == 'Now Showing' ? 'btn-primary' : 'btn-danger'}" ${ready ? '' : 'disabled'}>${buttonText}</button>
+            <button type="submit" class="btn ${target == 'End of Screening' ? 'btn-danger' : 'btn-primary'}" ${ready ? '' : 'disabled'}>${buttonText}</button>
             <c:if test="${not ready}"><span class="meta">Hoàn tất các mục đỏ để mở nút này.</span></c:if>
         </form>
     </section>

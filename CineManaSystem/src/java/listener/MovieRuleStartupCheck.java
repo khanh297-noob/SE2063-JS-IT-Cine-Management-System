@@ -50,6 +50,8 @@ public class MovieRuleStartupCheck implements ServletContextListener {
         try {
             MovieStatusService.RuleCheckResult r = new MovieStatusService().enforceStatusRules();
             for (String s : r.getDemoted()) LOG.warning("BR-MS-03 (" + when + "): chuyển về Coming Soon " + s);
+            for (String s : r.getEnded()) LOG.warning("BR-MS-03 (" + when + "): chuyển sang End of Screening " + s);
+            for (String s : r.getReadyToShow()) LOG.info("BR-MS-04 (" + when + "): có thể chuyển sang Now Showing " + s);
             for (String s : r.getNeedsAttention()) LOG.warning("BR-MS-03 (" + when + "): cần Admin xử lý " + s);
             if (r.isClean()) LOG.info("BR-MS-03 (" + when + "): không có phim nào cần đổi trạng thái.");
         } catch (Exception e) {

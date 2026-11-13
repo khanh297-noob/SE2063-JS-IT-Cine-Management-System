@@ -27,11 +27,13 @@ import java.util.Objects;
 /**
  * Configure Available Branches.
  *
- * BR-AB-01  Phim "End of Screening" chỉ xem, không cấu hình.
+ * BR-AB-01  Phim "End of Screening" chỉ xem, không cấu hình (muốn chiếu lại: chuyển phim về "Coming Soon" trước).
  * BR-AB-02  Không thêm phim vào chi nhánh đang ngưng hoạt động (chi nhánh đã có thì giữ/gỡ được).
  * BR-AB-03  Không gỡ chi nhánh khi phim còn suất chiếu sắp tới tại đó.
  * BR-AB-04  Từ ngày <= đến ngày; khoảng ngày không được loại bỏ suất chiếu đã xếp.
- * BR-AB-05  Khi thêm mới hoặc đổi ngày, ngày kết thúc không được ở quá khứ.
+ * BR-AB-05  Khi thêm mới hoặc đổi ngày: bắt buộc có ngày kết thúc (để đối soát BR-MS-03 biết đợt chiếu đã xong)
+ *           và ngày kết thúc không được ở quá khứ. Từ ngày để trống = chiếu ngay. Dòng cũ chưa có ngày kết thúc
+ *           giữ nguyên nếu không sửa.
  * BR-AB-06  Phim "Now Showing" phải còn ít nhất 1 chi nhánh đang hoạt động có khung ngày chiếu gồm hôm nay
  *           (BR-MS-01): không gỡ hết, không đẩy hết khung ngày chiếu ra khỏi hôm nay.
  */
@@ -154,6 +156,10 @@ public class MovieBranchService {
                     continue;
                 }
                 boolean changed = !Objects.equals(from, cur.getAvailableFrom()) || !Objects.equals(to, cur.getAvailableTo());
+                if (to == null && (!cur.isPersisted() || changed)) {
+                    errors.add(name + ": nhập ngày kết thúc chiếu.");
+                    continue;
+                }
                 if (to != null && to.isBefore(today) && (!cur.isPersisted() || changed)) {
                     errors.add(name + ": ngày kết thúc đã qua.");
                     continue;

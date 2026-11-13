@@ -14,7 +14,7 @@ import java.sql.SQLException;
 /**
  * Movie Status.
  * GET  /manage/movie/status?movieId=1
- * POST movieId, status
+ * POST movieId, from (trạng thái lúc mở trang), status
  */
 @WebServlet("/manage/movie/status")
 public class MovieStatusServlet extends MovieAdminServlet {
@@ -34,8 +34,8 @@ public class MovieStatusServlet extends MovieAdminServlet {
         int movieId = requiredId(req, "movieId");
         String target = str(req, "status");
         try {
-            statusService.changeStatus(movieId, target);
-            flashSuccess(req, "Đã chuyển trạng thái sang \"" + target + "\".");
+            statusService.changeStatus(movieId, str(req, "from"), target);
+            flashSuccess(req, "Đã chuyển trạng thái sang \"" + MovieStatusService.statusLabel(target) + "\".");
             redirect(req, resp, "/manage/movie/status?movieId=" + movieId);
         } catch (BusinessException e) {
             req.setAttribute("errors", e.getErrors());

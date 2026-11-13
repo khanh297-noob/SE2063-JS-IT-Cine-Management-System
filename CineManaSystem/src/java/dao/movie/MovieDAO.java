@@ -11,7 +11,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /** Bảng Movie. */
 public class MovieDAO {
@@ -47,6 +49,64 @@ public class MovieDAO {
             List<Movie> list = mapList(ps);
             return list.isEmpty() ? null : list.get(0);
         }
+    }
+
+    /**
+     * Phim khác (trừ excludeId) cùng tên và cùng năm khởi chiếu; null nếu không có.
+     * So tên không phân biệt hoa thường nhưng phân biệt dấu ("Mai" khác "Mãi"), bất kể collation của cột.
+     * Giữ khoá phạm vi tới hết giao dịch để hai người thêm cùng một phim cùng lúc không lọt cả hai.
+     */
+    public Movie findSameTitleAndYear(Connection con, String title, int year, int excludeId) throws SQLException {
+        String sql = "SELECT TOP 1 " + COLUMNS + " FROM Movie m WITH (UPDLOCK, HOLDLOCK) "
+                + "WHERE m.title COLLATE Vietnamese_CI_AS = ? COLLATE Vietnamese_CI_AS "
+                + "AND YEAR(m.ReleaseDate) = ? AND m.MovieID <> ?";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, title);
+            ps.setInt(2, year);
+            ps.setInt(3, excludeId);
+            List<Movie> list = mapList(ps);
+            return list.isEmpty() ? null : list.get(0);
+        }
+    }
+
+    /**
+     * Như findById nhưng giữ khoá cập nhật trên dòng phim tới hết giao dịch: hai thao tác đổi trạng thái /
+     * xếp suất chiếu cùng phim phải chờ nhau, không cùng kiểm tra trên dữ liệu cũ.
+     */
+    public Movie findByIdForUpdate(Connection con, int movieId) throws SQLException {
+        try (PreparedStatement ps = con.prepareStatement(
+                "SELECT " + COLUMNS + " FROM Movie m WITH (UPDLOCK, ROWLOCK) WHERE m.MovieID = ?")) {
+            ps.setInt(1, movieId);
+            List<Movie> list = mapList(ps);
+            return list.isEmpty() ? null : list.get(0);
+        }
+    }
+
+    /**
+     * Số suất chiếu sắp tới của phim (cùng nghĩa với ShowtimeDAO.countUpcomingByMovie), giữ khoá phạm vi tới hết
+     * giao dịch để không ai thêm suất chiếu cho phim này trong lúc đang ngưng chiếu.
+     */
+    public int countUpcomingShowtimesLocked(Connection con, int movieId) throws SQLException {
+        try (PreparedStatement ps = con.prepareStatement("SELECT COUNT(*) FROM Showtime s WITH (UPDLOCK, HOLDLOCK) "
+                + "WHERE s.MovieID = ? AND s.ShowDate >= CAST(GETDATE() AS DATE) AND s.Status <> 'Cancelled'")) {
+            ps.setInt(1, movieId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        }
+    }
+
+    /** MovieID của các phim từng có suất chiếu (chưa huỷ) trước hôm nay: phim "chiếu lại" khi đang Sắp chiếu. */
+    public Set<Integer> findIdsScreenedBefore(Connection con, LocalDate date) throws SQLException {
+        Set<Integer> ids = new HashSet<>();
+        try (PreparedStatement ps = con.prepareStatement(
+                "SELECT DISTINCT s.MovieID FROM Showtime s WHERE s.ShowDate < ? AND s.Status <> 'Cancelled'")) {
+            ps.setDate(1, Date.valueOf(date));
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) ids.add(rs.getInt(1));
+            }
+        }
+        return ids;
     }
 
     /** Phim đang chiếu tại chi nhánh vào ngày cho trước (theo MovieBranch). */
@@ -108,6 +168,16 @@ public class MovieDAO {
             ps.setString(1, status);
             ps.setInt(2, movieId);
             ps.executeUpdate();
+        }
+    }
+
+    /** Chỉ đổi khi phim vẫn đang ở trạng thái from; false nếu vừa bị người khác đổi. */
+    public boolean updateStatusIf(Connection con, int movieId, String from, String to) throws SQLException {
+        try (PreparedStatement ps = con.prepareStatement("UPDATE Movie SET status = ? WHERE MovieID = ? AND status = ?")) {
+            ps.setString(1, to);
+            ps.setInt(2, movieId);
+            ps.setString(3, from);
+            return ps.executeUpdate() == 1;
         }
     }
 

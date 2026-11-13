@@ -39,6 +39,29 @@ public class NotificationDAO {
     }
 
     /**
+     * Như insertForRoles nhưng bỏ qua tài khoản đã nhận thông báo cùng Type, Title, Link từ thời điểm since
+     * (để các lần đối soát lặp lại không gửi trùng). Trả về số thông báo đã tạo.
+     */
+    public int insertForRolesOnce(Connection con, List<String> roles, String type, String title, String content,
+                                  String link, java.time.LocalDateTime since) throws SQLException {
+        if (roles.isEmpty()) return 0;
+        String marks = String.join(", ", java.util.Collections.nCopies(roles.size(), "?"));
+        String sql = "INSERT INTO Notification (UserID, Type, Title, Content, Link) "
+                + "SELECT u.UserID, ?, ?, ?, ? FROM [User] u WHERE u.[Status] = 'Active' AND u.[Role] IN (" + marks + ") "
+                + "AND NOT EXISTS (SELECT 1 FROM Notification n WHERE n.UserID = u.UserID AND n.Type = ? "
+                + "AND n.Title = ? AND n.Link = ? AND n.CreatedAt >= ?)";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            int i = bindBody(ps, 1, type, title, content, link);
+            for (String r : roles) ps.setString(i++, r);
+            ps.setString(i++, type);
+            ps.setString(i++, cut(title, 150)); // so với tiêu đề đã lưu (đã cắt như bindBody)
+            ps.setString(i++, link);
+            ps.setTimestamp(i, java.sql.Timestamp.valueOf(since));
+            return ps.executeUpdate();
+        }
+    }
+
+    /**
      * Một thông báo cho mỗi Quản lý Active của chi nhánh branchId, trừ exceptUserId (người vừa thao tác).
      * Trả về số thông báo đã tạo.
      */

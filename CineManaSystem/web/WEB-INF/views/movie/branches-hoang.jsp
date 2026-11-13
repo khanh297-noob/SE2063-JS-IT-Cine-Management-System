@@ -83,7 +83,7 @@
                                     <input type="date" name="to_${b.branchId}" value="${row.availableTo}" aria-label="Đến ngày"
                                         ${(readOnly or not row.assigned) ? 'disabled' : ''} ${readOnly ? 'data-readonly' : ''}>
                                 </div>
-                                <div class="meta">Để trống nếu không giới hạn.</div>
+                                <div class="meta">Bắt buộc có ngày kết thúc. Để trống ngày bắt đầu nếu chiếu ngay.</div>
                             </td>
                         </tr>
                     </c:forEach>

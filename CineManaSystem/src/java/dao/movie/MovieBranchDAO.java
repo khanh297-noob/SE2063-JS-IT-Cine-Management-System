@@ -49,6 +49,65 @@ public class MovieBranchDAO {
         return map;
     }
 
+    /**
+     * true nếu phim đã được gán ít nhất 1 chi nhánh và mọi khung ngày chiếu đều đã kết thúc trước date
+     * (AvailableTo có giá trị và trước date): đợt chiếu này đã xong ở mọi rạp.
+     */
+    public boolean allWindowsEnded(Connection con, int movieId, LocalDate date) throws SQLException {
+        String sql = "SELECT COUNT(*), SUM(CASE WHEN AvailableTo IS NOT NULL AND AvailableTo < ? THEN 1 ELSE 0 END) "
+                + "FROM MovieBranch WHERE MovieID = ?";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setDate(1, Date.valueOf(date));
+            ps.setInt(2, movieId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() && rs.getInt(1) > 0 && rs.getInt(1) == rs.getInt(2);
+            }
+        }
+    }
+
+    /**
+     * MovieID -> ngày sớm nhất phim được chiếu tại một chi nhánh đang hoạt động, xét các khung ngày chiếu chưa
+     * kết thúc tính từ date. Bằng date nghĩa là đang trong khung chiếu. Phim không có khung chiếu nào còn hiệu lực
+     * thì không có trong map.
+     */
+    public Map<Integer, LocalDate> findNextScreeningStart(Connection con, LocalDate date) throws SQLException {
+        String sql = "SELECT mb.MovieID, MIN(CASE WHEN mb.AvailableFrom IS NULL OR mb.AvailableFrom < ? "
+                + "THEN ? ELSE mb.AvailableFrom END) "
+                + "FROM MovieBranch mb JOIN Branch b ON b.BranchID = mb.BranchID "
+                + "WHERE b.Status = 'Active' AND (mb.AvailableTo IS NULL OR mb.AvailableTo >= ?) GROUP BY mb.MovieID";
+        Map<Integer, LocalDate> map = new HashMap<>();
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setDate(1, Date.valueOf(date));
+            ps.setDate(2, Date.valueOf(date));
+            ps.setDate(3, Date.valueOf(date));
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) map.put(rs.getInt(1), rs.getDate(2).toLocalDate());
+            }
+        }
+        return map;
+    }
+
+    /**
+     * Ngày bắt đầu sớm nhất của các khung ngày chiếu đang hiệu lực hôm nay (để trống thì lấy ngày gán chi nhánh);
+     * null nếu không có. Dùng để chỉ nhắc Admin một lần cho mỗi đợt chiếu.
+     */
+    public LocalDate findScreeningSince(Connection con, int movieId, LocalDate date) throws SQLException {
+        String sql = "SELECT MIN(COALESCE(mb.AvailableFrom, CAST(mb.AssignedAt AS DATE))) "
+                + "FROM MovieBranch mb JOIN Branch b ON b.BranchID = mb.BranchID "
+                + "WHERE mb.MovieID = ? AND b.Status = 'Active' "
+                + "AND (mb.AvailableFrom IS NULL OR mb.AvailableFrom <= ?) "
+                + "AND (mb.AvailableTo IS NULL OR mb.AvailableTo >= ?)";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, movieId);
+            ps.setDate(2, Date.valueOf(date));
+            ps.setDate(3, Date.valueOf(date));
+            try (ResultSet rs = ps.executeQuery()) {
+                Date d = rs.next() ? rs.getDate(1) : null;
+                return d == null ? null : d.toLocalDate();
+            }
+        }
+    }
+
     public int countByMovie(Connection con, int movieId) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement("SELECT COUNT(*) FROM MovieBranch WHERE MovieID = ?")) {
             ps.setInt(1, movieId);
